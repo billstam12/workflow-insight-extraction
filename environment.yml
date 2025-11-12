@@ -1,0 +1,15 @@
+name: xxp
+channels:
+  - conda-forge
+  - defaults
+channel_priority: strict
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - scikit-learn
+  - shap
+  - pyale
+  - numba
+  - kmedoids
+  - pip
