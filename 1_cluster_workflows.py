@@ -10,6 +10,8 @@ Alternative implementation without scikit-learn-extra dependency.
 
 import pandas as pd
 import numpy as np
+import sys
+import os
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, pairwise_distances_argmin_min
@@ -111,8 +113,8 @@ def apply_elbow_method_mca(X_cat, max_components=None, inertia_threshold=0.95):
     return optimal_n_components, mca, inertia_ratio, cumulative_inertia
 
 
-def reduce_dimensions(df, metric_cols, pca_variance_threshold=0.426, mca_inertia_threshold=0.957,
-                      corr_threshold=0.9, eta_threshold=0.9):
+def reduce_dimensions(df, metric_cols, pca_variance_threshold, mca_inertia_threshold,
+                      corr_threshold, eta_threshold):
     """
     Apply combined dimensionality reduction using SPCA for numerical variables
     and MCA for categorical variables with automatic component selection via elbow method.
@@ -128,10 +130,10 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold=0.426, mca_inertia
     Args:
         df: Input DataFrame
         metric_cols: List of metric column names to include in dimensionality reduction
-        pca_variance_threshold: Target cumulative variance for PCA (default: 0.426 = 42.6%)
-        mca_inertia_threshold: Target cumulative inertia for MCA (default: 0.957 = 95.7%)
-        corr_threshold: Correlation threshold for naming PCA components (default: 0.9)
-        eta_threshold: Eta-squared threshold for naming MCA components (default: 0.9)
+        pca_variance_threshold: Target cumulative variance for PCA
+        mca_inertia_threshold: Target cumulative inertia for MCA
+        corr_threshold: Correlation threshold for naming PCA components
+        eta_threshold: Eta-squared threshold for naming MCA components
     
     Returns:
         reduced_df: DataFrame with derived components
@@ -165,7 +167,7 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold=0.426, mca_inertia
         
         # Apply low variance filter BEFORE standardization on original data
         filtered_numerical_cols, variance_filter_info = filter_low_variance_metrics(
-            X_numerical, numerical_cols, cv_threshold=0.1
+            X_numerical, numerical_cols, cv_threshold=0.05
         )
         
         # Keep only non-filtered columns
@@ -199,13 +201,14 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold=0.426, mca_inertia
         # Generate meaningful names for PCA components
         for i in range(optimal_pca_components):
             relevant_vars = pca_component_correlations[f'PC_{i+1}']
-            if relevant_vars:
+            component_name = f"PC_{i+1}"
+            # if relevant_vars:
                 # Create a set of all relevant variable names
-                component_name = f"PC_{i+1}"
+                # component_name = f"PC_{i+1}"
                 # var_names = {var['variable'] for var in relevant_vars}
                 # component_name = f"PCA_{i+1}_{{{','.join(sorted(var_names))}}}"
-            else:
-                continue
+            # else:
+            #     continue
             
             component_names.append(component_name)
             reduced_data[component_name] = pca_components[:, i]
@@ -241,12 +244,13 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold=0.426, mca_inertia
         # Generate meaningful names for MCA components
         for i in range(optimal_mca_components):
             relevant_cats = mca_component_eta[f'MCA_{i+1}']
-            if relevant_cats:
-                # Create a set of all relevant categorical variable names
-                cat_names = {cat['variable'] for cat in relevant_cats}
-                component_name = f"MCA_{i+1}_{{{','.join(sorted(cat_names))}}}"
-            else:
-                component_name = f'MCA_{i+1}'
+            component_name = f'MCA_{i+1}'
+            # if relevant_cats:
+            #     # Create a set of all relevant categorical variable names
+            #     cat_names = {cat['variable'] for cat in relevant_cats}
+            #     component_name = f"MCA_{i+1}_{{{','.join(sorted(cat_names))}}}"
+            # else:
+            #     component_name = f'MCA_{i+1}'
             
             component_names.append(component_name)
             reduced_data[component_name] = mca_components[:, i]
@@ -276,7 +280,8 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold=0.426, mca_inertia
         'n_mca_components': len([c for c in component_names if 'MCA' in c]),
         'component_names': component_names,
         'numerical_variables': numerical_cols,
-        'categorical_variables': categorical_cols
+        'categorical_variables': categorical_cols,
+        'kept_metric_cols': numerical_cols + categorical_cols  # Track which metrics were actually kept after filtering
     }
     
     return reduced_data, reduction_info, component_correlations
@@ -379,21 +384,36 @@ def filter_low_variance_metrics(df, metric_cols, cv_threshold=0.1):
     return filtered_metrics, filtered_info
 
 
-def load_and_preprocess_data(filepath='data/workflows.csv'):
+def load_and_preprocess_data(data_folder='data', params_file=None, metrics_file=None):
     """Load workflow data and separate hyperparameters from metrics."""
+    
+    # If params_file and metrics_file not provided, use defaults from data_folder
+    if params_file is None:
+        params_file = os.path.join(data_folder, 'parameter_names.txt')
+    if metrics_file is None:
+        metrics_file = os.path.join(data_folder, 'metric_names.txt')
+    
+    # Load workflows CSV from folder
+    filepath = os.path.join(data_folder, 'workflows.csv')
     df = pd.read_csv(filepath, on_bad_lines='skip')
 
-    # Define hyperparameters and metrics
-    hyperparams = ['criterion', 'fairness method', 'random state', 
-                   'max depth', 'normalization', 'n estimators']
+    # Load hyperparameters from file if provided
+    if os.path.exists(params_file):
+        with open(params_file, 'r') as f:
+            hyperparams = [line.strip() for line in f.readlines() if line.strip()]
+    else:
+        # Define hyperparameters and metrics (fallback)
+        hyperparams = ['criterion', 'fairness method', 'random state', 
+                       'max depth', 'normalization', 'n estimators']
 
-    # Exclude system metrics and identifiers
-    exclude_cols = ['workflowId'] + hyperparams 
-    # + [
-    #         col for col in df.columns if col.startswith('system_')
-    #   ]
-
-    metrics = [col for col in df.columns if col not in exclude_cols]
+    # Load metrics from file if provided
+    if os.path.exists(metrics_file):
+        with open(metrics_file, 'r') as f:
+            metrics = [line.strip() for line in f.readlines() if line.strip()]
+    else:
+        # Exclude system metrics and identifiers
+        exclude_cols = ['workflowId'] + hyperparams 
+        metrics = [col for col in df.columns if col not in exclude_cols]
 
     print(f"Loaded {len(df)} workflows")
     print(f"Hyperparameters: {len(hyperparams)}")
@@ -482,22 +502,42 @@ def identify_small_clusters(cluster_labels, n_std=1.5):
     return small_cluster_ids, cluster_sizes, stats_info
 
 
-def save_clustering_results(df, cluster_labels, medoid_indices, X, column_names, output_prefix='workflows'):
-    """Save clustering results to files, including scaled dataset."""
+def save_clustering_results(df, cluster_labels, medoid_indices, X, column_names, output_folder='data', output_prefix='workflows', kept_cols=None):
+    """Save clustering results to files in the output folder, including scaled dataset.
+    
+    Args:
+        df: Original dataframe with all columns
+        cluster_labels: Cluster assignments for each sample
+        medoid_indices: Indices of medoid samples
+        X: Scaled data used for clustering
+        column_names: Names of columns in X (after dimensionality reduction)
+        output_folder: Output directory
+        output_prefix: Prefix for output filenames
+        kept_metrics: List of original metric columns that were kept after low-variance filtering.
+                     If provided, only these metrics are saved in the clustered output.
+    """
 
     # Add cluster labels to original data
     df_clustered = df.copy()
     df_clustered['cluster'] = cluster_labels
+    
+    # Filter to only kept metrics if provided
+    if kept_cols is not None:
+        # Keep workflowId and kept metrics, then add cluster label
+        cols_to_keep = ['workflowId'] + kept_cols + ['cluster']
+        # Only include columns that exist in the dataframe
+        cols_to_keep = [col for col in cols_to_keep if col in df_clustered.columns]
+        df_clustered = df_clustered[cols_to_keep]
 
     # Save clustered workflows
-    output_file = f'{output_prefix}_clustered.csv'
+    output_file = os.path.join(output_folder, f'{output_prefix}_clustered.csv')
     df_clustered.to_csv(output_file, index=False)
     print(f"\nSaved clustered workflows to: {output_file}")
 
     # Save processed dataset for reuse in stats generation
     processed_df = pd.DataFrame(X, columns=column_names)
     processed_df['cluster'] = cluster_labels
-    processed_file = f'{output_prefix}_processed_data.csv'
+    processed_file = os.path.join(output_folder, f'{output_prefix}_processed_data.csv')
     processed_df.to_csv(processed_file, index=False)
     print(f"Saved processed dataset to: {processed_file}")
 
@@ -511,7 +551,7 @@ def save_clustering_results(df, cluster_labels, medoid_indices, X, column_names,
         })
 
     medoid_df = pd.DataFrame(medoid_data)
-    medoid_file = f'{output_prefix}_medoids.csv'
+    medoid_file = os.path.join(output_folder, f'{output_prefix}_medoids.csv')
     medoid_df.to_csv(medoid_file, index=False)
     print(f"Saved medoid information to: {medoid_file}")
 
@@ -644,13 +684,15 @@ class ClusteringPipeline:
 
 def step_load_data(results, pipeline, **kwargs):
     """Step 1: Load and preprocess data."""
-    filepath = kwargs.get('filepath', 'data/workflows.csv')
-    df, hyperparam_cols, metric_cols = load_and_preprocess_data(filepath)
+    data_folder = kwargs.get('data_folder', 'data')
+    
+    df, hyperparam_cols, metric_cols = load_and_preprocess_data(data_folder)
     
     return {
         'df': df,
         'hyperparam_cols': hyperparam_cols,
-        'metric_cols': metric_cols
+        'metric_cols': metric_cols,
+        'data_folder': data_folder
     }
 
 
@@ -660,12 +702,12 @@ def step_dimensionality_reduction(results, pipeline, **kwargs):
     load_result = pipeline.get_result('step_load_data', default={})
     df = load_result.get('df')
     metric_cols = load_result.get('metric_cols')
-    
+
     if df is None or metric_cols is None:
         raise KeyError("step_load_data: 'df' or 'metric_cols' not available. Load data first.")
     
-    pca_variance_threshold = kwargs.get('pca_variance_threshold', 0.99)
-    mca_inertia_threshold = kwargs.get('mca_inertia_threshold', 0.99)
+    pca_variance_threshold = kwargs.get('pca_variance_threshold', 0.95)
+    mca_inertia_threshold = kwargs.get('mca_inertia_threshold', 0.95)
     corr_threshold = kwargs.get('corr_threshold', 0.5)
     eta_threshold = kwargs.get('eta_threshold', 0.5)
     
@@ -699,6 +741,10 @@ def step_save_correlations(results, pipeline, **kwargs):
     
     component_correlations = dim_result.get('component_correlations', {})
     
+    # Get data_folder from load_data step
+    load_result = pipeline.get_result('step_load_data', default={})
+    data_folder = load_result.get('data_folder', 'data')
+    
     correlation_summary = []
     for comp_name, correlations in component_correlations.items():
         for corr_info in correlations:
@@ -717,8 +763,9 @@ def step_save_correlations(results, pipeline, **kwargs):
     
     if correlation_summary:
         corr_df = pd.DataFrame(correlation_summary)
-        corr_df.to_csv('workflows_component_correlations.csv', index=False)
-        print(f"Saved component correlations to: workflows_component_correlations.csv")
+        corr_file = os.path.join(data_folder, 'workflows_component_correlations.csv')
+        corr_df.to_csv(corr_file, index=False)
+        print(f"Saved component correlations to: {corr_file}")
     
     return {'correlation_summary': correlation_summary}
 
@@ -846,6 +893,10 @@ def step_create_cluster_metadata(results, pipeline, **kwargs):
     small_clusters = small_result.get('small_clusters', set())
     cluster_sizes = small_result.get('cluster_sizes', {})
     
+    # Get data_folder from load_data step
+    load_result = pipeline.get_result('step_load_data', default={})
+    data_folder = load_result.get('data_folder', 'data')
+    
     cluster_metadata = []
     for cluster_id in range(optimal_k):
         cluster_metadata.append({
@@ -856,7 +907,7 @@ def step_create_cluster_metadata(results, pipeline, **kwargs):
         })
     
     cluster_metadata_df = pd.DataFrame(cluster_metadata)
-    cluster_metadata_file = 'workflows_cluster_metadata.csv'
+    cluster_metadata_file = os.path.join(data_folder, 'workflows_cluster_metadata.csv')
     cluster_metadata_df.to_csv(cluster_metadata_file, index=False)
     print(f"\nSaved cluster metadata to: {cluster_metadata_file}")
     
@@ -868,7 +919,9 @@ def step_save_results(results, pipeline, **kwargs):
     # Required dependencies
     load_result = pipeline.get_result('step_load_data', default={})
     df = load_result.get('df')
-    
+    data_folder = load_result.get('data_folder', 'data')
+    hyperparam_cols = load_result.get('hyperparam_cols', [])
+
     cluster_result = pipeline.get_result('step_perform_clustering', default=None)
     if cluster_result is None:
         print("Skipping save: clustering not performed.")
@@ -884,17 +937,20 @@ def step_save_results(results, pipeline, **kwargs):
     dim_result = pipeline.get_result('step_dimensionality_reduction', default={})
     reduction_info = dim_result.get('reduction_info', {})
     component_names = reduction_info.get('component_names', [])
+    kept_cols = hyperparam_cols + reduction_info.get('kept_metric_cols', None)
     
     # Fallback to metric columns if no component names
     if not component_names:
         component_names = load_result.get('metric_cols', [])
     
     df_clustered = save_clustering_results(
-        df, cluster_labels, medoid_indices, X_scaled, component_names
+        df, cluster_labels, medoid_indices, X_scaled, component_names,
+        output_folder=data_folder, kept_cols=kept_cols
     )
     
     print("\n" + "="*60)
-    print("Clustering complete! Files generated:")
+    print("Clustering complete! Files generated in folder:")
+    print(f"  {data_folder}/")
     print("  - workflows_clustered.csv")
     print("  - workflows_processed_data.csv")
     print("  - workflows_cluster_metadata.csv (with small cluster flags)")
@@ -925,6 +981,15 @@ def build_default_pipeline():
 def main():
     """Main execution function with modular pipeline."""
     
+    # Parse command-line arguments
+    if len(sys.argv) < 2:
+        print("Usage: python 1_cluster_workflows.py <data_folder>")
+        print("\nArguments:")
+        print("  data_folder - Path to folder containing workflows.csv, parameter_names.txt, and metric_names.txt")
+        sys.exit(1)
+    
+    data_folder = sys.argv[1]
+    
     # Build the pipeline
     pipeline = build_default_pipeline()
     
@@ -954,15 +1019,15 @@ def main():
     
     # Configure pipeline parameters
     pipeline_params = {
-        'filepath': 'data/workflows.csv',
-        'pca_variance_threshold': 0.99,
-        'mca_inertia_threshold': 0.99,
-        'corr_threshold': 0.5,
-        'eta_threshold': 0.5,
-        'min_k': 3,
-        'max_k': 9,
+        'data_folder': data_folder,
+        'pca_variance_threshold': 0.8,
+        'mca_inertia_threshold': 0.8,
+        'corr_threshold': 0.75,
+        'eta_threshold': 0.33,
+        'min_k': 2,
+        'max_k': 20,
         'n_std': 1.5,
-        'n_clusters': 4  # Used if step_find_optimal_clusters is disabled
+        # 'n_clusters': 2  # Used if step_find_optimal_clusters is disabled
     }
     
     # Run the pipeline

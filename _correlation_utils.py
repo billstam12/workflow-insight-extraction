@@ -167,7 +167,7 @@ def compute_relationship_measure(X_df, feature1, feature2, var_types):
     
     x = X_df[feature1].values
     y = X_df[feature2].values
-    
+
     # Both continuous: Pearson correlation
     if type1 == 'continuous' and type2 == 'continuous':
         return compute_pearson_correlation(x, y), 'Pearson'

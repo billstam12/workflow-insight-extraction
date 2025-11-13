@@ -14,6 +14,8 @@ Pipeline structure allows enabling/disabling steps for testing.
 
 import pandas as pd
 import numpy as np
+import sys
+import os
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, LabelEncoder
@@ -137,18 +139,18 @@ class InsightsPipeline:
         return self.results
 
 
-def load_clustering_results(prefix='workflows'):
-    """Load clustering output files."""
-    df_clustered = pd.read_csv(f'{prefix}_clustered.csv')
-    medoids = pd.read_csv(f'{prefix}_medoids.csv')
+def load_clustering_results(data_folder='data', prefix='workflows'):
+    """Load clustering output files from data folder."""
+    df_clustered = pd.read_csv(os.path.join(data_folder, f'{prefix}_clustered.csv'))
+    medoids = pd.read_csv(os.path.join(data_folder, f'{prefix}_medoids.csv'))
     
     # Load cluster metadata to identify small/outlier clusters
     try:
-        cluster_metadata = pd.read_csv(f'{prefix}_cluster_metadata.csv')
+        cluster_metadata = pd.read_csv(os.path.join(data_folder, f'{prefix}_cluster_metadata.csv'))
     except FileNotFoundError:
         cluster_metadata = None
 
-    print(f"Loaded clustering results:")
+    print(f"Loaded clustering results from '{data_folder}':")
     print(f"  - {len(df_clustered)} workflows in {df_clustered['cluster'].nunique()} clusters")
     
     if cluster_metadata is not None:
@@ -159,26 +161,18 @@ def load_clustering_results(prefix='workflows'):
     return df_clustered, medoids, cluster_metadata
 
 
-def load_processed_data(prefix='workflows'):
+def load_processed_data(data_folder='data', prefix='workflows'):
     """Load pre-processed (dimensionality reduced) data for Phase 2."""
     try:
-        X_processed_df = pd.read_csv(f'{prefix}_processed_data.csv')
+        X_processed_df = pd.read_csv(os.path.join(data_folder, f'{prefix}_processed_data.csv'))
         print(f"Loaded processed data: {X_processed_df.shape}")
         return X_processed_df
     except FileNotFoundError:
-        print(f"⚠ Processed data file not found: {prefix}_processed_data.csv")
+        print(f"⚠ Processed data file not found: {os.path.join(data_folder, f'{prefix}_processed_data.csv')}")
         return None
 
 
-def identify_metric_columns(df):
-    """Identify metric columns (excluding hyperparameters and system metrics)."""
-    exclude_cols = ['workflowId', 'cluster', 'criterion', 'fairness method', 
-                    'random state', 'max depth', 'normalization', 'n estimators']
-    metrics = [col for col in df.columns if col not in exclude_cols]
-    return metrics
-
-
-def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iterations=None, correlation_threshold=0.9):
+def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iterations, correlation_threshold):
     """
     Steps 1-3: Iterative Feature Selection with SHAP + Correlation Removal.
     
@@ -327,14 +321,6 @@ def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iteratio
     return selected_features, selection_history
 
 
-def identify_metric_columns(df):
-    """Identify metric columns (excluding hyperparameters and system metrics)."""
-    exclude_cols = ['workflowId', 'cluster', 'criterion', 'fairness method', 
-                    'random state', 'max depth', 'normalization', 'n estimators']
-    metrics = [col for col in df.columns if col not in exclude_cols]
-    return metrics
-
-
 def main():
     """Main execution function """
     print("="*80)
@@ -343,13 +329,49 @@ def main():
     print("  PHASE 2: Model Training on Selected Features (future: with PCA-clustered data)")
     print("="*80 + "\n")
 
-    # Load clustering results and processed data
-    df_clustered, medoids, cluster_metadata = load_clustering_results()
-    X_processed_df = load_processed_data()
+    # Parse command-line arguments
+    if len(sys.argv) < 2:
+        print("Usage: python 2_generate_cluster_insights.py <data_folder>")
+        print("\nArguments:")
+        print("  data_folder - Path to folder containing clustering results and parameter/metric files")
+        sys.exit(1)
+    
+    data_folder = sys.argv[1]
 
-    # Identify metric columns from original data
-    metric_cols = identify_metric_columns(df_clustered)
-    print(f"Total features to analyze: {len(metric_cols)}")
+    # Load clustering results and processed data
+    df_clustered, medoids, cluster_metadata = load_clustering_results(data_folder)
+    X_processed_df = load_processed_data(data_folder)
+
+    # Load metric and parameter names from files (required - no fallback)
+    metrics_file = os.path.join(data_folder, 'metric_names.txt')
+    params_file = os.path.join(data_folder, 'parameter_names.txt')
+    
+    # Read metric columns from file
+    with open(metrics_file, 'r') as f:
+        metric_cols = [line.strip() for line in f.readlines() if line.strip()]
+    print(f"✓ Loaded metric names from {metrics_file}")
+    
+    # Read parameter names from file
+    with open(params_file, 'r') as f:
+        param_cols = [line.strip() for line in f.readlines() if line.strip()]
+    print(f"✓ Loaded parameter names from {params_file}")
+    
+    # Filter metric_cols to only include columns that exist in df_clustered
+    available_cols = set(df_clustered.columns)
+    missing_metric_cols = [col for col in metric_cols if col not in available_cols]
+    metric_cols = [col for col in metric_cols if col in available_cols]
+    
+    if missing_metric_cols:
+        print(f"\n⚠ Warning: {len(missing_metric_cols)} metric columns not found in clustered data:")
+        for col in missing_metric_cols:
+            print(f"    - {col}")
+        print(f"✓ Filtered to {len(metric_cols)} available metric columns")
+    
+    if not metric_cols:
+        print("✗ Error: No metric columns found in dataframe! Cannot proceed.")
+        sys.exit(1)
+    
+    print(f"\nTotal features to analyze: {len(metric_cols)}")
     print(f"Features: {metric_cols}\n")
 
     # Extract small clusters from metadata
@@ -383,11 +405,13 @@ def main():
         'X_standardized': X_standardized,
         'X_processed_df': X_processed_df,
         'metric_cols': metric_cols,
+        'param_cols': param_cols,
         'cluster_labels': cluster_labels,
         'n_clusters': n_clusters,
         'small_clusters': small_clusters,
-        'correlation_threshold': 0.5,
-        'n_iterations': None
+        'correlation_threshold': 0.75,
+        'n_iterations': None,
+        'data_folder': data_folder
     }
     
     # Run the pipeline
@@ -407,10 +431,11 @@ def main():
     print("="*80)
     model_summary = pipeline.get_result('step_phase1_model_training', key='models_summary')
     if model_summary is not None and not model_summary.empty:
-        print(model_summary[['cluster_id', 'n_samples', 'best_cv_auc', 'test_auc', 'f1_score']].to_string(index=False))
+        print(model_summary[['cluster_id', 'n_samples', 'test_auc', 'f1_score']].to_string(index=False))
 
     print("\n" + "="*80)
-    print("Analysis Complete! Generated Files:")
+    print("Analysis Complete! Generated Files in folder:")
+    print(f"  {data_folder}/")
     print("="*80)
     print("  PHASE 1 - Feature Selection:")
     print("    - workflows_classification_results.csv (per-cluster summary)")
@@ -434,9 +459,11 @@ def step_phase1_load_data(results, pipeline, **kwargs):
     X_standardized = kwargs.get('X_standardized')
     X_processed_df = kwargs.get('X_processed_df')
     metric_cols = kwargs.get('metric_cols')
+    param_cols = kwargs.get('param_cols')
     cluster_labels = kwargs.get('cluster_labels')
     n_clusters = kwargs.get('n_clusters')
     small_clusters = kwargs.get('small_clusters', set())
+    data_folder = kwargs.get('data_folder', 'data')
     
     return {
         'df_clustered': df_clustered,
@@ -444,9 +471,11 @@ def step_phase1_load_data(results, pipeline, **kwargs):
         'X_standardized': X_standardized,
         'X_processed_df': X_processed_df,
         'metric_cols': metric_cols,
+        'param_cols': param_cols,
         'cluster_labels': cluster_labels,
         'n_clusters': n_clusters,
-        'small_clusters': small_clusters
+        'small_clusters': small_clusters,
+        'data_folder': data_folder
     }
 
 
@@ -467,8 +496,9 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     cluster_labels = load_result.get('cluster_labels')
     n_clusters = load_result.get('n_clusters')
     small_clusters = load_result.get('small_clusters', set())
+    data_folder = load_result.get('data_folder', 'data')
     
-    correlation_threshold = kwargs.get('correlation_threshold', 0.5)
+    correlation_threshold = kwargs.get('correlation_threshold', 0.75)
     n_iterations = kwargs.get('n_iterations', None)
     
     if any(v is None for v in [X_standardized, metric_cols, cluster_labels]):
@@ -479,6 +509,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     print("="*80)
     
     all_results = []
+    tradeoff_analysis_per_cluster = {}  # Store trade-off data for later use in JSON
     
     for cluster_id in range(n_clusters):
         cluster_mask = cluster_labels == cluster_id
@@ -508,8 +539,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         
         # Feature selection (Steps 1-3 from paper)
         selected_features, selection_history = feature_selection_shap_iterative(
-            X_train, y_train, metric_cols, n_iterations=n_iterations, 
-            correlation_threshold=correlation_threshold
+            X_train, y_train, metric_cols, n_iterations, correlation_threshold
         )
         
         print(f"\n✓ Final selected features ({len(selected_features)}): {selected_features}")
@@ -537,7 +567,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         
         if selection_history_expanded:
             selection_df = pd.DataFrame(selection_history_expanded)
-            selection_df.to_csv(f'cluster_{cluster_id}_selection_history.csv', index=False)
+            selection_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_selection_history.csv'), index=False)
             print(f"✓ Saved cluster_{cluster_id}_selection_history.csv ({len(selection_df)} removed features tracked)")
         
         # Save trade-off analysis - SELECTED vs NON-SELECTED FEATURES
@@ -571,7 +601,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
                     x = X_cluster_df[feat1].values
                     y = X_cluster_df[feat2].values
                     actual_corr = np.corrcoef(x, y)[0, 1]
-                    
+                    print(f"  {feat1} ↔ {feat2} | Measure: {measure:.4f} ({measure_type}) | Actual Corr: {actual_corr:.4f}")
                     # Only include negative relationships as trade-offs
                     if actual_corr < 0:
                         correlation_results.append({
@@ -580,7 +610,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
                             'relationship_type': measure_type,
                             'relationship_strength': measure,
                             'actual_correlation': actual_corr,
-                            'is_tradeoff': 'Yes' if actual_corr < -0.9 else 'Weak'
+                            'is_tradeoff': 1 if actual_corr < - correlation_threshold else 0
                         })
                 except Exception as e:
                     pass
@@ -588,7 +618,10 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         if correlation_results:
             tradeoff_df = pd.DataFrame(correlation_results)
             tradeoff_df = tradeoff_df.sort_values('relationship_strength', ascending=False)
-            tradeoff_df.to_csv(f'cluster_{cluster_id}_tradeoff_analysis.csv', index=False)
+            tradeoff_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_tradeoff_analysis.csv'), index=False)
+            
+            # Store trade-off data for JSON output
+            tradeoff_analysis_per_cluster[cluster_id] = tradeoff_df.to_dict('records')
             
             print(f"\n✓ Found {len(tradeoff_df)} negative correlations (trade-offs) in Cluster {cluster_id}")
             print(f"✓ Saved cluster_{cluster_id}_tradeoff_analysis.csv")
@@ -602,12 +635,14 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         else:
             print(f"\n⚠ No negative correlations found in Cluster {cluster_id}")
             tradeoff_df = pd.DataFrame()
-            tradeoff_df.to_csv(f'cluster_{cluster_id}_tradeoff_analysis.csv', index=False)
+            tradeoff_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_tradeoff_analysis.csv'), index=False)
+            # Store empty list for this cluster
+            tradeoff_analysis_per_cluster[cluster_id] = []
     
     # Create summary results dataframe
     if all_results:
         results_summary = pd.DataFrame(all_results)
-        results_file = 'workflows_classification_results.csv'
+        results_file = os.path.join(data_folder, 'workflows_classification_results.csv')
         results_summary.to_csv(results_file, index=False)
         print(f"\n✓ Saved classification results summary to: {results_file}")
     else:
@@ -615,7 +650,8 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     
     return {
         'results_summary': results_summary,
-        'selected_features_per_cluster': {r['cluster_id']: r['selected_features'] for r in all_results}
+        'selected_features_per_cluster': {r['cluster_id']: r['selected_features'] for r in all_results},
+        'tradeoff_analysis_per_cluster': tradeoff_analysis_per_cluster  # Add trade-off data
     }
 
 
@@ -655,6 +691,7 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
     n_clusters = load_result.get('n_clusters')
     small_clusters = load_result.get('small_clusters', set())
     metric_cols = load_result.get('metric_cols')
+    data_folder = load_result.get('data_folder', 'data')
     
     selected_features_dict = feature_result.get('selected_features_per_cluster', {})
     
@@ -714,13 +751,11 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
         
         param_grid = {
             'max_depth': [3, 5, 7],
-            'learning_rate': [0.01, 0.1],
-            'n_estimators': [50, 100],
-            'subsample': [0.8, 1.0],
-            'colsample_bytree': [0.8, 1.0]
+            'n_estimators': [30, 60],
+            'eta': [0.15, 0.25],
         }
         
-        xgb_base = xgb.XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
+        xgb_base = xgb.XGBClassifier(random_state=42, eval_metric='auc', verbosity=0)
         grid_search = GridSearchCV(xgb_base, param_grid, cv=5, scoring='roc_auc', n_jobs=-1, verbose=0)
         grid_search.fit(X_train, y_train)
         
@@ -784,7 +819,6 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
             'n_samples': n_cluster,
             'n_features_used': len(selected_features),
             'selected_features': ','.join(selected_features),
-            'best_cv_auc': best_cv_score,
             'test_auc': auc,
             'precision': report['1']['precision'],
             'recall': report['1']['recall'],
@@ -801,7 +835,7 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
     # Create summary results dataframe
     if all_model_results:
         models_summary = pd.DataFrame(all_model_results)
-        models_file = 'workflows_model_evaluation_summary.csv'
+        models_file = os.path.join(data_folder, 'workflows_model_evaluation_summary.csv')
         models_summary.to_csv(models_file, index=False)
         print(f"\n✓ Saved model evaluation summary to: {models_file}")
     else:
@@ -813,28 +847,20 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
         'models_summary': models_summary
     }
 
+
 def step_phase1_decision_tree_rules(results, pipeline, **kwargs):
     """
-    Step 1.5: Decision Tree Rules for Workflows
-    
-    For each cluster:
-    1. Train a shallow decision tree on HYPERPARAMETERS (structural components)
-    2. Extract general interpretable rules for each CLUSTER (not individual workflows)
-    3. Generate human-readable rules explaining what defines cluster membership
-    
-    Output: General rules like:
-    "Cluster 0: IF max_depth > 11.5 AND fairness_method IN {'none', 'disparate_impact_remover'}"
-    
-    This answers: "What hyperparameter combination defines this cluster?"
+    Step 1.5: Using imodels built-in rule evaluation
     """
     try:
-        from sklearn.tree import DecisionTreeClassifier, _tree
+        from imodels import SkopeRulesClassifier
         from sklearn.preprocessing import LabelEncoder
         import numpy as np
         import pandas as pd
-    except ImportError:
-        print("⚠ Warning: sklearn not available for decision tree rules.")
-        return {'status': 'skipped', 'message': 'sklearn not available'}
+        import os
+    except ImportError as e:
+        print(f"⚠ Warning: {e}")
+        return {'status': 'skipped', 'message': str(e)}
     
     load_result = pipeline.get_result('step_phase1_load_data', default={})
     
@@ -842,177 +868,205 @@ def step_phase1_decision_tree_rules(results, pipeline, **kwargs):
     n_clusters = load_result.get('n_clusters')
     small_clusters = load_result.get('small_clusters', set())
     df_clustered = load_result.get('df_clustered')
+    param_cols = load_result.get('param_cols')
+    data_folder = load_result.get('data_folder', 'data')
     
-    if any(v is None for v in [cluster_labels, n_clusters, df_clustered]):
-        raise KeyError("step_phase1_load_data: Required data not available for decision tree rules")
+    if any(v is None for v in [cluster_labels, n_clusters, df_clustered, param_cols]):
+        raise KeyError("Required data not available")
     
-    # Define hyperparameters (structural components)
-    hyperparameters = ['criterion', 'fairness method', 'random state', 
-                       'max depth', 'normalization', 'n estimators']
+    # Sanitize column names
+    hyperparameters = [col.replace(' ', '_') for col in param_cols]
+    df_clustered.columns = [col.replace(' ', '_') for col in df_clustered.columns]
     
     print("\n" + "="*80)
-    print("PHASE 1 STEP 5: DECISION TREE RULES FOR CLUSTERS (HYPERPARAMETER-BASED)")
-    print("Extracting general decision rules that define each cluster")
+    print("PHASE 1 STEP 5: CLUSTER RULES (Using Built-in Rule Evaluation)")
     print("="*80)
     
-    le_dict = {}  # Store label encoders for decoding
-    
-    # Prepare hyperparameter data
+    # Prepare data
     X_hyperparam = df_clustered[hyperparameters].copy()
     
-    # Encode categorical hyperparameters
+    label_encoders = {}
+    categorical_mappings = {}
+    
     for col in X_hyperparam.columns:
         if X_hyperparam[col].dtype == 'object':
             le = LabelEncoder()
             X_hyperparam[col] = le.fit_transform(X_hyperparam[col])
-            le_dict[col] = le
+            label_encoders[col] = le
+            categorical_mappings[col] = {i: val for i, val in enumerate(le.classes_)}
     
-    X_hyperparam_array = X_hyperparam.values
+    X_array = X_hyperparam.values
     y_cluster = cluster_labels
     
-    # Train a decision tree on hyperparameters to predict cluster
-    print(f"\nTraining Decision Tree on {len(hyperparameters)} hyperparameters to predict cluster membership...")
-    
-    dt = DecisionTreeClassifier(
-        max_depth=5,
-        min_samples_leaf=max(2, len(df_clustered) // 50),
-        random_state=42
-    )
-    dt.fit(X_hyperparam_array, y_cluster)
-    
-    print(f"Decision Tree trained with max_depth=5")
-    print(f"Tree Accuracy on all data: {dt.score(X_hyperparam_array, y_cluster):.4f}")
-    
-    # Helper function to extract all paths to leaf nodes (general cluster rules)
-    def extract_cluster_rules(tree, feature_names, le_dict):
-        """
-        Extract general rules for each cluster by traversing to leaf nodes.
-        Returns one rule per cluster (or multiple if cluster appears in multiple leaves).
-        """
-        tree_ = tree.tree_
-        feature_name = [
-            feature_names[i] if i != _tree.TREE_UNDEFINED else "undefined!"
-            for i in tree_.feature
-        ]
+    def decode_categorical_in_rule(rule_str, categorical_mappings, label_encoders):
+        """Decode categorical features"""
+        import re
+        decoded = rule_str
         
-        cluster_rules = {}
-        
-        def recurse(node, path_conditions):
-            if tree_.feature[node] != _tree.TREE_UNDEFINED:
-                # Internal node - split point
-                feature_idx = tree_.feature[node]
-                threshold = tree_.threshold[node]
-                feature = feature_name[node]
-                
-                # Left branch (<=)
-                left_conditions = path_conditions.copy()
-                if feature in le_dict:
-                    le = le_dict[feature]
-                    valid_encoded = [i for i in range(len(le.classes_)) if i <= threshold]
-                    valid_values = [le.classes_[i] for i in valid_encoded]
-                    if len(valid_values) == 1:
-                        left_conditions.append(f"{feature} = '{valid_values[0]}'")
+        for col, mapping in categorical_mappings.items():
+            if col not in label_encoders:
+                continue
+            
+            le = label_encoders[col]
+            all_classes = le.classes_
+            
+            patterns = [
+                (rf'{col}\s*<=\s*([\d.]+)', '<='),
+                (rf'{col}\s*>\s*([\d.]+)', '>'),
+            ]
+            
+            for pattern, operator in patterns:
+                matches = list(re.finditer(pattern, decoded))
+                for match in matches:
+                    threshold = float(match.group(1))
+                    original_condition = match.group(0)
+                    
+                    if operator == '<=':
+                        valid_indices = [i for i in range(len(all_classes)) if i <= threshold]
                     else:
-                        values_str = ', '.join([f"'{v}'" for v in valid_values])
-                        left_conditions.append(f"{feature} IN {{{values_str}}}")
-                else:
-                    left_conditions.append(f"{feature} ≤ {threshold:.2f}")
-                
-                recurse(tree_.children_left[node], left_conditions)
-                
-                # Right branch (>)
-                right_conditions = path_conditions.copy()
-                if feature in le_dict:
-                    le = le_dict[feature]
-                    valid_encoded = [i for i in range(len(le.classes_)) if i > threshold]
-                    valid_values = [le.classes_[i] for i in valid_encoded]
-                    if len(valid_values) == 1:
-                        right_conditions.append(f"{feature} = '{valid_values[0]}'")
+                        valid_indices = [i for i in range(len(all_classes)) if i > threshold]
+                    
+                    valid_categories = [all_classes[i] for i in valid_indices]
+                    
+                    if len(valid_categories) == 1:
+                        replacement = f"{col} = '{valid_categories[0]}'"
                     else:
-                        values_str = ', '.join([f"'{v}'" for v in valid_values])
-                        right_conditions.append(f"{feature} IN {{{values_str}}}")
-                else:
-                    right_conditions.append(f"{feature} > {threshold:.2f}")
-                
-                recurse(tree_.children_right[node], right_conditions)
-            else:
-                # Leaf node - extract cluster and rule
-                cluster_id = int(np.argmax(tree_.value[node][0]))
-                n_samples = int(tree_.n_node_samples[node])
-                rule_str = " AND ".join(path_conditions) if path_conditions else "All workflows"
-                
-                if cluster_id not in cluster_rules:
-                    cluster_rules[cluster_id] = []
-                cluster_rules[cluster_id].append({
-                    'rule': rule_str,
-                    'n_samples': n_samples
-                })
+                        categories_str = ', '.join([f"'{c}'" for c in valid_categories])
+                        replacement = f"{col} IN {{{categories_str}}}"
+                    
+                    decoded = decoded.replace(original_condition, replacement, 1)
         
-        recurse(0, [])
-        return cluster_rules
+        return decoded
     
-    # Extract general cluster rules
-    cluster_rules = extract_cluster_rules(dt, hyperparameters, le_dict)
-    
-    # Display cluster rules
-    print("\n" + "="*80)
-    print("GENERAL CLUSTER RULES")
-    print("="*80)
-    
+    all_cluster_rules = {}
     cluster_rules_summary = []
-    for cluster_id in sorted(cluster_rules.keys()):
+    
+    for cluster_id in range(n_clusters):
         if cluster_id in small_clusters:
             continue
         
-        rules = cluster_rules[cluster_id]
-        n_workflows = df_clustered[df_clustered['cluster'] == cluster_id].shape[0]
+        y_binary = (y_cluster == cluster_id).astype(int)
+        n_cluster_samples = y_binary.sum()
         
         print(f"\n{'─'*80}")
-        print(f"Cluster {cluster_id}: {n_workflows} workflows")
+        print(f"Cluster {cluster_id} ({n_cluster_samples} workflows)")
         print(f"{'─'*80}")
         
-        for idx, rule_info in enumerate(rules, 1):
-            rule = rule_info['rule']
-            n_samples = rule_info['n_samples']
+        clf = SkopeRulesClassifier(
+            max_depth_duplication=3,
+            n_estimators=30,
+            precision_min=0.5,
+            recall_min=0.1,
+            max_depth=4,
+            random_state=42
+        )
+        
+        try:
+            clf.fit(X_array, y_binary, feature_names=hyperparameters)
             
-            print(f"\nRule {idx}: IF {rule}")
-            print(f"         THEN → Cluster {cluster_id}")
-            print(f"         ({n_samples} workflows match this rule)")
+            rules_list = clf.rules_
+            print(f"  ✓ Extracted {len(rules_list)} rules")
             
-            cluster_rules_summary.append({
-                'cluster_id': cluster_id,
-                'rule_number': idx,
-                'rule': rule,
-                'n_workflows': n_samples
-            })
+            if len(rules_list) == 0:
+                continue
+            
+            # Get cluster-specific data
+            cluster_mask = (y_cluster == cluster_id)
+            X_cluster = X_array[cluster_mask]
+            df_cluster = X_hyperparam[cluster_mask]
+            
+            cluster_rules = []
+            for rule_obj in rules_list:
+                rule_str = rule_obj.rule
+                precision, recall, nb_samples_total = rule_obj.args
+                
+                # USE BUILT-IN: Query the rule on cluster data using pandas
+                try:
+                    # imodels internally uses df.query() - we do the same
+                    satisfied_mask = df_cluster.query(rule_str).index
+                    n_workflows_in_cluster = len(satisfied_mask)
+                    
+                    # Cluster-specific recall
+                    cluster_recall = n_workflows_in_cluster / n_cluster_samples if n_cluster_samples > 0 else 0
+                    
+                except Exception as e:
+                    print(f"    ⚠ Could not evaluate rule: {rule_str}")
+                    continue
+                
+                decoded_rule = decode_categorical_in_rule(rule_str, categorical_mappings, label_encoders)
+                
+                if precision + cluster_recall > 0:
+                    f1_score = 2 * (precision * cluster_recall) / (precision + cluster_recall)
+                else:
+                    f1_score = 0.0
+                
+                # Score based on cluster-specific counts
+                significance_weight = np.log1p(n_workflows_in_cluster)
+                combined_score = f1_score * significance_weight
+                
+                cluster_rules.append({
+                    'rule': decoded_rule,
+                    'precision': precision,
+                    'recall': cluster_recall,
+                    'f1_score': f1_score,
+                    'n_workflows_in_cluster': int(n_workflows_in_cluster),
+                    'combined_score': combined_score
+                })
+            
+            cluster_rules = sorted(cluster_rules, key=lambda x: x['combined_score'], reverse=True)
+            all_cluster_rules[cluster_id] = cluster_rules
+            
+            print(f"\n  Top rules (by F1 × cluster coverage):")
+            for idx, rule_info in enumerate(cluster_rules[:3], 1):
+                print(f"\n  Rule {idx}: {rule_info['rule']}")
+                print(f"           F1: {rule_info['f1_score']:.3f} | "
+                      f"Precision: {rule_info['precision']:.3f} | "
+                      f"Recall: {rule_info['recall']:.3f}")
+                print(f"           Covers {rule_info['n_workflows_in_cluster']}/{n_cluster_samples} workflows in this cluster")
+                
+                cluster_rules_summary.append({
+                    'cluster_id': cluster_id,
+                    'rule_number': idx,
+                    'rule': rule_info['rule'],
+                    'precision': rule_info['precision'],
+                    'recall': rule_info['recall'],
+                    'f1_score': rule_info['f1_score'],
+                    'n_workflows_in_cluster': rule_info['n_workflows_in_cluster'],
+                    'cluster_size': n_cluster_samples,
+                    'combined_score': rule_info['combined_score']
+                })
+        
+        except Exception as e:
+            print(f"  ⚠ Error: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
     
-    # Save cluster rules to CSV
     if cluster_rules_summary:
         rules_df = pd.DataFrame(cluster_rules_summary)
-        rules_file = 'cluster_decision_rules.csv'
+        rules_file = os.path.join(data_folder, 'cluster_decision_rules.csv')
         rules_df.to_csv(rules_file, index=False)
-        print(f"\n✓ Saved cluster decision rules to: {rules_file}")
-        print(f"  Total clusters with rules: {len(cluster_rules)}")
+        print(f"\n✓ Saved to: {rules_file}")
     else:
         rules_df = pd.DataFrame()
     
-    # Also create a simple summary
     print("\n" + "="*80)
-    print("CLUSTER SIGNATURE SUMMARY")
+    print("BEST RULE PER CLUSTER")
     print("="*80)
-    for cluster_id in sorted(cluster_rules.keys()):
-        if cluster_id in small_clusters:
-            continue
-        rules = cluster_rules[cluster_id]
-        main_rule = rules[0]['rule']  # Primary rule
-        n_workflows = df_clustered[df_clustered['cluster'] == cluster_id].shape[0]
-        print(f"Cluster {cluster_id} ({n_workflows} workflows): {main_rule}")
+    for cluster_id in sorted(all_cluster_rules.keys()):
+        rules = all_cluster_rules[cluster_id]
+        if rules:
+            main_rule = rules[0]
+            n_total = df_clustered[df_clustered['cluster'] == cluster_id].shape[0]
+            print(f"\nCluster {cluster_id}: {main_rule['rule']}")
+            print(f"  [F1: {main_rule['f1_score']:.3f}, covers {main_rule['n_workflows_in_cluster']}/{n_total} workflows]")
     
     return {
         'status': 'completed',
-        'cluster_rules': cluster_rules,
+        'cluster_rules': all_cluster_rules,
         'rules_summary': rules_df
     }
+
 
 
 def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
@@ -1042,7 +1096,10 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
     n_clusters = load_result.get('n_clusters')
     small_clusters = load_result.get('small_clusters', set())
     metric_cols = load_result.get('metric_cols')
-    
+    param_cols = load_result.get('param_cols')
+    data_folder = load_result.get('data_folder', 'data')
+    correlation_threshold = kwargs.get('correlation_threshold', 0.75)
+
     results_summary = feature_result.get('results_summary', pd.DataFrame())
     models_summary = model_result.get('models_summary', pd.DataFrame())
     rules_summary = rules_result.get('rules_summary', pd.DataFrame())
@@ -1054,9 +1111,8 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
     print("PHASE 1 STEP 6: GENERATING COMPREHENSIVE CLUSTER STATISTICS")
     print("="*80)
     
-    # Define hyperparameters
-    hyperparameters = ['criterion', 'fairness method', 'random state', 
-                       'max depth', 'normalization', 'n estimators']
+    # Use loaded hyperparameters
+    hyperparameters = param_cols
     
     cluster_insights_dict = {}
     
@@ -1134,7 +1190,6 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                     quality_level = "Poor - Cluster is not well distinguished"
                 
                 cluster_insights['model_evaluation'] = {
-                    'best_cv_auc': round(float(row['best_cv_auc']), 4),
                     'test_auc': round(float(row['test_auc']), 4),
                     'precision': round(float(row['precision']), 4),
                     'recall': round(float(row['recall']), 4),
@@ -1152,27 +1207,25 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                 cluster_insights['high_shap_features'] = high_shap
         
         # ===== TRADE-OFF ANALYSIS =====
-        try:
-            tradeoff_file = f'cluster_{cluster_id}_tradeoff_analysis.csv'
-            tradeoff_df = pd.read_csv(tradeoff_file)
-            if not tradeoff_df.empty:
-                # Filter to only strong trade-offs (correlation < -0.9)
-                strong_tradeoffs = tradeoff_df[tradeoff_df['actual_correlation'] < -0.9]
-                
-                cluster_insights['trade_off_analysis'] = {
-                    'n_strong_tradeoffs': len(strong_tradeoffs),
-                    'top_tradeoffs': []
-                }
-                
-                for idx, row in strong_tradeoffs.head(5).iterrows():
-                    cluster_insights['trade_off_analysis']['top_tradeoffs'].append({
-                        'metric_1': row['metric_1'],
-                        'metric_2': row['metric_2'],
-                        'correlation': round(float(row['actual_correlation']), 4),
-                        'relationship_strength': round(float(row['relationship_strength']), 4)
-                    })
-        except FileNotFoundError:
-            pass
+        # Get trade-off data from feature selection results
+        tradeoff_data_per_cluster = feature_result.get('tradeoff_analysis_per_cluster', {})
+        cluster_tradeoffs = tradeoff_data_per_cluster.get(cluster_id, [])
+        
+        if cluster_tradeoffs:
+            # Convert to list of dicts with rounded values
+            strong_tradeoffs = []
+            
+            for tradeoff in cluster_tradeoffs:
+                # Round numeric values
+                if(tradeoff["is_tradeoff"] == 1):
+                    strong_tradeoffs.append(tradeoff)
+            
+            cluster_insights['trade_off_analysis'] = {
+                'n_total_tradeoffs': len(cluster_tradeoffs),
+                'n_strong_tradeoffs': len(strong_tradeoffs),
+                'strong_threshold': -correlation_threshold,
+                'strong_tradeoffs': strong_tradeoffs
+            }
         
         # ===== HYPERPARAMETER PATTERNS =====
         for hyperparam in hyperparameters:
@@ -1188,18 +1241,27 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                     'value_distribution': {str(k): int(v) for k, v in value_counts.items()}
                 }
         
-        # ===== DECISION TREE RULES =====
+        # ===== DECISION TREE RULES WITH SCORES =====
         if not rules_summary.empty:
-            cluster_rules = rules_summary[rules_summary['cluster_id'] == cluster_id]
-            if not cluster_rules.empty:
-                # Get unique rules (sample) - using 'rule' column instead
-                unique_rules = cluster_rules['rule'].unique()[:5] if 'rule' in cluster_rules.columns else []
-                cluster_insights['decision_tree_rules'] = list(unique_rules)
+            cluster_rules_filtered = rules_summary[rules_summary['cluster_id'] == cluster_id]
+            if not cluster_rules_filtered.empty:
+                # Include rules with their scores
+                rules_with_scores = []
+                for idx, row in cluster_rules_filtered.iterrows():
+                    rules_with_scores.append({
+                        'rule': row['rule'],
+                        'f1_score': float(row['f1_score']),
+                        'precision': float(row['precision']),
+                        'recall': float(row['recall']),
+                        'n_workflows_in_cluster': int(row['n_workflows_in_cluster']),
+                        'combined_score': float(row['combined_score']) if 'combined_score' in row and pd.notna(row['combined_score']) else None
+                    })
+                cluster_insights['decision_tree_rules'] = rules_with_scores
         
         cluster_insights_dict[str(cluster_id)] = cluster_insights
     
     # ===== SAVE COMPREHENSIVE JSON =====
-    json_file = 'clusters_comprehensive_insights.json'
+    json_file = os.path.join(data_folder, 'clusters_comprehensive_insights.json')
     with open(json_file, 'w') as f:
         json.dump(cluster_insights_dict, f, indent=2, cls=NumpyEncoder)
     
@@ -1216,14 +1278,14 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
         if insights['feature_selection']:
             print(f"  Selected Features: {insights['feature_selection']['n_features_selected']}")
         if insights['model_evaluation']:
-            print(f"  Model AUC (test): {insights['model_evaluation']['test_auc']}")
-            print(f"  F1 Score: {insights['model_evaluation']['f1_score']}")
-            print(f"  Model Quality Score: {insights['model_evaluation']['model_quality_score']}")
             print(f"  Quality: {insights['model_evaluation']['quality_interpretation']}")
         if insights['high_shap_features']:
             print(f"  High SHAP Features ({len(insights['high_shap_features'])}): {', '.join(insights['high_shap_features'][:3])}...")
         if insights['trade_off_analysis'] and 'n_strong_tradeoffs' in insights['trade_off_analysis']:
             print(f"  Strong Trade-offs: {insights['trade_off_analysis']['n_strong_tradeoffs']}")
+        if insights["decision_tree_rules"]:
+            print(f"  Decision Tree Rules: {len(insights['decision_tree_rules'])}")
+            print(f"    Top Rule: {insights['decision_tree_rules'][0]['rule']}")
     
     return {
         'status': 'completed',
