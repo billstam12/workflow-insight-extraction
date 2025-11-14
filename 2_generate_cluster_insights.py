@@ -486,7 +486,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     Per-cluster feature selection:
     - Train-test split (80-20)
     - Multi-step feature selection (correlation, SHAP-based)
-    - Track removed features and trade-offs
+    - Track removed features
     """
     load_result = pipeline.get_result('step_phase1_load_data', default={})
     
@@ -509,7 +509,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     print("="*80)
     
     all_results = []
-    tradeoff_analysis_per_cluster = {}  # Store trade-off data for later use in JSON
+    correlation_analysis_per_cluster = {}  # Store correlation analysis for removed features
     
     for cluster_id in range(n_clusters):
         cluster_mask = cluster_labels == cluster_id
@@ -556,7 +556,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         }
         all_results.append(cluster_result)
         
-        # Save selection history
+        # Save selection history with correlation data already embedded
         selection_history_expanded = []
         for entry in selection_history:
             for removed_feat, relation_measure in entry['removed_details']:
@@ -573,12 +573,108 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
             selection_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_selection_history.csv'), index=False)
             print(f"✓ Saved cluster_{cluster_id}_selection_history.csv ({len(selection_df)} removed features tracked)")
         
-        # Save trade-off analysis - SELECTED vs NON-SELECTED FEATURES
+        # Extract correlation analysis from selection history (removed features were correlated to selected by design)
         print("\n" + "-"*80)
-        print(f"Computing Trade-off Metrics: Selected vs Non-Selected Features")
+        print(f"Extracting Correlation Analysis for Removed Features")
         print("-"*80)
         
+        correlation_results = []
+        for entry in selection_history:
+            selected_feat = entry['selected_feature']
+            for removed_feat, relation_measure in entry['removed_details']:
+                if removed_feat != selected_feat:  # Skip the selected feature itself
+                    correlation_results.append({
+                        'removed_feature': removed_feat,
+                        'selected_feature': selected_feat,
+                        'relationship_strength': relation_measure
+                    })
+        
+        if correlation_results:
+            # Store correlation analysis for JSON output
+            correlation_analysis_per_cluster[cluster_id] = correlation_results
+            
+            print(f"\n✓ Extracted {len(correlation_results)} removed-to-selected feature correlations from feature selection")
+            print("\nTop Correlations (Removed vs Selected):")
+            sorted_corr = sorted(correlation_results, key=lambda x: x['relationship_strength'], reverse=True)
+            for idx, corr in enumerate(sorted_corr[:10], 1):
+                print(f"  {corr['removed_feature']} (removed) ↔ {corr['selected_feature']} (selected)")
+                print(f"    Relationship Strength: {corr['relationship_strength']:.4f}\n")
+        else:
+            print(f"\n⚠ No correlation analysis available")
+            correlation_analysis_per_cluster[cluster_id] = []
+    
+    # Create summary results dataframe
+    if all_results:
+        results_summary = pd.DataFrame(all_results)
+        results_file = os.path.join(data_folder, 'workflows_classification_results.csv')
+        results_summary.to_csv(results_file, index=False)
+        print(f"\n✓ Saved classification results summary to: {results_file}")
+    else:
+        results_summary = pd.DataFrame()
+    
+    return {
+        'results_summary': results_summary,
+        'selected_features_per_cluster': {r['cluster_id']: r['selected_features'] for r in all_results},
+        'correlation_analysis_per_cluster': correlation_analysis_per_cluster
+    }
+
+
+# ============ PIPELINE STEPS - PHASE 1 CONTINUED: TRADE-OFF ANALYSIS ============
+
+def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
+    """
+    Step 1.3: PHASE 1 - Trade-off Analysis (Selected vs Non-Selected Features)
+    
+    For each cluster:
+    - Identify selected vs non-selected features
+    - Compute relationship measures between feature pairs
+    - Save trade-off analysis: selected features vs non-selected features
+    - Track negative correlations as trade-offs
+    """
+    load_result = pipeline.get_result('step_phase1_load_data', default={})
+    feature_result = pipeline.get_result('step_phase1_feature_selection', default={})
+    
+    X_standardized = load_result.get('X_standardized')
+    metric_cols = load_result.get('metric_cols')
+    cluster_labels = load_result.get('cluster_labels')
+    n_clusters = load_result.get('n_clusters')
+    small_clusters = load_result.get('small_clusters', set())
+    data_folder = load_result.get('data_folder', 'data')
+    
+    selected_features_dict = feature_result.get('selected_features_per_cluster', {})
+    correlation_threshold = kwargs.get('correlation_threshold', 0.75)
+    
+    if any(v is None for v in [X_standardized, metric_cols, cluster_labels]):
+        raise KeyError("step_phase1_load_data: Required data not loaded for trade-off analysis")
+    
+    print("\n" + "="*80)
+    print("PHASE 1: TRADE-OFF ANALYSIS (Selected vs Non-Selected Features)")
+    print("="*80)
+    
+    tradeoff_analysis_per_cluster = {}
+    
+    for cluster_id in range(n_clusters):
+        if cluster_id in small_clusters:
+            print(f"\n⊘ Cluster {cluster_id}: SKIPPED (small cluster)")
+            tradeoff_analysis_per_cluster[cluster_id] = []
+            continue
+        
         cluster_mask = cluster_labels == cluster_id
+        
+        # Get selected features for this cluster
+        selected_feat_str = selected_features_dict.get(cluster_id, '')
+        if not selected_feat_str:
+            print(f"\n⊘ Cluster {cluster_id}: No features selected, skipping trade-off analysis")
+            tradeoff_analysis_per_cluster[cluster_id] = []
+            continue
+        
+        selected_features = [f.strip() for f in selected_feat_str.split(',') if f.strip()]
+        
+        print(f"\n{'='*80}")
+        print(f"CLUSTER {cluster_id}: Trade-off Analysis")
+        print(f"{'='*80}")
+        
+        # Extract cluster data
         X_cluster = X_standardized[cluster_mask]
         X_cluster_df = pd.DataFrame(X_cluster, columns=metric_cols)
         
@@ -586,15 +682,14 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         correlation_results = []
         
         # Separate selected and non-selected features
-        selected_features_list = selected_features if isinstance(selected_features, list) else []
-        non_selected_features = [f for f in metric_cols if f not in selected_features_list]
+        non_selected_features = [f for f in metric_cols if f not in selected_features]
         
-        print(f"Selected features: {len(selected_features_list)}")
+        print(f"Selected features: {len(selected_features)}")
         print(f"Non-selected features: {len(non_selected_features)}")
         print(f"Analyzing pairs: selected vs non-selected (excluding non-selected vs non-selected)")
         
         # Analyze pairs: selected vs non-selected
-        for feat1 in selected_features_list:
+        for feat1 in selected_features:
             for feat2 in non_selected_features:
                 try:
                     measure, measure_type = compute_relationship_measure(
@@ -642,19 +737,9 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
             # Store empty list for this cluster
             tradeoff_analysis_per_cluster[cluster_id] = []
     
-    # Create summary results dataframe
-    if all_results:
-        results_summary = pd.DataFrame(all_results)
-        results_file = os.path.join(data_folder, 'workflows_classification_results.csv')
-        results_summary.to_csv(results_file, index=False)
-        print(f"\n✓ Saved classification results summary to: {results_file}")
-    else:
-        results_summary = pd.DataFrame()
-    
     return {
-        'results_summary': results_summary,
-        'selected_features_per_cluster': {r['cluster_id']: r['selected_features'] for r in all_results},
-        'tradeoff_analysis_per_cluster': tradeoff_analysis_per_cluster  # Add trade-off data
+        'status': 'completed',
+        'tradeoff_analysis_per_cluster': tradeoff_analysis_per_cluster
     }
 
 
@@ -1092,6 +1177,7 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
     feature_result = pipeline.get_result('step_phase1_feature_selection', default={})
     model_result = pipeline.get_result('step_phase1_model_training', default={})
     rules_result = pipeline.get_result('step_phase1_decision_tree_rules', default={})
+    tradeoff_result = pipeline.get_result('step_phase1_tradeoff_analysis', default={})
     
     df_clustered = load_result.get('df_clustered')
     medoids = load_result.get('medoids')
@@ -1101,6 +1187,7 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
     metric_cols = load_result.get('metric_cols')
     param_cols = load_result.get('param_cols')
     data_folder = load_result.get('data_folder', 'data')
+    X_standardized = load_result.get('X_standardized')
     correlation_threshold = kwargs.get('correlation_threshold', 0.75)
 
     results_summary = feature_result.get('results_summary', pd.DataFrame())
@@ -1147,6 +1234,7 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
             'feature_selection': {},
             'model_evaluation': {},
             'high_shap_features': [],
+            'correlation_analysis': {},
             'trade_off_analysis': {},
             'hyperparameter_patterns': {},
             'decision_tree_rules': []
@@ -1163,6 +1251,68 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                     'selected_features': selected_feats,
                     'n_metrics_total': len(metric_cols)
                 }
+                
+                # Compute feature statistics comparing cluster vs others
+                feature_stats = {}
+                for feat in selected_feats:
+                    if feat in metric_cols:
+                        feat_idx = metric_cols.index(feat)
+                        
+                        # Get values for this cluster
+                        cluster_values = X_standardized[cluster_mask, feat_idx]
+                        cluster_mean = float(np.mean(cluster_values))
+                        cluster_std = float(np.std(cluster_values))
+                        
+                        # Get values for all other clusters
+                        other_mask = cluster_labels != cluster_id
+                        other_values = X_standardized[other_mask, feat_idx]
+                        other_mean = float(np.mean(other_values))
+                        other_std = float(np.std(other_values))
+                        
+                        # Compute quartiles for classification
+                        all_values = X_standardized[:, feat_idx]
+                        q25, q50, q75 = np.percentile(all_values, [25, 50, 75])
+                        
+                        # Classify cluster's mean value
+                        if cluster_mean <= q25:
+                            value_category = "low"
+                        elif cluster_mean <= q75:
+                            value_category = "mid"
+                        else:
+                            value_category = "high"
+                        
+                        # Calculate how distinctive this feature is for the cluster
+                        distinctiveness = abs(cluster_mean - other_mean) / (other_std + 1e-6)
+                        
+                        feature_stats[feat] = {
+                            'cluster_mean': round(cluster_mean, 4),
+                            'cluster_std': round(cluster_std, 4),
+                            'other_clusters_mean': round(other_mean, 4),
+                            'other_clusters_std': round(other_std, 4),
+                            'value_category': value_category,
+                            'distinctiveness_score': round(distinctiveness, 4),
+                            'quartiles': {
+                                'q25': round(float(q25), 4),
+                                'q50': round(float(q50), 4),
+                                'q75': round(float(q75), 4)
+                            }
+                        }
+                
+                cluster_insights['feature_selection']['feature_statistics'] = feature_stats
+        
+        # ===== CORRELATION ANALYSIS FOR REMOVED FEATURES =====
+        # Get correlation analysis data from feature selection step
+        correlation_data_per_cluster = feature_result.get('correlation_analysis_per_cluster', {})
+        cluster_correlations = correlation_data_per_cluster.get(cluster_id, [])
+        
+        if cluster_correlations:
+            # Find strongest correlations
+            strongest_correlations = sorted(cluster_correlations, key=lambda x: x['relationship_strength'], reverse=True)
+            
+            cluster_insights['correlation_analysis'] = {
+                'n_removed_features': len(cluster_correlations),
+                'strongest_correlations': strongest_correlations 
+            }
         
         # ===== MODEL EVALUATION INSIGHTS =====
         if not models_summary.empty:
@@ -1207,11 +1357,60 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                     }
                 }
                 
-                cluster_insights['high_shap_features'] = high_shap
+                # Compute statistics for high SHAP features
+                shap_feature_stats = {}
+                for feat in high_shap:
+                    if feat in metric_cols:
+                        feat_idx = metric_cols.index(feat)
+                        
+                        # Get values for this cluster
+                        cluster_values = X_standardized[cluster_mask, feat_idx]
+                        cluster_mean = float(np.mean(cluster_values))
+                        cluster_std = float(np.std(cluster_values))
+                        
+                        # Get values for all other clusters
+                        other_mask = cluster_labels != cluster_id
+                        other_values = X_standardized[other_mask, feat_idx]
+                        other_mean = float(np.mean(other_values))
+                        other_std = float(np.std(other_values))
+                        
+                        # Compute quartiles for classification
+                        all_values = X_standardized[:, feat_idx]
+                        q25, q50, q75 = np.percentile(all_values, [25, 50, 75])
+                        
+                        # Classify cluster's mean value
+                        if cluster_mean <= q25:
+                            value_category = "low"
+                        elif cluster_mean <= q75:
+                            value_category = "mid"
+                        else:
+                            value_category = "high"
+                        
+                        # Calculate how distinctive this feature is for the cluster
+                        distinctiveness = abs(cluster_mean - other_mean) / (other_std + 1e-6)
+                        
+                        shap_feature_stats[feat] = {
+                            'cluster_mean': round(cluster_mean, 4),
+                            'cluster_std': round(cluster_std, 4),
+                            'other_clusters_mean': round(other_mean, 4),
+                            'other_clusters_std': round(other_std, 4),
+                            'value_category': value_category,
+                            'distinctiveness_score': round(distinctiveness, 4),
+                            'quartiles': {
+                                'q25': round(float(q25), 4),
+                                'q50': round(float(q50), 4),
+                                'q75': round(float(q75), 4)
+                            }
+                        }
+                
+                cluster_insights['high_shap_features'] = {
+                    'features': high_shap,
+                    'feature_statistics': shap_feature_stats
+                }
         
         # ===== TRADE-OFF ANALYSIS =====
-        # Get trade-off data from feature selection results
-        tradeoff_data_per_cluster = feature_result.get('tradeoff_analysis_per_cluster', {})
+        # Get trade-off data from trade-off analysis step
+        tradeoff_data_per_cluster = tradeoff_result.get('tradeoff_analysis_per_cluster', {})
         cluster_tradeoffs = tradeoff_data_per_cluster.get(cluster_id, [])
         
         if cluster_tradeoffs:
@@ -1279,11 +1478,32 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
         print(f"\nCluster {cluster_id}:")
         print(f"  Workflows: {insights['metadata']['n_workflows']} ({insights['metadata']['percentage_of_total']}%)")
         if insights['feature_selection']:
-            print(f"  Selected Features: {insights['feature_selection']['n_features_selected']}")
+            n_selected = insights['feature_selection']['n_features_selected']
+            print(f"  Selected Features: {n_selected}")
+            # Show representative features with their categories
+            if 'feature_statistics' in insights['feature_selection']:
+                print(f"    Representative features (low/mid/high):")
+                feat_stats = insights['feature_selection']['feature_statistics']
+                for feat, stats in list(feat_stats.items())[:3]:
+                    category = stats['value_category']
+                    dist_score = stats['distinctiveness_score']
+                    print(f"      - {feat}: {category.upper()} (distinctiveness: {dist_score:.2f})")
+        if insights['correlation_analysis'] and 'n_removed_features' in insights['correlation_analysis']:
+            print(f"  Correlation Analysis: {insights['correlation_analysis']['n_removed_features']} removed features analyzed")
         if insights['model_evaluation']:
             print(f"  Quality: {insights['model_evaluation']['quality_interpretation']}")
         if insights['high_shap_features']:
-            print(f"  High SHAP Features ({len(insights['high_shap_features'])}): {', '.join(insights['high_shap_features'][:3])}...")
+            features_list = insights['high_shap_features'] if isinstance(insights['high_shap_features'], list) else insights['high_shap_features'].get('features', [])
+            n_features = len(features_list)
+            print(f"  High SHAP Features: {n_features}")
+            # Show SHAP features with their categories
+            if isinstance(insights['high_shap_features'], dict) and 'feature_statistics' in insights['high_shap_features']:
+                print(f"    Key discriminative features (low/mid/high):")
+                shap_stats = insights['high_shap_features']['feature_statistics']
+                for feat, stats in list(shap_stats.items())[:3]:
+                    category = stats['value_category']
+                    dist_score = stats['distinctiveness_score']
+                    print(f"      - {feat}: {category.upper()} (distinctiveness: {dist_score:.2f})")
         if insights['trade_off_analysis'] and 'n_strong_tradeoffs' in insights['trade_off_analysis']:
             print(f"  Strong Trade-offs: {insights['trade_off_analysis']['n_strong_tradeoffs']}")
         if insights["decision_tree_rules"]:
@@ -1304,6 +1524,7 @@ def build_default_insights_pipeline():
     # PHASE 1: Feature Selection & Model Training on Original Data
     pipeline.add_step('step_phase1_load_data', step_phase1_load_data, enabled=True)
     pipeline.add_step('step_phase1_feature_selection', step_phase1_feature_selection, enabled=True)
+    pipeline.add_step('step_phase1_tradeoff_analysis', step_phase1_tradeoff_analysis, enabled=True)
     pipeline.add_step('step_phase1_model_training', step_phase1_model_training_and_evaluation, enabled=True)
     pipeline.add_step('step_phase1_decision_tree_rules', step_phase1_decision_tree_rules, enabled=True)
     pipeline.add_step('step_phase1_comprehensive_cluster_insights', step_phase1_comprehensive_cluster_insights, enabled=True)
