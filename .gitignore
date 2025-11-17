@@ -22,3 +22,5 @@ parallel-viz/__pycache__
 parallel-viz/output_constrained
 parallel-viz/output_constrained_workflows
 readme.md
+
+/data/workflows/**
