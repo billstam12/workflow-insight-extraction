@@ -519,7 +519,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Constrained Parallel Coordinates (Hyperparams → Metrics)'
     )
-    parser.add_argument('--data', type=str, default='../data/data.csv')
+    parser.add_argument('--data', type=str, default='../data/workflows.csv')
     parser.add_argument('--output', type=str, default='output_constrained')
     parser.add_argument('--algorithm', type=str, default='hybrid',
                        choices=['greedy', 'simulated-annealing', 'hybrid'])

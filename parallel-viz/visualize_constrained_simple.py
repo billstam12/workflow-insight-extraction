@@ -472,7 +472,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Simple Constrained Parallel Coordinates - YOU choose columns!'
     )
-    parser.add_argument('--data', type=str, default='../data/data.csv')
+    parser.add_argument('--data', type=str, default='../data/workflows.csv')
     parser.add_argument('--output', type=str, default='output_constrained')
     parser.add_argument('--algorithm', type=str, default='hybrid',
                        choices=['greedy', 'simulated-annealing', 'hybrid'])
@@ -562,6 +562,21 @@ def main():
     else:
         print("❌ WARNING: Constraint violated!")
     
+    # Save data to CSV files with reordered columns
+    print("\n💾 Saving data to CSV files...")
+    
+    print("   1/3 Constrained optimal data...")
+    data_constrained = data[constrained_order].copy()
+    data_constrained.to_csv(os.path.join(args.output, 'data_constrained_optimal.csv'), index=False)
+    
+    print("   2/3 Original order data...")
+    data_original = data[original_order].copy()
+    data_original.to_csv(os.path.join(args.output, 'data_original_order.csv'), index=False)
+    
+    print("   3/3 Unconstrained optimal data...")
+    data_unconstrained = data[unconstrained_order].copy()
+    data_unconstrained.to_csv(os.path.join(args.output, 'data_unconstrained_optimal.csv'), index=False)
+    
     # Create visualizations
     print("\n🎨 Creating visualizations...")
     
@@ -620,8 +635,12 @@ def main():
     print("\n" + "="*70)
     print("✨ CONSTRAINED VISUALIZATION COMPLETE!")
     print("="*70)
-    print(f"\n📁 Output: {args.output}/")
-    print(f"🌐 Opening: {summary_path}")
+    print(f"\n📁 Output directory: {args.output}/")
+    print(f"\n📊 CSV files saved:")
+    print(f"   • data_constrained_optimal.csv (columns ordered: hyperparams → metrics)")
+    print(f"   • data_original_order.csv (original column order)")
+    print(f"   • data_unconstrained_optimal.csv (optimally ordered, no constraints)")
+    print(f"\n🌐 Opening summary: {summary_path}")
     
     webbrowser.open('file://' + os.path.abspath(summary_path))
     
