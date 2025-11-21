@@ -166,8 +166,8 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold, mca_inertia_thres
         X_numerical = df_metrics[numerical_cols].dropna(axis=0, how='all')
         
         # Apply low variance filter BEFORE standardization on original data
-        filtered_numerical_cols, variance_filter_info = filter_low_variance_metrics(
-            X_numerical, numerical_cols, cv_threshold=0.05
+        filtered_numerical_cols, variance_filter_info = filter_low_and_high_variance_metrics(
+            X_numerical, numerical_cols, low_cv_threshold=0.05, high_cv_threshold=1.5
         )
         
         # Keep only non-filtered columns
@@ -287,7 +287,7 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold, mca_inertia_thres
     return reduced_data, reduction_info, component_correlations
 
 
-def filter_low_variance_metrics(df, metric_cols, cv_threshold=0.1):
+def filter_low_and_high_variance_metrics(df, metric_cols, low_cv_threshold=0.05, high_cv_threshold=1.5):
     """
     Filter out metrics with low variance using Coefficient of Variation (CV).
     
@@ -346,14 +346,17 @@ def filter_low_variance_metrics(df, metric_cols, cv_threshold=0.1):
     variance_df = pd.DataFrame(metric_variances)
     
     # Identify low variance metrics based on CV threshold
-    low_variance_metrics = variance_df[(variance_df['cv'] < cv_threshold) & (variance_df['cv'] != np.inf)]['metric'].tolist()
+    low_variance_metrics = variance_df[(variance_df['cv'] < low_cv_threshold) & (variance_df['cv'] != np.inf)]['metric'].tolist()
+    high_variance_metrics = variance_df[(variance_df['cv'] > high_cv_threshold) & (variance_df['cv'] != np.inf)]['metric'].tolist()
     filtered_metrics = [col for col in metric_cols if col not in low_variance_metrics]
+    filtered_metrics = [col for col in filtered_metrics if col not in high_variance_metrics]
     
     # Print filtering results
     print(f"\n{'='*80}")
     print("Low Variance Filter Analysis (Coefficient of Variation)")
     print(f"{'='*80}")
-    print(f"Threshold (CV): {cv_threshold:.3f} (metrics with CV < {cv_threshold:.3f} are removed)")
+    print(f"Low CV Threshold: {low_cv_threshold:.3f} (metrics with CV < {low_cv_threshold:.3f} are removed)")
+    print(f"High CV Threshold: {high_cv_threshold:.3f} (metrics with CV > {high_cv_threshold:.3f} are removed)")
     print(f"\nOriginal metrics: {len(metric_cols)}")
     print(f"Metrics removed (low CV): {len(low_variance_metrics)}")
     print(f"Metrics retained: {len(filtered_metrics)}")
@@ -361,6 +364,12 @@ def filter_low_variance_metrics(df, metric_cols, cv_threshold=0.1):
     if low_variance_metrics:
         print(f"\nRemoved metrics (low coefficient of variation):")
         for metric in low_variance_metrics:
+            var_info = variance_df[variance_df['metric'] == metric].iloc[0]
+            print(f"  - {metric:30s} (CV: {var_info['cv']:.4f}, mean: {var_info['mean']:10.4f}, std: {var_info['std']:10.6f}, range: [{var_info['min']:.4f}, {var_info['max']:.4f}])")
+    
+    if high_variance_metrics:
+        print(f"\nRemoved metrics (high coefficient of variation):")
+        for metric in high_variance_metrics:
             var_info = variance_df[variance_df['metric'] == metric].iloc[0]
             print(f"  - {metric:30s} (CV: {var_info['cv']:.4f}, mean: {var_info['mean']:10.4f}, std: {var_info['std']:10.6f}, range: [{var_info['min']:.4f}, {var_info['max']:.4f}])")
     
@@ -377,7 +386,8 @@ def filter_low_variance_metrics(df, metric_cols, cv_threshold=0.1):
         'total_removed': len(low_variance_metrics),
         'total_retained': len(filtered_metrics),
         'removed_metrics': low_variance_metrics,
-        'cv_threshold': cv_threshold,
+        'low_cv_threshold': low_cv_threshold,
+        'high_cv_threshold': high_cv_threshold,
         'variance_details': variance_df.to_dict('records')
     }
     
