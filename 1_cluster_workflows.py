@@ -129,7 +129,7 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold, mca_inertia_thres
     
     Args:
         df: Input DataFrame
-        metric_cols: List of metric column names to include in dimensionality reduction
+        metric_cols: List of metric column names to include in dimensionality reduction (already filtered)
         pca_variance_threshold: Target cumulative variance for PCA
         mca_inertia_threshold: Target cumulative inertia for MCA
         corr_threshold: Correlation threshold for naming PCA components
@@ -152,7 +152,7 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold, mca_inertia_thres
     print(f"\n{'='*60}")
     print("Dimensionality Reduction Analysis")
     print(f"{'='*60}")
-    print(f"Original variables: {len(metric_cols)}")
+    print(f"Original variables (after filtering): {len(metric_cols)}")
     print(f"  - Numerical: {len(numerical_cols)}")
     print(f"  - Categorical: {len(categorical_cols)}")
     
@@ -165,15 +165,9 @@ def reduce_dimensions(df, metric_cols, pca_variance_threshold, mca_inertia_thres
     if numerical_cols:
         X_numerical = df_metrics[numerical_cols].dropna(axis=0, how='all')
         
-        # Apply low variance filter BEFORE standardization on original data
-        filtered_numerical_cols, variance_filter_info = filter_low_and_high_variance_metrics(
-            X_numerical, numerical_cols, low_cv_threshold=0.05, high_cv_threshold=1.5
-        )
-        
-        # Keep only non-filtered columns
-        if len(filtered_numerical_cols) < len(numerical_cols):
-            X_numerical = X_numerical[filtered_numerical_cols]
-            numerical_cols = filtered_numerical_cols
+        # Note: Low and high variance filtering is now done in separate pipeline steps
+        # (step_filter_low_variance_metrics and step_filter_high_variance_metrics)
+        # metric_cols passed here are already filtered
         
         # Standardize numerical variables
         scaler = StandardScaler()
@@ -706,12 +700,90 @@ def step_load_data(results, pipeline, **kwargs):
     }
 
 
-def step_dimensionality_reduction(results, pipeline, **kwargs):
-    """Step 2: Apply dimensionality reduction."""
-    # Get data from previous step (required)
+def step_filter_low_variance_metrics(results, pipeline, **kwargs):
+    """Step 1.5a: Filter out metrics with low coefficient of variation."""
     load_result = pipeline.get_result('step_load_data', default={})
     df = load_result.get('df')
     metric_cols = load_result.get('metric_cols')
+    
+    if df is None or metric_cols is None:
+        raise KeyError("step_load_data: 'df' or 'metric_cols' not available. Load data first.")
+    
+    low_cv_threshold = kwargs.get('low_cv_threshold', 0.05)
+    
+    print("\n" + "="*60)
+    print("Step 1.5a: Filter Low Variance Metrics")
+    print("="*60)
+    
+    filtered_metrics, filter_info = filter_low_and_high_variance_metrics(
+        df[metric_cols], metric_cols, 
+        low_cv_threshold=low_cv_threshold, 
+        high_cv_threshold=float('inf')  # Don't filter high in this step
+    )
+    
+    return {
+        'metric_cols': filtered_metrics,
+        'filter_info': filter_info,
+        'removed_low_variance': filter_info.get('removed_metrics', [])
+    }
+
+
+def step_filter_high_variance_metrics(results, pipeline, **kwargs):
+    """Step 1.5b: Filter out metrics with high coefficient of variation."""
+    # Get metric columns from low variance filtering step
+    low_filter_result = pipeline.get_result('step_filter_low_variance_metrics', default=None)
+    
+    if low_filter_result is None:
+        # Fallback to raw metrics from load step
+        load_result = pipeline.get_result('step_load_data', default={})
+        metric_cols = load_result.get('metric_cols', [])
+    else:
+        metric_cols = low_filter_result.get('metric_cols', [])
+    
+    load_result = pipeline.get_result('step_load_data', default={})
+    df = load_result.get('df')
+    
+    if df is None or not metric_cols:
+        raise KeyError("step_load_data or step_filter_low_variance_metrics: Data not available.")
+    
+    high_cv_threshold = kwargs.get('high_cv_threshold', 1.5)
+    
+    print("\n" + "="*60)
+    print("Step 1.5b: Filter High Variance Metrics")
+    print("="*60)
+    
+    filtered_metrics, filter_info = filter_low_and_high_variance_metrics(
+        df[metric_cols], metric_cols,
+        low_cv_threshold=0.0,  # Don't filter low in this step (already done)
+        high_cv_threshold=high_cv_threshold
+    )
+    
+    return {
+        'metric_cols': filtered_metrics,
+        'filter_info': filter_info,
+        'removed_high_variance': filter_info.get('removed_metrics', [])
+    }
+
+
+def step_dimensionality_reduction(results, pipeline, **kwargs):
+    """Step 2: Apply dimensionality reduction."""
+    # Get filtered metrics from high variance filtering step
+    high_filter_result = pipeline.get_result('step_filter_high_variance_metrics', default=None)
+    
+    if high_filter_result is None:
+        # Fallback to low variance filtering
+        low_filter_result = pipeline.get_result('step_filter_low_variance_metrics', default=None)
+        if low_filter_result is None:
+            # Fallback to raw metrics from load step
+            load_result = pipeline.get_result('step_load_data', default={})
+            metric_cols = load_result.get('metric_cols')
+        else:
+            metric_cols = low_filter_result.get('metric_cols')
+    else:
+        metric_cols = high_filter_result.get('metric_cols')
+
+    load_result = pipeline.get_result('step_load_data', default={})
+    df = load_result.get('df')
 
     if df is None or metric_cols is None:
         raise KeyError("step_load_data: 'df' or 'metric_cols' not available. Load data first.")
@@ -976,6 +1048,8 @@ def build_default_pipeline():
     
     # Add all steps in order
     pipeline.add_step('step_load_data', step_load_data, enabled=True)
+    pipeline.add_step('step_filter_low_variance_metrics', step_filter_low_variance_metrics, enabled=True)
+    pipeline.add_step('step_filter_high_variance_metrics', step_filter_high_variance_metrics, enabled=True)
     pipeline.add_step('step_dimensionality_reduction', step_dimensionality_reduction, enabled=True)
     pipeline.add_step('step_save_correlations', step_save_correlations, enabled=True)
     pipeline.add_step('step_prepare_clustering_data', step_prepare_clustering_data, enabled=True)
@@ -1030,6 +1104,8 @@ def main():
     # Configure pipeline parameters
     pipeline_params = {
         'data_folder': data_folder,
+        'low_cv_threshold': 0.05,
+        'high_cv_threshold': 1.5,
         'pca_variance_threshold': 0.8,
         'mca_inertia_threshold': 0.8,
         'corr_threshold': 0.75,

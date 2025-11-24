@@ -202,7 +202,7 @@ def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iteratio
     print(f"Correlation threshold for removal: {correlation_threshold}")
     
     if n_iterations is None:
-        n_iterations = min(10, len(feature_names) // 2)
+        n_iterations = min(10, len(feature_names) // 2) 
     
     selected_features = []
     previously_selected = set()
@@ -483,8 +483,6 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     """
     Step 1.2-1.3: PHASE 1 - Feature Selection on Original Data
     
-    Per-cluster feature selection:
-    - Train-test split (80-20)
     - Multi-step feature selection (correlation, SHAP-based)
     - Track removed features
     """
@@ -528,11 +526,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         # Create binary classification: this cluster vs. others
         y_binary = (cluster_labels == cluster_id).astype(int)
         
-        # Train-test split (80-20)
-        # X_train, X_test, y_train, y_test = train_test_split(
-        #     X_standardized, y_binary, test_size=0.2, random_state=42, stratify=y_binary
-        # )
-
+    
         X_train = X_standardized
         y_train = y_binary
         
@@ -1089,8 +1083,9 @@ def step_phase1_decision_tree_rules(results, pipeline, **kwargs):
                     f1_score = 0.0
                 
                 # Score based on cluster-specific counts
-                significance_weight = np.log1p(n_workflows_in_cluster)
-                combined_score = f1_score * significance_weight
+                # significance_weight = np.log1p(n_workflows_in_cluster)
+                p_workflows_in_cluster = n_workflows_in_cluster / n_cluster_samples if n_cluster_samples > 0 else 0
+                combined_score = f1_score * p_workflows_in_cluster
                 
                 cluster_rules.append({
                     'rule': decoded_rule,
