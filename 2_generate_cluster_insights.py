@@ -431,7 +431,9 @@ def main():
     print("="*80)
     model_summary = pipeline.get_result('step_phase1_model_training', key='models_summary')
     if model_summary is not None and not model_summary.empty:
-        print(model_summary[['cluster_id', 'n_samples', 'test_auc', 'f1_score']].to_string(index=False))
+        # Include balanced accuracy for predictive quality
+        cols = [c for c in ['cluster_id', 'n_samples', 'balanced_accuracy', 'f1_score', 'test_auc'] if c in model_summary.columns]
+        print(model_summary[cols].to_string(index=False))
 
     print("\n" + "="*80)
     print("Analysis Complete! Generated Files in folder:")
@@ -747,7 +749,7 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
     1. Use selected features from step_phase1_feature_selection
     2. Train XGBoost classifier for cluster vs. others
     3. Hyperparameter grid search with cross-validation
-    4. Evaluate with AUC, confusion matrix, precision, recall, F1
+    4. Evaluate with AUC, balanced accuracy, confusion matrix, precision, recall, F1
     5. Generate local & global SHAP values using TreeExplainer
     
     Requires XGBoost to be installed: pip install xgboost
@@ -755,7 +757,7 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
     try:
         import xgboost as xgb
         from sklearn.model_selection import GridSearchCV, cross_val_score
-        from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report
+        from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report, balanced_accuracy_score
     except ImportError:
         print("⚠ Warning: XGBoost not installed. Model training skipped.")
         print("  Install with: pip install xgboost")
@@ -855,10 +857,12 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
         y_pred_proba = best_model.predict_proba(X_test)[:, 1]
         
         auc = roc_auc_score(y_test, y_pred_proba)
+        balanced_acc = balanced_accuracy_score(y_test, y_pred)
         cm = confusion_matrix(y_test, y_pred)
         report = classification_report(y_test, y_pred, output_dict=True)
         
         print(f"Test AUC: {auc:.4f}")
+        print(f"Balanced Accuracy: {balanced_acc:.4f}")
         print(f"Confusion Matrix:\n{cm}")
         print(f"Classification Report:")
         print(f"  Precision (cluster): {report['1']['precision']:.4f}")
@@ -868,6 +872,7 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
         # ========== SHAP Interpretability ==========
         print(f"\nGenerating SHAP values for interpretation...")
         
+        high_shap_features = []
         try:
             explainer = shap.TreeExplainer(best_model)
             shap_values = explainer.shap_values(X_test)
@@ -905,6 +910,7 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
             'precision': report['1']['precision'],
             'recall': report['1']['recall'],
             'f1_score': report['1']['f1-score'],
+            'balanced_accuracy': balanced_acc,
             'tn': int(cm[0, 0]),
             'fp': int(cm[0, 1]),
             'fn': int(cm[1, 0]),
@@ -1160,7 +1166,7 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
     comprehensive JSON file for each cluster containing:
     - Cluster metadata (size, samples)
     - Feature selection results (n_selected, selected_features)
-    - Model evaluation metrics (AUC, F1, precision, recall)
+    - Model evaluation metrics (AUC, F1, balanced accuracy, precision, recall)
     - High SHAP features (features with importance > 0.1)
     - Trade-off analysis (negative correlations between selected and non-selected)
     - Hyperparameter patterns (dominant values and percentages)
@@ -1322,6 +1328,7 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                 f1 = float(row['f1_score'])
                 precision = float(row['precision'])
                 recall = float(row['recall'])
+                balanced_acc = float(row['balanced_accuracy']) if 'balanced_accuracy' in row else None
                 
                 # Quality score: weighted combination of metrics
                 # Prioritize AUC as main discriminator, then balanced F1
@@ -1339,6 +1346,7 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                 
                 cluster_insights['model_evaluation'] = {
                     'test_auc': round(float(row['test_auc']), 4),
+                    'balanced_accuracy': round(float(balanced_acc), 4) if balanced_acc is not None else None,
                     'precision': round(float(row['precision']), 4),
                     'recall': round(float(row['recall']), 4),
                     'f1_score': round(float(row['f1_score']), 4),
