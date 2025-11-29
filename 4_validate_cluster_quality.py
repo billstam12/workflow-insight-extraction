@@ -473,6 +473,63 @@ def plot_rule_quality(cv_summary_df: pd.DataFrame, save_path: str = None):
         plt.savefig(save_path)
         print(f"Rule quality plot saved to {save_path}")
 
+def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = None):
+    """
+    Creates boxplots showing the distribution of CV values for each cluster's rules.
+    """
+    # Get unique clusters and rules
+    clusters = sorted(cv_summary_df['Cluster'].unique())
+    
+    # Setup plot
+    fig, ax = plt.subplots(figsize=(14, 7))
+    
+    # Prepare data for boxplot: collect CV distributions for each cluster
+    data_to_plot = []
+    labels = []
+    
+    for cluster in clusters:
+        cluster_data = cv_summary_df[cv_summary_df['Cluster'] == cluster]
+        
+        # For each cluster, create a list containing the CV percentile ranges
+        # We'll use the median, 10th, and 90th percentiles to construct the distribution
+        cv_values = []
+        for _, row in cluster_data.iterrows():
+            # Add the three key points: 10th percentile, median, 90th percentile
+            cv_values.extend([row['CV_10th_Percentile'], row['Median_CV'], row['CV_90th_Percentile']])
+        
+        if cv_values:
+            data_to_plot.append(cv_values)
+            labels.append(f'Cluster {cluster}')
+    
+    # Create boxplot
+    bp = ax.boxplot(data_to_plot, patch_artist=True, labels=labels, widths=0.6)
+    
+    # Customize colors using a colormap
+    colors = [plt.cm.viridis(float(i) / len(clusters)) for i in range(len(clusters))]
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.7)
+    
+    # Customize whiskers, caps, and medians
+    for whisker in bp['whiskers']:
+        whisker.set(linewidth=1.5, linestyle='--', alpha=0.7)
+    for cap in bp['caps']:
+        cap.set(linewidth=1.5)
+    for median in bp['medians']:
+        median.set(color='red', linewidth=2)
+    
+    # Formatting
+    ax.set_xlabel('Cluster', fontsize=12)
+    ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
+    ax.set_title('Stability of Discriminative Metrics within Rules\n(Distribution of CV values across rules per cluster)', fontsize=14)
+    ax.tick_params(axis='x', rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Rule quality plot saved to {save_path}")
+
 if __name__ == "__main__":
     path="./data/workflows"
     dataset_name = "adult"
@@ -508,6 +565,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir_rule_quality, exist_ok=True)
     cv_summary_df.to_csv(os.path.join(result_dir_rule_quality, "rule_quality_metrics.csv"), index=False)
     plot_rule_quality(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality.png"))
+    plot_rule_quality_box_plot(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality_boxplot.png"))
 
 
 
