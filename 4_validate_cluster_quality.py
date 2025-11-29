@@ -271,6 +271,60 @@ def plot_predictive_quality(predictive_df: pd.DataFrame, save_path: str = None):
         print(f"Plot saved to {save_path}")
     # plt.show()
 
+def plot_predictive_quality_table(predictive_df: pd.DataFrame, save_path: str = None):
+    """
+    Plot predictive quality metrics as a formatted table.
+    """
+    fig, ax = plt.subplots()
+    ax.axis('tight')
+    ax.axis('off')
+    
+    # Prepare data for table - transpose so clusters are columns
+    metrics = ['F1 Score', 'Balanced Accuracy', 'ROC AUC', 'Quality Score']
+    clusters = predictive_df['Cluster'].tolist()
+    
+    # Create table data with metrics as rows and clusters as columns
+    table_data = []
+    for metric in metrics:
+        row = [f"{val:.4f}" for val in predictive_df[metric].values]
+        table_data.append(row)
+    
+    # Create the table
+    table = ax.table(cellText=table_data, 
+                     rowLabels=metrics,
+                     colLabels=clusters,
+                     cellLoc='center',
+                     loc='center',
+                     colWidths=[0.15] * len(clusters))
+    
+    # Style the table
+    table.auto_set_font_size(False)
+    table.set_fontsize(12)
+    table.scale(1, 2.5)
+    
+    # Color header row (cluster labels)
+    for i in range(len(clusters)):
+        table[(0, i)].set_facecolor('#4c72b0')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    # Color metric rows alternating
+    colors = ['#f0f0f0', '#e0e0e0']
+    for i in range(len(metrics)):
+        for j in range(len(clusters)):
+            table[(i+1, j)].set_facecolor(colors[i % 2])
+    
+    # Color row labels (metrics)
+    for i in range(len(metrics)):
+        table[(i+1, -1)].set_facecolor('#2d5986')
+        table[(i+1, -1)].set_text_props(weight='bold', color='white')
+    
+    plt.title('Predictive Quality Metrics by Cluster', pad=20, fontweight='bold')
+    
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Predictive quality table saved to {save_path}")
+    # plt.show()
+
 ####################################RULE  QUALITY####################################
 def convert_rule_to_pandas(rule_str):
     # Replace "IN {...}" with "in [...]"
@@ -555,6 +609,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir_predictive_quality, exist_ok=True)
     predictive_df.to_csv(os.path.join(result_dir_predictive_quality, "predictive_quality_metrics.csv"), index=False)
     plot_predictive_quality(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality.png"))
+    plot_predictive_quality_table(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality_table.png"))
        
     ##Rule quality
     rules_df = pd.read_csv("./data/workflows/cluster_decision_rules.csv")
