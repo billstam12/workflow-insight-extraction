@@ -132,7 +132,7 @@ def silhouette_statistics(clustered_data: pd.DataFrame, X_scaled: np.ndarray) ->
 
 def plot_silhouette_analysis(X_scaled, clusters, silhouette_avg, per_cluster_metrics_df, save_path=None):
     fig, ax1 = plt.subplots(1, 1)
-    fig.set_size_inches(10, 7)
+    # fig.set_size_inches(10, 7)
 
     ax1.set_xlim([-0.2, 1])
     ax1.set_ylim([0, len(X_scaled) + (len(per_cluster_metrics_df['cluster_id']) + 1) * 10])
@@ -172,7 +172,7 @@ def plot_silhouette_boxplot(X_scaled, clusters, silhouette_avg, per_cluster_metr
     """
     Generates a box plot of silhouette scores for each cluster.
     """
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots()
     
     sample_silhouette_values = silhouette_samples(X_scaled, clusters)
     
@@ -206,7 +206,7 @@ def plot_combined_cluster_quality(scores_df: pd.DataFrame, save_path: str = None
     metrics = scores_df.columns
     values = scores_df.iloc[0].values
     
-    fig, axes = plt.subplots(1, len(metrics), figsize=(15, 5))
+    fig, axes = plt.subplots(1, len(metrics))
     fig.suptitle('Overall Cluster Quality Scores', fontsize=16)
     
     colors = ['#4c72b0', '#55a868', '#c44e52']
@@ -248,7 +248,7 @@ def calculate_predictive_quality(clusters_insights: dict) -> pd.DataFrame:
     return predictive_df
 
 def plot_predictive_quality(predictive_df: pd.DataFrame, save_path: str = None):
-    plt.figure(figsize=(14, 7))
+    plt.figure()
     x = np.arange(len(predictive_df))
     width = 0.2  # Adjusted width to fit 4 bars comfortably
 
@@ -413,7 +413,7 @@ def plot_rule_quality(cv_summary_df: pd.DataFrame, save_path: str = None):
     n_rules = len(rules)
 
     # Setup plot
-    fig, ax = plt.subplots(figsize=(14, 7))
+    fig, ax = plt.subplots()
 
     # Width of each bar
     bar_width = 0.8 / n_rules
@@ -481,7 +481,7 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
     clusters = sorted(cv_summary_df['Cluster'].unique())
     
     # Setup plot
-    fig, ax = plt.subplots(figsize=(14, 7))
+    fig, ax = plt.subplots()
     
     # Prepare data for boxplot: collect CV distributions for each cluster
     data_to_plot = []
@@ -521,7 +521,7 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
     # Formatting
     ax.set_xlabel('Cluster', fontsize=12)
     ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
-    ax.set_title('Stability of Discriminative Metrics within Rules\n(Distribution of CV values across rules per cluster)', fontsize=14)
+    # ax.set_title('Stability of Discriminative Metrics within Rules\n(Distribution of CV values across rules per cluster)', fontsize=14)
     ax.tick_params(axis='x', rotation=45)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
