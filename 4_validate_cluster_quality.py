@@ -11,6 +11,39 @@ from sklearn.metrics import silhouette_score
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.metrics import silhouette_samples
 
+# Publication-ready font size configuration
+FONT_SIZE = {
+    'title': 22,
+    'xlabel': 20,
+    'ylabel': 20,
+    'xtick': 20,
+    'ytick': 20,
+    'legend': 20,
+    'figure': 12,
+    'figsize': [16, 6]
+}
+ 
+# Set publication-ready plotting style
+plt.rcParams.update({
+    'font.family': 'serif',
+    'font.serif': ['Times', 'Times New Roman', 'Palatino', 'DejaVu Serif'],
+    'font.size': FONT_SIZE['figure'],
+    'axes.titlesize': FONT_SIZE['title'],
+    'axes.labelsize': FONT_SIZE['xlabel'],
+    'xtick.labelsize': FONT_SIZE['xtick'],
+    'ytick.labelsize': FONT_SIZE['ytick'],
+    'legend.fontsize': FONT_SIZE['legend'],
+    'figure.figsize': FONT_SIZE['figsize'],
+    'figure.dpi': 150,
+    'savefig.dpi': 300,
+    'savefig.bbox': 'tight',
+    'savefig.pad_inches': 0.05,
+    'axes.grid': True,
+    'grid.alpha': 0.3,
+    'axes.axisbelow': True,
+    'axes.labelpad': 10
+})
+
 
 def read_data(file_path: str) -> pd.DataFrame:
     clustered_data = pd.read_csv(file_path+"/workflows_clustered.csv")
@@ -133,6 +166,40 @@ def plot_silhouette_analysis(X_scaled, clusters, silhouette_avg, per_cluster_met
     if save_path:
         plt.savefig(save_path)
         print(f"Silhouette plot saved to {save_path}")
+    # plt.show()
+
+def plot_silhouette_boxplot(X_scaled, clusters, silhouette_avg, per_cluster_metrics_df, save_path=None):
+    """
+    Generates a box plot of silhouette scores for each cluster.
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    sample_silhouette_values = silhouette_samples(X_scaled, clusters)
+    
+    cluster_ids = sorted(per_cluster_metrics_df['cluster_id'].unique())
+    data_to_plot = [sample_silhouette_values[clusters == i] for i in cluster_ids]
+    
+    bp = ax.boxplot(data_to_plot, patch_artist=True, labels=[str(i) for i in cluster_ids])
+    
+    # Customizing colors
+    colors = [plt.cm.nipy_spectral(float(i) / len(cluster_ids)) for i in cluster_ids]
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+        
+    ax.axhline(y=silhouette_avg, color="red", linestyle="--", label=f'Overall Avg Silhouette: {silhouette_avg:.2f}')
+    
+    ax.set_title('Distribution of Silhouette Scores per Cluster', fontsize=16)
+    ax.set_xlabel('Cluster ID', fontsize=12)
+    ax.set_ylabel('Silhouette Coefficient', fontsize=12)
+    ax.set_ylim([-0.2, 1.0])
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    ax.legend()
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Silhouette box plot saved to {save_path}")
     # plt.show()
 
 def plot_combined_cluster_quality(scores_df: pd.DataFrame, save_path: str = None):
@@ -423,6 +490,7 @@ if __name__ == "__main__":
     all_scores.to_csv(os.path.join(result_dir_cluster_quality, "overall_cluster_quality_scores.csv"), index=False)
     cluster_silhouette_df.to_csv(os.path.join(result_dir_cluster_quality, "per_cluster_silhouette_metrics.csv"), index=False)
     plot_silhouette_analysis(X_scaled, clustered_data['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_plot.png"))
+    plot_silhouette_boxplot(X_scaled, clustered_data['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_boxplot.png"))
     plot_combined_cluster_quality(all_scores, save_path=os.path.join(result_dir_cluster_quality, "combined_quality_scores.png"))
 
     ##Predictive Quality 
