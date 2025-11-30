@@ -260,7 +260,7 @@ def plot_predictive_quality(predictive_df: pd.DataFrame, save_path: str = None):
 
     plt.xlabel('Cluster', fontsize=12)
     plt.ylabel('Score', fontsize=12)
-    plt.title('Predictive quality', fontsize=14)
+    # plt.title('Predictive quality', fontsize=14)
     plt.xticks(x, predictive_df['Cluster'], fontsize=10)
     plt.ylim(0, 1.15)  # Extra space for labels if needed
     plt.legend(loc='upper center', ncol=4, frameon=True)  # Legend below chart
@@ -318,7 +318,7 @@ def plot_predictive_quality_table(predictive_df: pd.DataFrame, save_path: str = 
         table[(i+1, -1)].set_facecolor('#2d5986')
         table[(i+1, -1)].set_text_props(weight='bold', color='white')
     
-    plt.title('Predictive Quality Metrics by Cluster', pad=20, fontweight='bold')
+    # plt.title('Predictive Quality Metrics by Cluster', pad=20, fontweight='bold')
     
     if save_path:
         plt.savefig(save_path)
@@ -529,60 +529,91 @@ def plot_rule_quality(cv_summary_df: pd.DataFrame, save_path: str = None):
 
 def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = None):
     """
-    Creates boxplots showing the distribution of CV values for each cluster's rules.
+    Creates boxplots showing the distribution of CV values for each rule within each cluster.
+    Similar structure to plot_rule_quality but using box plots instead of bars.
     """
     # Get unique clusters and rules
     clusters = sorted(cv_summary_df['Cluster'].unique())
+    rules = sorted(cv_summary_df['Rule'].unique())
+    
+    n_clusters = len(clusters)
+    n_rules = len(rules)
     
     # Setup plot
     fig, ax = plt.subplots()
     
-    # Prepare data for boxplot: collect CV distributions for each cluster
+    # Prepare data for grouped boxplots
+    # Each rule will get its own set of boxes across clusters
+    box_positions = []
     data_to_plot = []
-    labels = []
+    colors_list = []
     
-    for cluster in clusters:
-        cluster_data = cv_summary_df[cv_summary_df['Cluster'] == cluster]
-        
-        # For each cluster, create a list containing the CV percentile ranges
-        # We'll use the median, 10th, and 90th percentiles to construct the distribution
-        cv_values = []
-        for _, row in cluster_data.iterrows():
-            # Add the three key points: 10th percentile, median, 90th percentile
-            cv_values.extend([row['CV_10th_Percentile'], row['Median_CV'], row['CV_90th_Percentile']])
-        
-        if cv_values:
-            data_to_plot.append(cv_values)
-            labels.append(f'Cluster {cluster}')
+    # Generate distinct colors for each rule
+    rule_colors = [plt.cm.Set3(i / n_rules) for i in range(n_rules)]
     
-    # Create boxplot
-    bp = ax.boxplot(data_to_plot, patch_artist=True, labels=labels, widths=0.6)
+    # Width for spacing
+    cluster_spacing = 1.0
+    box_width = 0.6 / n_rules
     
-    # Customize colors using a colormap
-    colors = [plt.cm.viridis(float(i) / len(clusters)) for i in range(len(clusters))]
-    for patch, color in zip(bp['boxes'], colors):
+    for i, rule in enumerate(rules):
+        for j, cluster in enumerate(clusters):
+            # Find data for this cluster-rule combination
+            match = cv_summary_df[(cv_summary_df['Cluster'] == cluster) & (cv_summary_df['Rule'] == rule)]
+            
+            if not match.empty:
+                row = match.iloc[0]
+                # Create distribution from percentiles
+                cv_values = [row['CV_10th_Percentile'], row['Median_CV'], row['CV_90th_Percentile']]
+                data_to_plot.append(cv_values)
+                
+                # Calculate position: cluster_position + rule_offset
+                pos = j * cluster_spacing + (i - (n_rules - 1) / 2) * box_width
+                box_positions.append(pos)
+                colors_list.append(rule_colors[i])
+            else:
+                # No data for this combination - skip
+                pass
+    
+    # Create boxplot with custom positions
+    bp = ax.boxplot(data_to_plot, positions=box_positions, widths=box_width * 0.8, 
+                     patch_artist=True, showfliers=False)
+    
+    # Color the boxes by rule
+    for patch, color in zip(bp['boxes'], colors_list):
         patch.set_facecolor(color)
         patch.set_alpha(0.7)
+        patch.set_edgecolor('black')
     
     # Customize whiskers, caps, and medians
     for whisker in bp['whiskers']:
-        whisker.set(linewidth=1.5, linestyle='--', alpha=0.7)
+        whisker.set(linewidth=1.2, linestyle='--', alpha=0.6)
     for cap in bp['caps']:
-        cap.set(linewidth=1.5)
+        cap.set(linewidth=1.2)
     for median in bp['medians']:
-        median.set(color='red', linewidth=2)
+        median.set(color='darkred', linewidth=2)
+    
+    # Set x-axis labels at cluster centers
+    cluster_positions = [i * cluster_spacing for i in range(n_clusters)]
+    ax.set_xticks(cluster_positions)
+    ax.set_xticklabels([f'Cluster {c}' for c in clusters])
+    
+    # Create legend for rules
+    from matplotlib.patches import Patch
+    legend_elements = [Patch(facecolor=rule_colors[i], edgecolor='black', 
+                             label=f'Rule {rule}', alpha=0.7) 
+                      for i, rule in enumerate(rules)]
+    ax.legend(handles=legend_elements, title='Rule Number', loc='best')
     
     # Formatting
     ax.set_xlabel('Cluster', fontsize=12)
     ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
-    # ax.set_title('Stability of Discriminative Metrics within Rules\n(Distribution of CV values across rules per cluster)', fontsize=14)
-    ax.tick_params(axis='x', rotation=45)
+    ax.set_title('Stability of Discriminative Metrics within Rules\n(Box plots showing CV distribution per rule)', fontsize=14)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path)
-        print(f"Rule quality plot saved to {save_path}")
+        print(f"Rule quality box plot saved to {save_path}")
 
 ####################################REPRESENTATIVE METRICS QUALITY####################################
 
@@ -645,19 +676,14 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
         
         # Get selected features for this cluster
         selected_features_raw = cluster_info['feature_selection']['selected_features']
-        print("ena")
-        print(selected_features_raw)
+        
         # Don't normalize - the column names in the dataframe have spaces, matching the JSON
         selected_features = selected_features_raw
-        print("deux")
-        print(selected_features)
+        
         # Filter to only include metrics that exist in our metric_cols
         selected_metrics = [f for f in selected_features if f in metric_cols]
-        print("trois")
-        print(selected_metrics)
         non_selected_metrics = [f for f in metric_cols if f not in selected_metrics]
-        print("quatre")
-        print(non_selected_metrics)
+        
         # Get data for this cluster only
         cluster_mask = clustered_data['cluster'] == cluster_id
         cluster_data = clustered_data[cluster_mask]
@@ -750,14 +776,6 @@ if __name__ == "__main__":
     os.makedirs(result_dir_representative_quality, exist_ok=True)
     
     representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
-    print("\n" + "="*80)
-    print("REPRESENTATIVE METRICS QUALITY - CV Comparison")
-    print("="*80)
-    print(representative_quality_df.to_string(index=False))
-    print("\nExpectation: Selected metrics should have LOWER CV (more stable within cluster)")
-    print("CV_Difference = Non_Selected_CV_Mean - Selected_CV_Mean")
-    print("Positive CV_Difference means selected metrics are more stable (as expected)")
-    
     representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
     plot_representative_metrics_cv_comparison(representative_quality_df, save_path=os.path.join(result_dir_representative_quality, "cv_comparison.png"))
 
