@@ -1019,7 +1019,24 @@ def step_save_results(results, pipeline, **kwargs):
     dim_result = pipeline.get_result('step_dimensionality_reduction', default={})
     reduction_info = dim_result.get('reduction_info', {})
     component_names = reduction_info.get('component_names', [])
-    kept_cols = hyperparam_cols + reduction_info.get('kept_metric_cols', None)
+    
+    # Handle kept_cols properly when dimensionality reduction is skipped
+    kept_metric_cols = reduction_info.get('kept_metric_cols', None)
+    if kept_metric_cols is not None:
+        kept_cols = hyperparam_cols + kept_metric_cols
+    else:
+        # If no dimensionality reduction, use filtered metrics
+        high_filter_result = pipeline.get_result('step_filter_high_variance_metrics', default={})
+        low_filter_result = pipeline.get_result('step_filter_low_variance_metrics', default={})
+        
+        if high_filter_result:
+            filtered_metrics = high_filter_result.get('metric_cols', [])
+        elif low_filter_result:
+            filtered_metrics = low_filter_result.get('metric_cols', [])
+        else:
+            filtered_metrics = load_result.get('metric_cols', [])
+        
+        kept_cols = hyperparam_cols + filtered_metrics
     
     # Fallback to metric columns if no component names
     if not component_names:
@@ -1067,36 +1084,53 @@ def main():
     
     # Parse command-line arguments
     if len(sys.argv) < 2:
-        print("Usage: python 1_cluster_workflows.py <data_folder>")
+        print("Usage: python 1_cluster_workflows.py <data_folder> [ablation_mode]")
         print("\nArguments:")
-        print("  data_folder - Path to folder containing workflows.csv, parameter_names.txt, and metric_names.txt")
+        print("  data_folder    - Path to folder containing workflows.csv, parameter_names.txt, and metric_names.txt")
+        print("  ablation_mode  - Optional ablation study mode:")
+        print("                   'full' (default) - Run complete pipeline")
+        print("                   'no_variance_filter' - Skip variance filtering")
+        print("                   'no_dim_reduction' - Skip dimensionality reduction")
+        print("                   'no_iterative_filter' - Skip iterative feature selection")
         sys.exit(1)
     
     data_folder = sys.argv[1]
+    ablation_mode = sys.argv[2] if len(sys.argv) > 2 else 'full'
     
     # Build the pipeline
     pipeline = build_default_pipeline()
     
-    # Customize which steps to run (examples):
+    # Apply ablation configurations
     # ==========================================
     
-    # Example 1: Skip dimensionality reduction (use raw metrics)
-    # pipeline.disable_step('step_dimensionality_reduction')
-    # pipeline.disable_step('step_save_correlations')
+    if ablation_mode == 'no_variance_filter':
+        print("\n" + "="*60)
+        print("ABLATION MODE: No Variance Filtering")
+        print("Disabling variance filtering steps")
+        print("="*60)
+        pipeline.disable_step('step_filter_low_variance_metrics')
+        pipeline.disable_step('step_filter_high_variance_metrics')
     
-    # Example 2: Skip optional analysis steps
-    # pipeline.disable_step('step_identify_small_clusters')
-    # pipeline.disable_step('step_create_cluster_metadata')
+    elif ablation_mode == 'no_dim_reduction':
+        print("\n" + "="*60)
+        print("ABLATION MODE: No Dimensionality Reduction")
+        print("Using all metrics for clustering (no PCA/MCA)")
+        print("="*60)
+        pipeline.disable_step('step_dimensionality_reduction')
+        pipeline.disable_step('step_save_correlations')
     
-    # Example 3: Run only certain steps
-    # pipeline.set_steps([
-    #     'step_load_data', 
-    #     'step_dimensionality_reduction',
-    #     'step_prepare_clustering_data'
-    # ])
+    elif ablation_mode == 'no_iterative_filter':
+        print("\n" + "="*60)
+        print("ABLATION MODE: No Iterative Feature Selection")
+        print("(Note: This affects Step 2 in 2_generate_cluster_insights.py)")
+        print("Running clustering normally - feature selection handled later")
+        print("="*60)
+        # This ablation is primarily handled in 2_generate_cluster_insights.py
+        # No changes needed here for clustering
     
-    # Example 4: Skip k optimization (use fixed k value)
-    # pipeline.disable_step('step_find_optimal_clusters')
+    elif ablation_mode != 'full':
+        print(f"\nWarning: Unknown ablation mode '{ablation_mode}'. Using 'full' mode.")
+        ablation_mode = 'full'
     
     # Print current pipeline configuration
     pipeline.list_steps()

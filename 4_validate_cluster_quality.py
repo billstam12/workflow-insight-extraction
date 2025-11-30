@@ -152,7 +152,7 @@ def plot_silhouette_analysis(X_scaled, clusters, silhouette_avg, per_cluster_met
         ax1.text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
         y_lower = y_upper + 10
 
-    ax1.set_title("Silhouette plot for the various clusters.")
+    # ax1.set_title("Silhouette plot for the various clusters.")
     ax1.set_xlabel("The silhouette coefficient values")
     ax1.set_ylabel("Cluster label")
 
@@ -160,8 +160,8 @@ def plot_silhouette_analysis(X_scaled, clusters, silhouette_avg, per_cluster_met
     ax1.set_yticks([])
     ax1.set_xticks(np.arange(-0.2, 1.1, 0.2))
     
-    plt.suptitle(f"Silhouette analysis for clustering with n_clusters = {len(per_cluster_metrics_df['cluster_id'])}",
-                 fontsize=14, fontweight='bold')
+    # plt.suptitle(f"Silhouette analysis for clustering with n_clusters = {len(per_cluster_metrics_df['cluster_id'])}",
+    #              fontsize=14, fontweight='bold')
     
     if save_path:
         plt.savefig(save_path)
@@ -188,7 +188,7 @@ def plot_silhouette_boxplot(X_scaled, clusters, silhouette_avg, per_cluster_metr
         
     ax.axhline(y=silhouette_avg, color="red", linestyle="--", label=f'Overall Avg Silhouette: {silhouette_avg:.2f}')
     
-    ax.set_title('Distribution of Silhouette Scores per Cluster', fontsize=16)
+    # ax.set_title('Distribution of Silhouette Scores per Cluster', fontsize=16)
     ax.set_xlabel('Cluster ID', fontsize=12)
     ax.set_ylabel('Silhouette Coefficient', fontsize=12)
     ax.set_ylim([-0.2, 1.0])
@@ -207,13 +207,13 @@ def plot_combined_cluster_quality(scores_df: pd.DataFrame, save_path: str = None
     values = scores_df.iloc[0].values
     
     fig, axes = plt.subplots(1, len(metrics))
-    fig.suptitle('Overall Cluster Quality Scores', fontsize=16)
+    # fig.suptitle('Overall Cluster Quality Scores', fontsize=16)
     
     colors = ['#4c72b0', '#55a868', '#c44e52']
     
     for i, (metric, value, color) in enumerate(zip(metrics, values, colors)):
         axes[i].bar(metric, value, color=color, edgecolor='white')
-        axes[i].set_title(metric.replace('_', ' '), fontsize=12)
+        # axes[i].set_title(metric.replace('_', ' '), fontsize=12)
         axes[i].set_ylabel('Score', fontsize=10)
         axes[i].tick_params(axis='x', rotation=45)
         axes[i].grid(axis='y', linestyle='--', alpha=0.7)
@@ -516,7 +516,7 @@ def plot_rule_quality(cv_summary_df: pd.DataFrame, save_path: str = None):
     # Formatting
     ax.set_xlabel('Cluster ID', fontsize=12)
     ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
-    ax.set_title('Stability of Discriminative Metrics within Rules\n(Bar = Median CV, Whiskers = 10th-90th Percentile Range)', fontsize=14)
+    # ax.set_title('Stability of Discriminative Metrics within Rules\n(Bar = Median CV, Whiskers = 10th-90th Percentile Range)', fontsize=14)
     ax.set_xticks(indices)
     ax.set_xticklabels(clusters)
     ax.legend(title='Rule Number')
@@ -607,7 +607,7 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
     # Formatting
     ax.set_xlabel('Cluster', fontsize=12)
     ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
-    ax.set_title('Stability of Discriminative Metrics within Rules\n(Box plots showing CV distribution per rule)', fontsize=14)
+    # ax.set_title('Stability of Discriminative Metrics within Rules\n(Box plots showing CV distribution per rule)', fontsize=14)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
     plt.tight_layout()
@@ -645,7 +645,7 @@ def plot_representative_metrics_cv_comparison(df: pd.DataFrame, save_path: str =
     # Formatting
     ax.set_xlabel('Cluster ID')
     ax.set_ylabel('Mean Coefficient of Variation (CV)')
-    ax.set_title('Stability Comparison: Selected vs Non-Selected Metrics\n(Lower CV = More Stable)')
+    # ax.set_title('Stability Comparison: Selected vs Non-Selected Metrics\n(Lower CV = More Stable)')
     ax.set_xticks(x)
     ax.set_xticklabels(clusters)
     ax.legend()
