@@ -734,11 +734,32 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
 
 
 if __name__ == "__main__":
-    path="./data/workflows"
-    dataset_name = "adult"
-    result_dir_cluster_quality = f"./results/{dataset_name}/cluster_quality"
-    result_dir_predictive_quality = f"./results/{dataset_name}/predictive_quality"
-    result_dir_rule_quality = f"./results/{dataset_name}/rule_quality"
+    import sys
+    
+    # Default values
+    # path = "./data/workflows"
+    # dataset_name = "adult"
+    # ablation = "full"
+    
+    # Parse command line arguments
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    if len(sys.argv) > 2:
+        dataset_name = sys.argv[2]
+    if len(sys.argv) > 3:
+        ablation = sys.argv[3]
+    
+    print(f"Configuration:")
+    print(f"  Data path: {path}")
+    print(f"  Dataset: {dataset_name}")
+    print(f"  Ablation: {ablation}")
+    print()
+    
+    result_dir_cluster_quality = f"./results/{dataset_name}/{ablation}/cluster_quality"
+    result_dir_predictive_quality = f"./results/{dataset_name}/{ablation}/predictive_quality"
+    result_dir_rule_quality = f"./results/{dataset_name}/{ablation}/rule_quality"
+    result_dir_representative_quality = f"./results/{dataset_name}/{ablation}/representative_quality"
+
 
 
     clustered_data, clusters_insights, X_scaled, metric_cols = read_data(path)
@@ -772,9 +793,7 @@ if __name__ == "__main__":
     plot_rule_quality_box_plot(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality_boxplot.png"))
    
     ## Representative Metrics Quality
-    result_dir_representative_quality = f"./results/{dataset_name}/representative_quality"
     os.makedirs(result_dir_representative_quality, exist_ok=True)
-    
     representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
     representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
     plot_representative_metrics_cv_comparison(representative_quality_df, save_path=os.path.join(result_dir_representative_quality, "cv_comparison.png"))
