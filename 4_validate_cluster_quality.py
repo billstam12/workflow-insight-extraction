@@ -584,6 +584,129 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
         plt.savefig(save_path)
         print(f"Rule quality plot saved to {save_path}")
 
+####################################REPRESENTATIVE METRICS QUALITY####################################
+
+def plot_representative_metrics_cv_comparison(df: pd.DataFrame, save_path: str = None):
+    """
+    Create a simple bar plot comparing CV for selected vs non-selected metrics per cluster.
+    """
+    fig, ax = plt.subplots(figsize=(14, 6))
+    
+    clusters = df['Cluster'].values
+    x = np.arange(len(clusters))
+    width = 0.35
+    
+    # Plot bars for selected and non-selected metrics
+    bars1 = ax.bar(x - width/2, df['Selected_CV_Mean'], width, 
+                   label='Selected Metrics', color='#2ecc71', alpha=0.8, edgecolor='black')
+    bars2 = ax.bar(x + width/2, df['Non_Selected_CV_Mean'], width,
+                   label='Non-Selected Metrics', color='#e74c3c', alpha=0.8, edgecolor='black')
+    
+    # Add value labels on bars
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            height = bar.get_height()
+            if not np.isnan(height):
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                       f'{height:.3f}',
+                       ha='center', va='bottom', fontsize=10)
+    
+    # Formatting
+    ax.set_xlabel('Cluster ID')
+    ax.set_ylabel('Mean Coefficient of Variation (CV)')
+    ax.set_title('Stability Comparison: Selected vs Non-Selected Metrics\n(Lower CV = More Stable)')
+    ax.set_xticks(x)
+    ax.set_xticklabels(clusters)
+    ax.legend()
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Representative metrics CV comparison plot saved to {save_path}")
+
+def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insights: dict, metric_cols: list) -> pd.DataFrame:
+    """
+    Compare CV distribution for selected (discriminative) vs non-selected metrics.
+    
+    For each cluster:
+    - Selected metrics = those in feature_selection.selected_features
+    - Non-selected metrics = all other metrics
+    
+    We expect selected metrics to have lower CV (more stable within cluster).
+    
+    Returns:
+        DataFrame with CV statistics for selected vs non-selected metrics per cluster
+    """
+    results = []
+    
+    for cluster_id_str, cluster_info in clusters_insights.items():
+        cluster_id = int(cluster_id_str)
+        
+        # Get selected features for this cluster
+        selected_features_raw = cluster_info['feature_selection']['selected_features']
+        print("ena")
+        print(selected_features_raw)
+        # Don't normalize - the column names in the dataframe have spaces, matching the JSON
+        selected_features = selected_features_raw
+        print("deux")
+        print(selected_features)
+        # Filter to only include metrics that exist in our metric_cols
+        selected_metrics = [f for f in selected_features if f in metric_cols]
+        print("trois")
+        print(selected_metrics)
+        non_selected_metrics = [f for f in metric_cols if f not in selected_metrics]
+        print("quatre")
+        print(non_selected_metrics)
+        # Get data for this cluster only
+        cluster_mask = clustered_data['cluster'] == cluster_id
+        cluster_data = clustered_data[cluster_mask]
+        
+        if len(cluster_data) < 2:
+            print(f"Skipping Cluster {cluster_id}: insufficient data")
+            continue
+        
+        # Calculate CV for selected metrics
+        selected_cvs = []
+        for metric in selected_metrics:
+            if metric in cluster_data.columns:
+                mean_val = cluster_data[metric].mean()
+                std_val = cluster_data[metric].std()
+                
+                if abs(mean_val) > 1e-9:  # Avoid division by zero
+                    cv = std_val / abs(mean_val)
+                    selected_cvs.append(cv)
+        
+        # Calculate CV for non-selected metrics
+        non_selected_cvs = []
+        for metric in non_selected_metrics:
+            if metric in cluster_data.columns:
+                mean_val = cluster_data[metric].mean()
+                std_val = cluster_data[metric].std()
+                
+                if abs(mean_val) > 1e-9:  # Avoid division by zero
+                    cv = std_val / abs(mean_val)
+                    non_selected_cvs.append(cv)
+        
+        # Compute summary statistics
+        results.append({
+            'Cluster': cluster_id,
+            'N_Workflows': len(cluster_data),
+            'N_Selected_Metrics': len(selected_metrics),  # Use actual selected metrics count
+            'N_Non_Selected_Metrics': len(non_selected_metrics),  # Use actual non-selected metrics count
+            'Selected_CV_Mean': np.mean(selected_cvs) if selected_cvs else np.nan,
+            'Selected_CV_Median': np.median(selected_cvs) if selected_cvs else np.nan,
+            'Selected_CV_Std': np.std(selected_cvs) if selected_cvs else np.nan,
+            'Non_Selected_CV_Mean': np.mean(non_selected_cvs) if non_selected_cvs else np.nan,
+            'Non_Selected_CV_Median': np.median(non_selected_cvs) if non_selected_cvs else np.nan,
+            'Non_Selected_CV_Std': np.std(non_selected_cvs) if non_selected_cvs else np.nan,
+            'CV_Difference': (np.mean(non_selected_cvs) - np.mean(selected_cvs)) if (selected_cvs and non_selected_cvs) else np.nan
+        })
+    
+    df = pd.DataFrame(results)
+    return df
+
+
 if __name__ == "__main__":
     path="./data/workflows"
     dataset_name = "adult"
@@ -621,9 +744,21 @@ if __name__ == "__main__":
     cv_summary_df.to_csv(os.path.join(result_dir_rule_quality, "rule_quality_metrics.csv"), index=False)
     plot_rule_quality(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality.png"))
     plot_rule_quality_box_plot(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality_boxplot.png"))
-
-
-
-
+   
+    ## Representative Metrics Quality
+    result_dir_representative_quality = f"./results/{dataset_name}/representative_quality"
+    os.makedirs(result_dir_representative_quality, exist_ok=True)
+    
+    representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
+    print("\n" + "="*80)
+    print("REPRESENTATIVE METRICS QUALITY - CV Comparison")
+    print("="*80)
+    print(representative_quality_df.to_string(index=False))
+    print("\nExpectation: Selected metrics should have LOWER CV (more stable within cluster)")
+    print("CV_Difference = Non_Selected_CV_Mean - Selected_CV_Mean")
+    print("Positive CV_Difference means selected metrics are more stable (as expected)")
+    
+    representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
+    plot_representative_metrics_cv_comparison(representative_quality_df, save_path=os.path.join(result_dir_representative_quality, "cv_comparison.png"))
 
 
