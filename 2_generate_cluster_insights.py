@@ -212,6 +212,9 @@ def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iteratio
     # Track selection history for feature removal analysis
     selection_history = []
     
+    # Track removed features with their correlations for later analysis
+    removed_features_analysis = {}  # {removed_feature: {'max_relationship': float, 'related_to': selected_feature, 'all_relationships': [...]}}
+    
     # ============================================================================
     # Iterative SHAP-based selection with correlation removal
     # ============================================================================
@@ -297,6 +300,28 @@ def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iteratio
         removed_with_relations = [(f, related_to_selected.get(f, 0)) for f in to_remove]
         removed_with_relations.sort(key=lambda x: x[1], reverse=True)
         
+        # Build removed features analysis (excluding the selected feature itself)
+        removed_features_only = [f for f in to_remove if f != most_important_feature]
+        for removed_feat, relation_measure in removed_with_relations:
+            if removed_feat != most_important_feature:  # Skip the selected feature
+                if removed_feat not in removed_features_analysis:
+                    removed_features_analysis[removed_feat] = {
+                        'max_relationship': relation_measure,
+                        'related_to': most_important_feature,
+                        'all_relationships': []
+                    }
+                else:
+                    # Update max_relationship if this one is stronger
+                    if relation_measure > removed_features_analysis[removed_feat]['max_relationship']:
+                        removed_features_analysis[removed_feat]['max_relationship'] = relation_measure
+                        removed_features_analysis[removed_feat]['related_to'] = most_important_feature
+                
+                # Track all relationships for this removed feature
+                removed_features_analysis[removed_feat]['all_relationships'].append({
+                    'selected_feature': most_important_feature,
+                    'relationship_measure': relation_measure
+                })
+        
         selection_history.append({
             'iteration': iteration,
             'selected_feature': most_important_feature,
@@ -318,7 +343,7 @@ def feature_selection_shap_iterative(X_train, y_train, feature_names, n_iteratio
     
     print(f"\n✓ After iterative selection: {len(selected_features)} features selected")
     
-    return selected_features, selection_history
+    return selected_features, selection_history, removed_features_analysis
 
 
 def main():
@@ -510,6 +535,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     
     all_results = []
     correlation_analysis_per_cluster = {}  # Store correlation analysis for removed features
+    removed_features_analysis_per_cluster = {}  # Store detailed removed features analysis
     
     for cluster_id in range(n_clusters):
         cluster_mask = cluster_labels == cluster_id
@@ -537,11 +563,14 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         # print(f"Class distribution (test): {np.bincount(y_test)}")
         
         # Feature selection (Steps 1-3 from paper)
-        selected_features, selection_history = feature_selection_shap_iterative(
+        selected_features, selection_history, removed_features_analysis = feature_selection_shap_iterative(
             X_train, y_train, metric_cols, n_iterations, correlation_threshold
         )
         
         print(f"\n✓ Final selected features ({len(selected_features)}): {selected_features}")
+        
+        # Store removed features analysis for later use in comprehensive insights
+        removed_features_analysis_per_cluster[cluster_id] = removed_features_analysis
         
         # Store results
         cluster_result = {
@@ -611,7 +640,8 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     return {
         'results_summary': results_summary,
         'selected_features_per_cluster': {r['cluster_id']: r['selected_features'] for r in all_results},
-        'correlation_analysis_per_cluster': correlation_analysis_per_cluster
+        'correlation_analysis_per_cluster': correlation_analysis_per_cluster,
+        'removed_features_analysis_per_cluster': removed_features_analysis_per_cluster
     }
 
 
@@ -1272,15 +1302,18 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                         
                         # Compute quartiles for classification
                         all_values = X_standardized[:, feat_idx]
-                        q25, q50, q75 = np.percentile(all_values, [25, 50, 75])
+                        global_mean = float(np.mean(all_values))
+                        global_std = float(np.std(all_values))
+                        # q25, q50, q75 = np.percentile(other_values, [25, 50, 75])
                         
                         # Classify cluster's mean value
-                        if cluster_mean <= q25:
-                            value_category = "low"
-                        elif cluster_mean <= q75:
-                            value_category = "mid"
+                        z_score = (cluster_mean - global_mean) / global_std
+                        if z_score > 1.0:
+                            value_category = "high"  # >1 std above global
+                        elif z_score < -1.0:
+                            value_category = "low"   # >1 std below global
                         else:
-                            value_category = "high"
+                            value_category = "mid"
                         
                         # Calculate how distinctive this feature is for the cluster
                         distinctiveness = abs(cluster_mean - other_mean) / (other_std + 1e-6)
@@ -1292,27 +1325,32 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                             'other_clusters_std': round(other_std, 4),
                             'value_category': value_category,
                             'distinctiveness_score': round(distinctiveness, 4),
-                            'quartiles': {
-                                'q25': round(float(q25), 4),
-                                'q50': round(float(q50), 4),
-                                'q75': round(float(q75), 4)
-                            }
+                            'z-score': round(z_score, 4),
+                            # 'quartiles': {
+                            #     'q25': round(float(q25), 4),
+                            #     'q50': round(float(q50), 4),
+                            #     'q75': round(float(q75), 4)
+                            # }
                         }
                 
                 cluster_insights['feature_selection']['feature_statistics'] = feature_stats
         
         # ===== CORRELATION ANALYSIS FOR REMOVED FEATURES =====
-        # Get correlation analysis data from feature selection step
-        correlation_data_per_cluster = feature_result.get('correlation_analysis_per_cluster', {})
-        cluster_correlations = correlation_data_per_cluster.get(cluster_id, [])
+        # Get removed features analysis from feature selection step
+        removed_features_per_cluster = feature_result.get('removed_features_analysis_per_cluster', {})
+        cluster_removed_features = removed_features_per_cluster.get(cluster_id, {})
         
-        if cluster_correlations:
-            # Find strongest correlations
-            strongest_correlations = sorted(cluster_correlations, key=lambda x: x['relationship_strength'], reverse=True)
-            
+        if cluster_removed_features:
             cluster_insights['correlation_analysis'] = {
-                'n_removed_features': len(cluster_correlations),
-                'strongest_correlations': strongest_correlations 
+                'n_removed_features': len(cluster_removed_features),
+                'removed_features': {
+                    feat: {
+                        'max_relationship': round(float(details['max_relationship']), 4),
+                        'related_to': details['related_to'],
+                        'all_relationships': details.get('all_relationships', [])
+                    }
+                    for feat, details in cluster_removed_features.items()
+                }
             }
         
         # ===== MODEL EVALUATION INSIGHTS =====

@@ -3,28 +3,31 @@ Correlation and Relationship Measurement Utilities
 ===================================================
 Provides unified functions for measuring relationships between variables
 of different types using appropriate statistical measures:
-- Pearson correlation for continuous-continuous
+- Kendall correlation for continuous-continuous
 - Partial eta squared for categorical-continuous
 - Mutual information for categorical-categorical
 """
 
 import pandas as pd
 import numpy as np
+from scipy.stats import kendalltau
 from sklearn.preprocessing import LabelEncoder
 
 
-def compute_pearson_correlation(x, y):
+def compute_kendall_correlation(x, y):
     """
-    Compute Pearson correlation for continuous-continuous relationships.
+    Compute Kendall tau correlation for continuous-continuous relationships.
+    More robust to outliers than Pearson correlation.
     
     Args:
         x: First continuous variable (array-like)
         y: Second continuous variable (array-like)
     
     Returns:
-        Absolute Pearson correlation coefficient (0 to 1)
+        Absolute Kendall tau correlation coefficient (0 to 1)
     """
-    return np.abs(np.corrcoef(x, y)[0, 1])
+    tau, _ = kendalltau(x, y)
+    return np.abs(tau)
 
 
 def compute_partial_eta_squared(continuous, categorical):
@@ -143,12 +146,12 @@ def compute_relationship_measure(X_df, feature1, feature2, var_types):
     Compute relationship measure based on variable types.
     
     Uses appropriate statistical measure:
-    - Pearson correlation for continuous-continuous
+    - Kendall tau correlation for continuous-continuous
     - Partial eta squared for categorical-continuous
     - Mutual information for categorical-categorical
     
     Following paper methodology: "The relationship between variables is measured 
-    using Pearson's correlation coefficient, partial eta square, and mutual information,
+    using Kendall's correlation coefficient, partial eta square, and mutual information,
     as it is done consistently throughout the methodology, depending on the types of variables."
     
     Args:
@@ -168,9 +171,9 @@ def compute_relationship_measure(X_df, feature1, feature2, var_types):
     x = X_df[feature1].values
     y = X_df[feature2].values
 
-    # Both continuous: Pearson correlation
+    # Both continuous: Kendall tau correlation
     if type1 == 'continuous' and type2 == 'continuous':
-        return compute_pearson_correlation(x, y), 'Pearson'
+        return compute_kendall_correlation(x, y), 'Kendall'
     
     # One categorical, one continuous: Partial eta squared
     elif (type1 == 'categorical' and type2 == 'continuous') or \
