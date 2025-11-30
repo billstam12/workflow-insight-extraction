@@ -782,9 +782,9 @@ if __name__ == "__main__":
     plot_predictive_quality_table(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality_table.png"))
        
     ##Rule quality
-    rules_df = pd.read_csv("./data/workflows/cluster_decision_rules.csv")
-    raw_data_full = pd.read_csv("./data/workflows/workflows.csv")
-    cluster_labels = pd.read_csv("./data/workflows/workflows_clustered.csv")[['workflowId', 'cluster']]
+    rules_df = pd.read_csv(f"{path}/cluster_decision_rules.csv")
+    raw_data_full = pd.read_csv(f"{path}/workflows.csv")
+    cluster_labels = pd.read_csv(f"{path}/workflows_clustered.csv")[['workflowId', 'cluster']]
     _,sub_frames=overall_for_rules(rules_df, raw_data_full, cluster_labels)
     cv_summary_df=rule_quality(sub_frames, clusters_insights)
     os.makedirs(result_dir_rule_quality, exist_ok=True)

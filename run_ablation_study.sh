@@ -9,8 +9,15 @@
 
 set -e  # Exit on error
 
+# Configuration
+WORKFLOW_FOLDER="./data/workflows_adult"
+DATASET_NAME="adult"
+
 echo "=========================================="
 echo "Starting Ablation Study"
+echo "=========================================="
+echo "Workflow Folder: $WORKFLOW_FOLDER"
+echo "Dataset Name: $DATASET_NAME"
 echo "=========================================="
 echo ""
 
@@ -25,15 +32,15 @@ for mode in "${modes[@]}"; do
     echo ""
     
     echo "Step 1: Clustering workflows..."
-    python 1_cluster_workflows.py ./data/workflows "$mode"
+    python 1_cluster_workflows.py "$WORKFLOW_FOLDER" "$mode"
     
     echo ""
     echo "Step 2: Generating cluster insights..."
-    python 2_generate_cluster_insights.py ./data/workflows "$mode"
+    python 2_generate_cluster_insights.py "$WORKFLOW_FOLDER" "$mode"
     
     echo ""
     echo "Step 3: Validating cluster quality..."
-    python 4_validate_cluster_quality.py ./data/workflows adult "$mode"
+    python 4_validate_cluster_quality.py "$WORKFLOW_FOLDER" "$DATASET_NAME" "$mode"
     
     echo ""
     echo "✓ Completed: $mode"
@@ -46,8 +53,8 @@ echo "Ablation Study Complete!"
 echo "=========================================="
 echo ""
 echo "Results are saved in:"
-echo "  - results/adult/full/"
-echo "  - results/adult/no_variance_filter/"
-echo "  - results/adult/no_dim_reduction/"
-echo "  - results/adult/no_iterative_filter/"
+echo "  - results/$DATASET_NAME/full/"
+echo "  - results/$DATASET_NAME/no_variance_filter/"
+echo "  - results/$DATASET_NAME/no_dim_reduction/"
+echo "  - results/$DATASET_NAME/no_iterative_filter/"
 echo ""
