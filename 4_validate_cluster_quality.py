@@ -11,6 +11,39 @@ from sklearn.metrics import silhouette_score
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.metrics import silhouette_samples
 
+# Publication-ready font size configuration
+FONT_SIZE = {
+    'title': 22,
+    'xlabel': 20,
+    'ylabel': 20,
+    'xtick': 20,
+    'ytick': 20,
+    'legend': 20,
+    'figure': 12,
+    'figsize': [16, 6]
+}
+ 
+# Set publication-ready plotting style
+plt.rcParams.update({
+    'font.family': 'serif',
+    'font.serif': ['Times', 'Times New Roman', 'Palatino', 'DejaVu Serif'],
+    'font.size': FONT_SIZE['figure'],
+    'axes.titlesize': FONT_SIZE['title'],
+    'axes.labelsize': FONT_SIZE['xlabel'],
+    'xtick.labelsize': FONT_SIZE['xtick'],
+    'ytick.labelsize': FONT_SIZE['ytick'],
+    'legend.fontsize': FONT_SIZE['legend'],
+    'figure.figsize': FONT_SIZE['figsize'],
+    'figure.dpi': 150,
+    'savefig.dpi': 300,
+    'savefig.bbox': 'tight',
+    'savefig.pad_inches': 0.05,
+    'axes.grid': True,
+    'grid.alpha': 0.3,
+    'axes.axisbelow': True,
+    'axes.labelpad': 10
+})
+
 
 def read_data(file_path: str) -> pd.DataFrame:
     clustered_data = pd.read_csv(file_path+"/workflows_clustered.csv")
@@ -99,7 +132,7 @@ def silhouette_statistics(clustered_data: pd.DataFrame, X_scaled: np.ndarray) ->
 
 def plot_silhouette_analysis(X_scaled, clusters, silhouette_avg, per_cluster_metrics_df, save_path=None):
     fig, ax1 = plt.subplots(1, 1)
-    fig.set_size_inches(10, 7)
+    # fig.set_size_inches(10, 7)
 
     ax1.set_xlim([-0.2, 1])
     ax1.set_ylim([0, len(X_scaled) + (len(per_cluster_metrics_df['cluster_id']) + 1) * 10])
@@ -135,11 +168,45 @@ def plot_silhouette_analysis(X_scaled, clusters, silhouette_avg, per_cluster_met
         print(f"Silhouette plot saved to {save_path}")
     # plt.show()
 
+def plot_silhouette_boxplot(X_scaled, clusters, silhouette_avg, per_cluster_metrics_df, save_path=None):
+    """
+    Generates a box plot of silhouette scores for each cluster.
+    """
+    fig, ax = plt.subplots()
+    
+    sample_silhouette_values = silhouette_samples(X_scaled, clusters)
+    
+    cluster_ids = sorted(per_cluster_metrics_df['cluster_id'].unique())
+    data_to_plot = [sample_silhouette_values[clusters == i] for i in cluster_ids]
+    
+    bp = ax.boxplot(data_to_plot, patch_artist=True, labels=[str(i) for i in cluster_ids])
+    
+    # Customizing colors
+    colors = [plt.cm.nipy_spectral(float(i) / len(cluster_ids)) for i in cluster_ids]
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+        
+    ax.axhline(y=silhouette_avg, color="red", linestyle="--", label=f'Overall Avg Silhouette: {silhouette_avg:.2f}')
+    
+    ax.set_title('Distribution of Silhouette Scores per Cluster', fontsize=16)
+    ax.set_xlabel('Cluster ID', fontsize=12)
+    ax.set_ylabel('Silhouette Coefficient', fontsize=12)
+    ax.set_ylim([-0.2, 1.0])
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    ax.legend()
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Silhouette box plot saved to {save_path}")
+    # plt.show()
+
 def plot_combined_cluster_quality(scores_df: pd.DataFrame, save_path: str = None):
     metrics = scores_df.columns
     values = scores_df.iloc[0].values
     
-    fig, axes = plt.subplots(1, len(metrics), figsize=(15, 5))
+    fig, axes = plt.subplots(1, len(metrics))
     fig.suptitle('Overall Cluster Quality Scores', fontsize=16)
     
     colors = ['#4c72b0', '#55a868', '#c44e52']
@@ -181,7 +248,7 @@ def calculate_predictive_quality(clusters_insights: dict) -> pd.DataFrame:
     return predictive_df
 
 def plot_predictive_quality(predictive_df: pd.DataFrame, save_path: str = None):
-    plt.figure(figsize=(14, 7))
+    plt.figure()
     x = np.arange(len(predictive_df))
     width = 0.2  # Adjusted width to fit 4 bars comfortably
 
@@ -202,6 +269,60 @@ def plot_predictive_quality(predictive_df: pd.DataFrame, save_path: str = None):
     if save_path:
         plt.savefig(save_path)
         print(f"Plot saved to {save_path}")
+    # plt.show()
+
+def plot_predictive_quality_table(predictive_df: pd.DataFrame, save_path: str = None):
+    """
+    Plot predictive quality metrics as a formatted table.
+    """
+    fig, ax = plt.subplots()
+    ax.axis('tight')
+    ax.axis('off')
+    
+    # Prepare data for table - transpose so clusters are columns
+    metrics = ['F1 Score', 'Balanced Accuracy', 'ROC AUC', 'Quality Score']
+    clusters = predictive_df['Cluster'].tolist()
+    
+    # Create table data with metrics as rows and clusters as columns
+    table_data = []
+    for metric in metrics:
+        row = [f"{val:.4f}" for val in predictive_df[metric].values]
+        table_data.append(row)
+    
+    # Create the table
+    table = ax.table(cellText=table_data, 
+                     rowLabels=metrics,
+                     colLabels=clusters,
+                     cellLoc='center',
+                     loc='center',
+                     colWidths=[0.15] * len(clusters))
+    
+    # Style the table
+    table.auto_set_font_size(False)
+    table.set_fontsize(12)
+    table.scale(1, 2.5)
+    
+    # Color header row (cluster labels)
+    for i in range(len(clusters)):
+        table[(0, i)].set_facecolor('#4c72b0')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    # Color metric rows alternating
+    colors = ['#f0f0f0', '#e0e0e0']
+    for i in range(len(metrics)):
+        for j in range(len(clusters)):
+            table[(i+1, j)].set_facecolor(colors[i % 2])
+    
+    # Color row labels (metrics)
+    for i in range(len(metrics)):
+        table[(i+1, -1)].set_facecolor('#2d5986')
+        table[(i+1, -1)].set_text_props(weight='bold', color='white')
+    
+    plt.title('Predictive Quality Metrics by Cluster', pad=20, fontweight='bold')
+    
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Predictive quality table saved to {save_path}")
     # plt.show()
 
 ####################################RULE  QUALITY####################################
@@ -346,7 +467,7 @@ def plot_rule_quality(cv_summary_df: pd.DataFrame, save_path: str = None):
     n_rules = len(rules)
 
     # Setup plot
-    fig, ax = plt.subplots(figsize=(14, 7))
+    fig, ax = plt.subplots()
 
     # Width of each bar
     bar_width = 0.8 / n_rules
@@ -406,6 +527,63 @@ def plot_rule_quality(cv_summary_df: pd.DataFrame, save_path: str = None):
         plt.savefig(save_path)
         print(f"Rule quality plot saved to {save_path}")
 
+def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = None):
+    """
+    Creates boxplots showing the distribution of CV values for each cluster's rules.
+    """
+    # Get unique clusters and rules
+    clusters = sorted(cv_summary_df['Cluster'].unique())
+    
+    # Setup plot
+    fig, ax = plt.subplots()
+    
+    # Prepare data for boxplot: collect CV distributions for each cluster
+    data_to_plot = []
+    labels = []
+    
+    for cluster in clusters:
+        cluster_data = cv_summary_df[cv_summary_df['Cluster'] == cluster]
+        
+        # For each cluster, create a list containing the CV percentile ranges
+        # We'll use the median, 10th, and 90th percentiles to construct the distribution
+        cv_values = []
+        for _, row in cluster_data.iterrows():
+            # Add the three key points: 10th percentile, median, 90th percentile
+            cv_values.extend([row['CV_10th_Percentile'], row['Median_CV'], row['CV_90th_Percentile']])
+        
+        if cv_values:
+            data_to_plot.append(cv_values)
+            labels.append(f'Cluster {cluster}')
+    
+    # Create boxplot
+    bp = ax.boxplot(data_to_plot, patch_artist=True, labels=labels, widths=0.6)
+    
+    # Customize colors using a colormap
+    colors = [plt.cm.viridis(float(i) / len(clusters)) for i in range(len(clusters))]
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.7)
+    
+    # Customize whiskers, caps, and medians
+    for whisker in bp['whiskers']:
+        whisker.set(linewidth=1.5, linestyle='--', alpha=0.7)
+    for cap in bp['caps']:
+        cap.set(linewidth=1.5)
+    for median in bp['medians']:
+        median.set(color='red', linewidth=2)
+    
+    # Formatting
+    ax.set_xlabel('Cluster', fontsize=12)
+    ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
+    # ax.set_title('Stability of Discriminative Metrics within Rules\n(Distribution of CV values across rules per cluster)', fontsize=14)
+    ax.tick_params(axis='x', rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Rule quality plot saved to {save_path}")
+
 if __name__ == "__main__":
     path="./data/workflows"
     dataset_name = "adult"
@@ -423,6 +601,7 @@ if __name__ == "__main__":
     all_scores.to_csv(os.path.join(result_dir_cluster_quality, "overall_cluster_quality_scores.csv"), index=False)
     cluster_silhouette_df.to_csv(os.path.join(result_dir_cluster_quality, "per_cluster_silhouette_metrics.csv"), index=False)
     plot_silhouette_analysis(X_scaled, clustered_data['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_plot.png"))
+    plot_silhouette_boxplot(X_scaled, clustered_data['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_boxplot.png"))
     plot_combined_cluster_quality(all_scores, save_path=os.path.join(result_dir_cluster_quality, "combined_quality_scores.png"))
 
     ##Predictive Quality 
@@ -430,6 +609,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir_predictive_quality, exist_ok=True)
     predictive_df.to_csv(os.path.join(result_dir_predictive_quality, "predictive_quality_metrics.csv"), index=False)
     plot_predictive_quality(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality.png"))
+    plot_predictive_quality_table(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality_table.png"))
        
     ##Rule quality
     rules_df = pd.read_csv("./data/workflows/cluster_decision_rules.csv")
@@ -440,6 +620,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir_rule_quality, exist_ok=True)
     cv_summary_df.to_csv(os.path.join(result_dir_rule_quality, "rule_quality_metrics.csv"), index=False)
     plot_rule_quality(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality.png"))
+    plot_rule_quality_box_plot(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality_boxplot.png"))
 
 
 
