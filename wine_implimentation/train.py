@@ -45,7 +45,7 @@ param_grid = {
     'tol': [1e-4, 1e-3, 1e-2],
     'selection': ['cyclic', 'random'],
     'fit_intercept': [True, False],
-    'normalize': [True]  # normalize is deprecated but we keep it simple
+    'normalize': [True,False]  # normalize is deprecated but we keep it simple
 }
 
 # Generate all combinations
