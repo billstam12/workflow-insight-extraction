@@ -24,10 +24,11 @@ def compute_kendall_correlation(x, y):
         y: Second continuous variable (array-like)
     
     Returns:
-        Absolute Kendall tau correlation coefficient (0 to 1)
+        Kendall tau correlation coefficient (-1 to 1)
     """
     tau, _ = kendalltau(x, y)
-    return np.abs(tau)
+    # return np.abs(tau)
+    return tau
 
 
 def compute_partial_eta_squared(continuous, categorical):

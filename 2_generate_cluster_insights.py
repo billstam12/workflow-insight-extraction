@@ -724,17 +724,15 @@ def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
                     
                     x = X_cluster_df[feat1].values
                     y = X_cluster_df[feat2].values
-                    actual_corr = np.corrcoef(x, y)[0, 1]
-                    print(f"  {feat1} ↔ {feat2} | Measure: {measure:.4f} ({measure_type}) | Actual Corr: {actual_corr:.4f}")
+                    print(f"  {feat1} ↔ {feat2} | Measure: {measure:.4f} ({measure_type})")
                     # Only include negative relationships as trade-offs
-                    if actual_corr < 0:
+                    if measure < 0:
                         correlation_results.append({
                             'metric_1': feat1,
                             'metric_2': feat2,
                             'relationship_type': measure_type,
                             'relationship_strength': measure,
-                            'actual_correlation': actual_corr,
-                            'is_tradeoff': 1 if actual_corr < - correlation_threshold else 0
+                            'is_tradeoff': 1 if measure < - correlation_threshold else 0
                         })
                 except Exception as e:
                     pass
@@ -753,7 +751,6 @@ def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
             print("\nTop Trade-off Relationships (Strongest Negative Correlations):")
             for idx, row in tradeoff_df.head(10).iterrows():
                 print(f"  {row['metric_1']} ↔ {row['metric_2']}")
-                print(f"    Actual Correlation: {row['actual_correlation']:.4f}")
                 print(f"    Relationship Strength: {row['relationship_strength']:.4f} ({row['relationship_type']})")
                 print(f"    Trade-off: {row['is_tradeoff']}\n")
         else:

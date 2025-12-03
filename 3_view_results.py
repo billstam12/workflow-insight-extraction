@@ -344,26 +344,33 @@ def plot_feature_correlation_network(ax, df_clustered, cluster_id, cluster_insig
     for feat in selected_features:
         G.add_node(feat)
     
-    # Add alternative features
+    # Add alternative features (keep only top by strength to avoid crowding)
     alternatives_features = set()
-    for alt in high_alternatives + low_alternatives:
-        if alt['type'] == 'Alternative':
-            feat = alt['feature']
-            related = alt['related_to']
+    alt_list = [alt for alt in high_alternatives + low_alternatives if alt['type'] == 'Alternative']
+    # Sort by strength and keep top 10 alternatives
+    alt_list.sort(key=lambda x: x['strength'], reverse=True)
+    for alt in alt_list[:10]:
+        feat = alt['feature']
+        related = alt['related_to']
+        
+        if related in selected_features:
+            alternatives_features.add(feat)
+            G.add_node(feat)
             
-            if related in selected_features:
-                alternatives_features.add(feat)
-                G.add_node(feat)
-                
-                # Add edge
-                G.add_edge(feat, related, weight=alt['strength'], edge_type='alternative')
+            # Add edge
+            G.add_edge(feat, related, weight=alt['strength'], edge_type='alternative')
     
-    # Add trade-off features
+    # Add trade-off features (keep only top by correlation to avoid crowding)
     tradeoff_features = set()
     trade_off_analysis = cluster_insights.get('trade_off_analysis', {})
     strong_tradeoffs = trade_off_analysis.get('strong_tradeoffs', [])
     
-    for trade in strong_tradeoffs:
+    # Sort by correlation strength and keep top 10 tradeoffs
+    strong_tradeoffs_sorted = sorted(strong_tradeoffs, 
+                                     key=lambda x: abs(x.get('actual_correlation', 0)), 
+                                     reverse=True)
+    
+    for trade in strong_tradeoffs_sorted[:10]:
         m1 = trade.get('metric_1', '')
         m2 = trade.get('metric_2', '')
         corr = abs(trade.get('actual_correlation', 0))
@@ -630,8 +637,11 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
             angles = np.linspace(0, 2 * np.pi, N, endpoint=False).tolist()
             angles_plot = angles + angles[:1]
             
-            # Plot other clusters for context
-            for other_id in other_cluster_ids:
+            # Plot all other clusters for context (greyed out background)
+            n_clusters = df_clustered['cluster'].max() + 1
+            all_other_cluster_ids = [i for i in range(n_clusters) if i != target_cluster_id]
+            
+            for other_id in all_other_cluster_ids:
                 other_data = extract_shap_features_and_tradeoffs(df_clustered, other_id, insights,
                                                                  use_high_shap_only=use_high_shap_only)
                 other_categories = other_data['categories']
@@ -646,8 +656,8 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
                         other_values_list.append(0.5)
                 
                 other_values_plot = other_values_list + other_values_list[:1]
-                ax_high.plot(angles_plot, other_values_plot, 'o-', linewidth=1.5, 
-                            color='gray', alpha=0.3, markersize=3)
+                ax_high.plot(angles_plot, other_values_plot, 'o-', linewidth=1.0, 
+                            color='gray', alpha=0.15, markersize=2.5)
             
             # Plot target cluster
             target_values = [item['value'] for item in high_plot_data]
@@ -718,8 +728,11 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
             angles = np.linspace(0, 2 * np.pi, N, endpoint=False).tolist()
             angles_plot = angles + angles[:1]
             
-            # Plot other clusters for context
-            for other_id in other_cluster_ids:
+            # Plot all other clusters for context (greyed out background)
+            n_clusters = df_clustered['cluster'].max() + 1
+            all_other_cluster_ids = [i for i in range(n_clusters) if i != target_cluster_id]
+            
+            for other_id in all_other_cluster_ids:
                 other_data = extract_shap_features_and_tradeoffs(df_clustered, other_id, insights,
                                                                  use_high_shap_only=use_high_shap_only)
                 other_categories = other_data['categories']
@@ -734,8 +747,8 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
                         other_values_list.append(0.5)
                 
                 other_values_plot = other_values_list + other_values_list[:1]
-                ax_low.plot(angles_plot, other_values_plot, 'o-', linewidth=1.5, 
-                           color='gray', alpha=0.3, markersize=3)
+                ax_low.plot(angles_plot, other_values_plot, 'o-', linewidth=1.0, 
+                           color='gray', alpha=0.15, markersize=2.5)
             
             # Plot target cluster
             target_values = [item['value'] for item in low_plot_data]
@@ -792,6 +805,7 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
         
         all_cols_pc = config_cols + metric_cols_pc
         
+        # Prepare data for both target cluster and all other clusters
         data_norm = pd.DataFrame()
         
         for col in config_cols:
@@ -813,10 +827,41 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
             col_max = df_clustered[col].max()
             data_norm[col] = (cluster_data[col] - col_min) / (col_max - col_min + 1e-8)
         
-        # Plot individual lines
+        # Plot all other clusters' data in grey background
+        n_clusters_pc = df_clustered['cluster'].max() + 1
+        for other_cluster_id in range(n_clusters_pc):
+            if other_cluster_id != target_cluster_id:
+                other_cluster_data = df_clustered[df_clustered['cluster'] == other_cluster_id]
+                
+                # Normalize other cluster data using same scaling as target
+                other_data_norm = pd.DataFrame()
+                for col in config_cols:
+                    if col in other_cluster_data.columns:
+                        if other_cluster_data[col].dtype == 'object':
+                            unique_vals = df_clustered[col].unique()
+                            val_to_int = {v: i for i, v in enumerate(unique_vals)}
+                            encoded = other_cluster_data[col].map(val_to_int)
+                            col_min, col_max = 0, len(unique_vals) - 1
+                        else:
+                            encoded = other_cluster_data[col]
+                            col_min = df_clustered[col].min()
+                            col_max = df_clustered[col].max()
+                        other_data_norm[col] = (encoded - col_min) / (col_max - col_min + 1e-8)
+                
+                for col in metric_cols_pc:
+                    col_min = df_clustered[col].min()
+                    col_max = df_clustered[col].max()
+                    other_data_norm[col] = (other_cluster_data[col] - col_min) / (col_max - col_min + 1e-8)
+                
+                # Plot other cluster lines in background
+                for idx, row in other_data_norm.iterrows():
+                    ax_parallel.plot(range(len(all_cols_pc)), row.values, 
+                                   color='gray', alpha=0.05, linewidth=0.5, zorder=1)
+        
+        # Plot target cluster lines (on top)
         for idx, row in data_norm.iterrows():
             ax_parallel.plot(range(len(all_cols_pc)), row.values, 
-                           color=cluster_color, alpha=0.08, linewidth=0.7)
+                           color=cluster_color, alpha=0.1, linewidth=0.7, zorder=10)
         
         # Plot mean line
         mean_line = data_norm.mean()
