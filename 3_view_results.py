@@ -219,7 +219,7 @@ def extract_alternatives_and_tradeoffs(df_clustered, cluster_insights, shap_data
         for trade in strong_tradeoffs:
             m1 = trade.get('metric_1', '')
             m2 = trade.get('metric_2', '')
-            corr = abs(trade.get('actual_correlation', 0))
+            corr = abs(trade.get('relationship_strength', 0))
             
             # We want trade-offs from opposite category
             # If m1 is our primary feature and m2 is not selected, it's a trade-off from opposite
@@ -367,13 +367,13 @@ def plot_feature_correlation_network(ax, df_clustered, cluster_id, cluster_insig
     
     # Sort by correlation strength and keep top 10 tradeoffs
     strong_tradeoffs_sorted = sorted(strong_tradeoffs, 
-                                     key=lambda x: abs(x.get('actual_correlation', 0)), 
+                                     key=lambda x: abs(x.get('relationship_strength', 0)), 
                                      reverse=True)
     
     for trade in strong_tradeoffs_sorted[:10]:
         m1 = trade.get('metric_1', '')
         m2 = trade.get('metric_2', '')
-        corr = abs(trade.get('actual_correlation', 0))
+        corr = abs(trade.get('relationship_strength', 0))
         
         # Check if either is a selected feature
         if m1 in selected_features and m2 not in selected_features:
@@ -641,7 +641,7 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
             n_clusters = df_clustered['cluster'].max() + 1
             all_other_cluster_ids = [i for i in range(n_clusters) if i != target_cluster_id]
             
-            for other_id in all_other_cluster_ids:
+            for idx, other_id in enumerate(all_other_cluster_ids):
                 other_data = extract_shap_features_and_tradeoffs(df_clustered, other_id, insights,
                                                                  use_high_shap_only=use_high_shap_only)
                 other_categories = other_data['categories']
@@ -656,16 +656,21 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
                         other_values_list.append(0.5)
                 
                 other_values_plot = other_values_list + other_values_list[:1]
-                ax_high.plot(angles_plot, other_values_plot, 'o-', linewidth=1.0, 
-                            color='gray', alpha=0.15, markersize=2.5)
+                # Vary alpha and line style for better distinction
+                alpha_val = 0.25 + (idx % 3) * 0.08  # Vary alpha: 0.25, 0.33, 0.41
+                linestyle = ['-', '--', ':'][idx % 3]  # Vary line style
+                ax_high.plot(angles_plot, other_values_plot, 'o-', linewidth=1.8, 
+                            color='#808080', alpha=alpha_val, markersize=4, linestyle=linestyle, zorder=2)
+                # Add subtle fill for better visibility
+                ax_high.fill(angles_plot, other_values_plot, alpha=alpha_val*0.4, color='#808080', zorder=1)
             
-            # Plot target cluster
+            # Plot target cluster (solid, bright)
             target_values = [item['value'] for item in high_plot_data]
             target_values_plot = target_values + target_values[:1]
             
-            ax_high.plot(angles_plot, target_values_plot, 'o-', linewidth=3.5, 
-                         color=cluster_color, markersize=8, zorder=10)
-            ax_high.fill(angles_plot, target_values_plot, alpha=0.25, color=cluster_color)
+            ax_high.plot(angles_plot, target_values_plot, 'o-', linewidth=4, 
+                         color=cluster_color, markersize=10, zorder=100, linestyle='-')
+            ax_high.fill(angles_plot, target_values_plot, alpha=0.3, color=cluster_color, zorder=50)
             
             # Labels with type indicators
             labels_high = []
@@ -732,7 +737,7 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
             n_clusters = df_clustered['cluster'].max() + 1
             all_other_cluster_ids = [i for i in range(n_clusters) if i != target_cluster_id]
             
-            for other_id in all_other_cluster_ids:
+            for idx, other_id in enumerate(all_other_cluster_ids):
                 other_data = extract_shap_features_and_tradeoffs(df_clustered, other_id, insights,
                                                                  use_high_shap_only=use_high_shap_only)
                 other_categories = other_data['categories']
@@ -747,16 +752,21 @@ def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None,
                         other_values_list.append(0.5)
                 
                 other_values_plot = other_values_list + other_values_list[:1]
-                ax_low.plot(angles_plot, other_values_plot, 'o-', linewidth=1.0, 
-                           color='gray', alpha=0.15, markersize=2.5)
+                # Vary alpha and line style for better distinction
+                alpha_val = 0.25 + (idx % 3) * 0.08  # Vary alpha: 0.25, 0.33, 0.41
+                linestyle = ['-', '--', ':'][idx % 3]  # Vary line style
+                ax_low.plot(angles_plot, other_values_plot, 'o-', linewidth=1.8, 
+                           color='#808080', alpha=alpha_val, markersize=4, linestyle=linestyle, zorder=2)
+                # Add subtle fill for better visibility
+                ax_low.fill(angles_plot, other_values_plot, alpha=alpha_val*0.4, color='#808080', zorder=1)
             
-            # Plot target cluster
+            # Plot target cluster (solid, bright)
             target_values = [item['value'] for item in low_plot_data]
             target_values_plot = target_values + target_values[:1]
             
-            ax_low.plot(angles_plot, target_values_plot, 'o-', linewidth=3.5, 
-                        color=cluster_color, markersize=8, zorder=10)
-            ax_low.fill(angles_plot, target_values_plot, alpha=0.25, color=cluster_color)
+            ax_low.plot(angles_plot, target_values_plot, 'o-', linewidth=4, 
+                        color=cluster_color, markersize=10, zorder=100, linestyle='-')
+            ax_low.fill(angles_plot, target_values_plot, alpha=0.3, color=cluster_color, zorder=50)
             
             # Labels with type indicators
             labels_low = []
@@ -931,7 +941,7 @@ def main():
     print("Generating visualizations...\n")
     
     # Configuration: Set to True for high SHAP features only, False for all selected features
-    USE_HIGH_SHAP_ONLY = False
+    USE_HIGH_SHAP_ONLY = True
     feature_mode = "High SHAP Features Only" if USE_HIGH_SHAP_ONLY else "All Selected Features"
     print(f"Representative Feature Mode: {feature_mode}\n")
     

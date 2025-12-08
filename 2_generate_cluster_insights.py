@@ -356,12 +356,17 @@ def main():
 
     # Parse command-line arguments
     if len(sys.argv) < 2:
-        print("Usage: python 2_generate_cluster_insights.py <data_folder>")
+        print("Usage: python 2_generate_cluster_insights.py <data_folder> [--no-csv]")
         print("\nArguments:")
         print("  data_folder - Path to folder containing clustering results and parameter/metric files")
+        print("  --no-csv    - Skip writing CSV outputs (JSON still generated)")
         sys.exit(1)
     
     data_folder = sys.argv[1]
+    export_csv = '--no-csv' not in sys.argv
+    csv_dir = os.path.join(data_folder, 'csv')
+    if export_csv:
+        os.makedirs(csv_dir, exist_ok=True)
 
     # Load clustering results and processed data
     df_clustered, medoids, cluster_metadata = load_clustering_results(data_folder)
@@ -436,7 +441,9 @@ def main():
         'small_clusters': small_clusters,
         'correlation_threshold': 0.75,
         'n_iterations': None,
-        'data_folder': data_folder
+        'data_folder': data_folder,
+        'csv_dir': csv_dir,
+        'export_csv': export_csv
     }
     
     # Run the pipeline
@@ -461,17 +468,20 @@ def main():
         print(model_summary[cols].to_string(index=False))
 
     print("\n" + "="*80)
-    print("Analysis Complete! Generated Files in folder:")
-    print(f"  {data_folder}/")
-    print("="*80)
-    print("  PHASE 1 - Feature Selection:")
-    print("    - workflows_classification_results.csv (per-cluster summary)")
-    print("    - cluster_X_selection_history.csv (feature removal tracking)")
-    print("    - cluster_X_tradeoff_analysis.csv (negative correlations/trade-offs)")
-    print("  PHASE 1 - Model Training:")
-    print("    - workflows_model_evaluation_summary.csv (per-cluster model performance)")
-    print("  PHASE 1 - Decision Tree Rules:")
-    print("    - workflows_decision_tree_rules.csv (interpretable decision paths per workflow)")
+    if export_csv:
+        print("Analysis Complete! Generated Files in folder:")
+        print(f"  {csv_dir}/")
+        print("="*80)
+        print("  PHASE 1 - Feature Selection:")
+        print("    - workflows_classification_results.csv (per-cluster summary)")
+        print("    - cluster_X_selection_history.csv (feature removal tracking)")
+        print("    - cluster_X_tradeoff_analysis.csv (negative correlations/trade-offs)")
+        print("  PHASE 1 - Model Training:")
+        print("    - workflows_model_evaluation_summary.csv (per-cluster model performance)")
+        print("  PHASE 1 - Decision Tree Rules:")
+        print("    - cluster_decision_rules.csv (interpretable decision paths per workflow)")
+    else:
+        print("CSV export disabled (--no-csv). Skipped writing CSV outputs.")
     print("  PHASE 1 - Comprehensive Statistics:")
     print("    - clusters_comprehensive_insights.json (all important insights per cluster)")
     print("="*80 + "\n")
@@ -491,6 +501,8 @@ def step_phase1_load_data(results, pipeline, **kwargs):
     n_clusters = kwargs.get('n_clusters')
     small_clusters = kwargs.get('small_clusters', set())
     data_folder = kwargs.get('data_folder', 'data')
+    csv_dir = kwargs.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = kwargs.get('export_csv', True)
     
     return {
         'df_clustered': df_clustered,
@@ -502,7 +514,9 @@ def step_phase1_load_data(results, pipeline, **kwargs):
         'cluster_labels': cluster_labels,
         'n_clusters': n_clusters,
         'small_clusters': small_clusters,
-        'data_folder': data_folder
+        'data_folder': data_folder,
+        'csv_dir': csv_dir,
+        'export_csv': export_csv
     }
 
 
@@ -522,7 +536,9 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     n_clusters = load_result.get('n_clusters')
     small_clusters = load_result.get('small_clusters', set())
     data_folder = load_result.get('data_folder', 'data')
-    
+    csv_dir = load_result.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = load_result.get('export_csv', True)
+
     correlation_threshold = kwargs.get('correlation_threshold', 0.75)
     n_iterations = kwargs.get('n_iterations', None)
     
@@ -595,8 +611,9 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         
         if selection_history_expanded:
             selection_df = pd.DataFrame(selection_history_expanded)
-            selection_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_selection_history.csv'), index=False)
-            print(f"✓ Saved cluster_{cluster_id}_selection_history.csv ({len(selection_df)} removed features tracked)")
+            if export_csv:
+                selection_df.to_csv(os.path.join(csv_dir, f'cluster_{cluster_id}_selection_history.csv'), index=False)
+                print(f"✓ Saved cluster_{cluster_id}_selection_history.csv ({len(selection_df)} removed features tracked)")
         
         # Extract correlation analysis from selection history (removed features were correlated to selected by design)
         print("\n" + "-"*80)
@@ -631,9 +648,10 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     # Create summary results dataframe
     if all_results:
         results_summary = pd.DataFrame(all_results)
-        results_file = os.path.join(data_folder, 'workflows_classification_results.csv')
-        results_summary.to_csv(results_file, index=False)
-        print(f"\n✓ Saved classification results summary to: {results_file}")
+        if export_csv:
+            results_file = os.path.join(csv_dir, 'workflows_classification_results.csv')
+            results_summary.to_csv(results_file, index=False)
+            print(f"\n✓ Saved classification results summary to: {results_file}")
     else:
         results_summary = pd.DataFrame()
     
@@ -666,7 +684,11 @@ def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
     n_clusters = load_result.get('n_clusters')
     small_clusters = load_result.get('small_clusters', set())
     data_folder = load_result.get('data_folder', 'data')
-    
+    csv_dir = load_result.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = load_result.get('export_csv', True)
+    csv_dir = load_result.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = load_result.get('export_csv', True)
+
     selected_features_dict = feature_result.get('selected_features_per_cluster', {})
     correlation_threshold = kwargs.get('correlation_threshold', 0.75)
     
@@ -740,13 +762,15 @@ def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
         if correlation_results:
             tradeoff_df = pd.DataFrame(correlation_results)
             tradeoff_df = tradeoff_df.sort_values('relationship_strength', ascending=False)
-            tradeoff_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_tradeoff_analysis.csv'), index=False)
+            if export_csv:
+                tradeoff_df.to_csv(os.path.join(csv_dir, f'cluster_{cluster_id}_tradeoff_analysis.csv'), index=False)
             
             # Store trade-off data for JSON output
             tradeoff_analysis_per_cluster[cluster_id] = tradeoff_df.to_dict('records')
             
             print(f"\n✓ Found {len(tradeoff_df)} negative correlations (trade-offs) in Cluster {cluster_id}")
-            print(f"✓ Saved cluster_{cluster_id}_tradeoff_analysis.csv")
+            if export_csv:
+                print(f"✓ Saved cluster_{cluster_id}_tradeoff_analysis.csv")
             
             print("\nTop Trade-off Relationships (Strongest Negative Correlations):")
             for idx, row in tradeoff_df.head(10).iterrows():
@@ -756,7 +780,8 @@ def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
         else:
             print(f"\n⚠ No negative correlations found in Cluster {cluster_id}")
             tradeoff_df = pd.DataFrame()
-            tradeoff_df.to_csv(os.path.join(data_folder, f'cluster_{cluster_id}_tradeoff_analysis.csv'), index=False)
+            if export_csv:
+                tradeoff_df.to_csv(os.path.join(csv_dir, f'cluster_{cluster_id}_tradeoff_analysis.csv'), index=False)
             # Store empty list for this cluster
             tradeoff_analysis_per_cluster[cluster_id] = []
     
@@ -803,7 +828,11 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
     small_clusters = load_result.get('small_clusters', set())
     metric_cols = load_result.get('metric_cols')
     data_folder = load_result.get('data_folder', 'data')
-    
+    csv_dir = load_result.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = load_result.get('export_csv', True)
+    csv_dir = load_result.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = load_result.get('export_csv', True)
+
     selected_features_dict = feature_result.get('selected_features_per_cluster', {})
     
     if any(v is None for v in [X_standardized, cluster_labels, metric_cols]):
@@ -915,6 +944,11 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
             shap_importance = dict(zip(selected_features, mean_abs_shap))
             shap_importance_sorted = sorted(shap_importance.items(), key=lambda x: x[1], reverse=True)
             
+            # top_percentile = 95  # Top 5% of features
+            # importance_values = [imp for _, imp in shap_importance_sorted]
+            # threshold = np.percentile(importance_values, top_percentile) if importance_values else 0
+            # high_shap_features = [feat for feat, importance in shap_importance_sorted if importance >= threshold]
+            
             # Select all features with SHAP value > 0.1
             high_shap_features = [feat for feat, importance in shap_importance_sorted if importance > 0.1]
             
@@ -950,9 +984,10 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
     # Create summary results dataframe
     if all_model_results:
         models_summary = pd.DataFrame(all_model_results)
-        models_file = os.path.join(data_folder, 'workflows_model_evaluation_summary.csv')
-        models_summary.to_csv(models_file, index=False)
-        print(f"\n✓ Saved model evaluation summary to: {models_file}")
+        if export_csv:
+            models_file = os.path.join(csv_dir, 'workflows_model_evaluation_summary.csv')
+            models_summary.to_csv(models_file, index=False)
+            print(f"\n✓ Saved model evaluation summary to: {models_file}")
     else:
         models_summary = pd.DataFrame()
     
@@ -985,6 +1020,8 @@ def step_phase1_decision_tree_rules(results, pipeline, **kwargs):
     df_clustered = load_result.get('df_clustered')
     param_cols = load_result.get('param_cols')
     data_folder = load_result.get('data_folder', 'data')
+    csv_dir = load_result.get('csv_dir', os.path.join(data_folder, 'csv'))
+    export_csv = load_result.get('export_csv', True)
     
     if any(v is None for v in [cluster_labels, n_clusters, df_clustered, param_cols]):
         raise KeyError("Required data not available")
@@ -1160,9 +1197,10 @@ def step_phase1_decision_tree_rules(results, pipeline, **kwargs):
     
     if cluster_rules_summary:
         rules_df = pd.DataFrame(cluster_rules_summary)
-        rules_file = os.path.join(data_folder, 'cluster_decision_rules.csv')
-        rules_df.to_csv(rules_file, index=False)
-        print(f"\n✓ Saved to: {rules_file}")
+        if export_csv:
+            rules_file = os.path.join(csv_dir, 'cluster_decision_rules.csv')
+            rules_df.to_csv(rules_file, index=False)
+            print(f"\n✓ Saved to: {rules_file}")
     else:
         rules_df = pd.DataFrame()
     
@@ -1281,7 +1319,10 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                 }
                 
                 # Compute feature statistics comparing cluster vs others
+                # This will be reused for high_shap_features to avoid redundant computation
                 feature_stats = {}
+                other_mask = cluster_labels != cluster_id
+                
                 for feat in selected_feats:
                     if feat in metric_cols:
                         feat_idx = metric_cols.index(feat)
@@ -1292,23 +1333,22 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                         cluster_std = float(np.std(cluster_values))
                         
                         # Get values for all other clusters
-                        other_mask = cluster_labels != cluster_id
                         other_values = X_standardized[other_mask, feat_idx]
                         other_mean = float(np.mean(other_values))
                         other_std = float(np.std(other_values))
                         
-                        # Compute quartiles for classification
+                        # Compute global stats for z-score
                         all_values = X_standardized[:, feat_idx]
                         global_mean = float(np.mean(all_values))
                         global_std = float(np.std(all_values))
-                        # q25, q50, q75 = np.percentile(other_values, [25, 50, 75])
                         
                         # Classify cluster's mean value
-                        z_score = (cluster_mean - global_mean) / global_std
-                        if z_score > 1.0:
-                            value_category = "high"  # >1 std above global
-                        elif z_score < -1.0:
-                            value_category = "low"   # >1 std below global
+                        z_score = (cluster_mean - global_mean) / (global_std + 1e-6)
+                        threshold = 1.0
+                        if z_score > threshold:
+                            value_category = "high"  # > threshold std above global
+                        elif z_score < -threshold:
+                            value_category = "low"   # < threshold std below global
                         else:
                             value_category = "mid"
                         
@@ -1323,11 +1363,6 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                             'value_category': value_category,
                             'distinctiveness_score': round(distinctiveness, 4),
                             'z-score': round(z_score, 4),
-                            # 'quartiles': {
-                            #     'q25': round(float(q25), 4),
-                            #     'q50': round(float(q50), 4),
-                            #     'q75': round(float(q75), 4)
-                            # }
                         }
                 
                 cluster_insights['feature_selection']['feature_statistics'] = feature_stats
@@ -1395,54 +1430,12 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                     }
                 }
                 
-                # Compute statistics for high SHAP features
-                shap_feature_stats = {}
-                for feat in high_shap:
-                    if feat in metric_cols:
-                        feat_idx = metric_cols.index(feat)
-                        
-                        # Get values for this cluster
-                        cluster_values = X_standardized[cluster_mask, feat_idx]
-                        cluster_mean = float(np.mean(cluster_values))
-                        cluster_std = float(np.std(cluster_values))
-                        
-                        # Get values for all other clusters
-                        other_mask = cluster_labels != cluster_id
-                        other_values = X_standardized[other_mask, feat_idx]
-                        other_mean = float(np.mean(other_values))
-                        other_std = float(np.std(other_values))
-                        
-                        # Compute quartiles for classification
-                        all_values = X_standardized[:, feat_idx]
-                        q25, q50, q75 = np.percentile(all_values, [25, 50, 75])
-                        
-                        # Classify cluster's mean value
-                        if cluster_mean <= q25:
-                            value_category = "low"
-                        elif cluster_mean <= q75:
-                            value_category = "mid"
-                        else:
-                            value_category = "high"
-                        
-                        # Calculate how distinctive this feature is for the cluster
-                        distinctiveness = abs(cluster_mean - other_mean) / (other_std + 1e-6)
-                        
-                        shap_feature_stats[feat] = {
-                            'cluster_mean': round(cluster_mean, 4),
-                            'cluster_std': round(cluster_std, 4),
-                            'other_clusters_mean': round(other_mean, 4),
-                            'other_clusters_std': round(other_std, 4),
-                            'value_category': value_category,
-                            'distinctiveness_score': round(distinctiveness, 4),
-                            'quartiles': {
-                                'q25': round(float(q25), 4),
-                                'q50': round(float(q50), 4),
-                                'q75': round(float(q75), 4)
-                            }
-                        }
+                # Reuse already computed feature_stats for high SHAP features
+                # High SHAP features are a subset of selected features
+                shap_feature_stats = {feat: feature_stats[feat] for feat in high_shap if feat in feature_stats}
                 
                 cluster_insights['high_shap_features'] = {
-                    'features': high_shap,
+                    'features': list(shap_feature_stats.keys()),
                     'feature_statistics': shap_feature_stats
                 }
         
