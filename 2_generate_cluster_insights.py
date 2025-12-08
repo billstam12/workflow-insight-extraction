@@ -573,11 +573,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
     
         X_train = X_standardized
         y_train = y_binary
-        
-        # print(f"Train set: {len(X_train)} samples | Test set: {len(X_test)} samples")
-        # print(f"Class distribution (train): {np.bincount(y_train)}")
-        # print(f"Class distribution (test): {np.bincount(y_test)}")
-        
+    
         # Feature selection (Steps 1-3 from paper)
         selected_features, selection_history, removed_features_analysis = feature_selection_shap_iterative(
             X_train, y_train, metric_cols, n_iterations, correlation_threshold

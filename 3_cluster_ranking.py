@@ -3,7 +3,8 @@ Cluster Ranking & Selection Pipeline
 =====================================
 Implements cluster-adaptive ranking system to:
 1. MACRO-RANKING (Global): Identify efficient (non-dominated) clusters using Pareto dominance
-2. MICRO-RANKING (Local): Rank runs within each cluster based on benefit-to-cost ratio
+2. CONSENSUS-RANKING: Rank all clusters using Borda count and Copeland's method
+3. MICRO-RANKING (Local): Rank runs within each cluster based on benefit-to-cost ratio
 
 The ranking considers:
 - Representative Metrics (R_k): Primary objectives from SHAP analysis
@@ -18,6 +19,7 @@ import sys
 import numpy as np
 import pandas as pd
 import warnings
+from itertools import combinations
 from sklearn.preprocessing import MinMaxScaler
 
 warnings.filterwarnings('ignore')
@@ -541,6 +543,128 @@ def borda_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_c
     }
 
 
+def copeland_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_clustered):
+    """
+    Compute Copeland count ranking for all clusters based on representative metrics.
+    
+    Copeland's method uses pairwise comparisons:
+    1. For each pair of clusters (i, j)
+    2. For each representative metric k:
+       - If cluster i is better than j on metric k, i gets 1 point vs j
+       - If j is better than i on metric k, j gets 1 point vs i
+    3. Rank clusters by total pairwise wins
+    
+    This provides a consensus ranking based on head-to-head performance.
+    
+    Returns:
+        DataFrame with cluster rankings and Copeland scores
+    """
+    print("\n" + "="*80)
+    print("COPELAND'S RANKING (Pairwise Head-to-Head Comparison)")
+    print("="*80)
+    
+    # Collect all unique representative metrics across all clusters
+    all_representatives = set()
+    for cluster_id in range(n_clusters):
+        sig = cluster_signatures[cluster_id]
+        all_representatives.update(sig['representatives'])
+    
+    all_representatives = sorted(list(all_representatives))
+    
+    if not all_representatives:
+        print("⚠ No representative metrics found for Copeland ranking")
+        return pd.DataFrame()
+    
+    print(f"\nComparing clusters on {len(all_representatives)} representative metrics:")
+    print(f"  {', '.join(all_representatives)}")
+    
+    # Initialize Copeland scores (pairwise wins)
+    copeland_scores = {cid: 0 for cid in range(n_clusters)}
+    copeland_details = {cid: {} for cid in range(n_clusters)}
+    
+    # Pairwise comparisons
+    print("\n" + "-"*80)
+    print("Pairwise Comparisons")
+    print("-"*80)
+    
+    for i, j in combinations(range(n_clusters), 2):
+        i_wins = 0
+        j_wins = 0
+        comparison_details = []
+        
+        # Compare on each representative metric
+        for metric in all_representatives:
+            val_i = cluster_metrics[i].get(metric, None)
+            val_j = cluster_metrics[j].get(metric, None)
+            
+            if val_i is not None and val_j is not None:
+                direction = get_metric_directionality(df_clustered, metric)
+                
+                if direction == 1:  # Higher is better
+                    if val_i > val_j:
+                        i_wins += 1
+                    elif val_j > val_i:
+                        j_wins += 1
+                else:  # Lower is better
+                    if val_i < val_j:
+                        i_wins += 1
+                    elif val_j < val_i:
+                        j_wins += 1
+                
+                comparison_details.append({
+                    'metric': metric,
+                    'val_i': val_i,
+                    'val_j': val_j,
+                    'winner': 'i' if i_wins > j_wins else ('j' if j_wins > i_wins else 'tie')
+                })
+        
+        # Award points for this pairwise comparison
+        if i_wins > j_wins:
+            copeland_scores[i] += 1
+            copeland_details[i][j] = {'wins': i_wins, 'losses': j_wins}
+            copeland_details[j][i] = {'wins': j_wins, 'losses': i_wins}
+        elif j_wins > i_wins:
+            copeland_scores[j] += 1
+            copeland_details[i][j] = {'wins': i_wins, 'losses': j_wins}
+            copeland_details[j][i] = {'wins': j_wins, 'losses': i_wins}
+        else:
+            # Tie: both get 0.5 points (or could split differently)
+            copeland_scores[i] += 0.5
+            copeland_scores[j] += 0.5
+            copeland_details[i][j] = {'wins': i_wins, 'losses': j_wins}
+            copeland_details[j][i] = {'wins': j_wins, 'losses': i_wins}
+    
+    # Create ranking dataframe
+    ranking_data = []
+    for cluster_id in range(n_clusters):
+        sig = cluster_signatures[cluster_id]
+        ranking_data.append({
+            'cluster_id': cluster_id,
+            'copeland_score': copeland_scores[cluster_id],
+            'n_representatives': sig['n_representatives'],
+            'cluster_size': len(df_clustered[df_clustered['cluster'] == cluster_id])
+        })
+    
+    copeland_df = pd.DataFrame(ranking_data)
+    copeland_df = copeland_df.sort_values('copeland_score', ascending=False)
+    copeland_df['copeland_rank'] = range(1, len(copeland_df) + 1)
+    
+    print("\n" + "-"*80)
+    print("COPELAND'S RANKING RESULTS")
+    print("-"*80)
+    print(f"\n{'Rank':<6} {'Cluster':<10} {'Copeland Score':<18} {'Representatives':<18} {'Cluster Size'}")
+    print("-"*80)
+    for _, row in copeland_df.iterrows():
+        print(f"{row['copeland_rank']:<6} {int(row['cluster_id']):<10} {row['copeland_score']:<18.1f} {int(row['n_representatives']):<18} {int(row['cluster_size'])}")
+    
+    return {
+        'copeland_ranking': copeland_df,
+        'copeland_scores': copeland_scores,
+        'copeland_details': copeland_details,
+        'all_representatives': all_representatives
+    }
+
+
 def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters):
     """
     LEVEL 1: MACRO-RANKING (Global Efficiency)
@@ -834,7 +958,7 @@ def micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_cluste
 
 
 def save_ranking_results(macro_results, micro_results, efficient_clusters, n_clusters, 
-                        output_dir='data', filename_prefix='workflows', insights=None, borda_results=None,
+                        output_dir='data', filename_prefix='workflows', insights=None, borda_results=None, copeland_results=None,
                         export_csv=True, csv_dir=None):
     """Save ranking results to CSV and JSON files."""
     
@@ -855,6 +979,12 @@ def save_ranking_results(macro_results, micro_results, efficient_clusters, n_clu
         borda_file = os.path.join(csv_dir, f'{filename_prefix}_borda_ranking.csv')
         borda_results['borda_ranking'].to_csv(borda_file, index=False)
         print(f"✓ Saved Borda ranking to: {borda_file}")
+    
+    # 1c. Save Copeland ranking
+    if export_csv and copeland_results and 'copeland_ranking' in copeland_results and not copeland_results['copeland_ranking'].empty:
+        copeland_file = os.path.join(csv_dir, f'{filename_prefix}_copeland_ranking.csv')
+        copeland_results['copeland_ranking'].to_csv(copeland_file, index=False)
+        print(f"✓ Saved Copeland ranking to: {copeland_file}")
     
     # 2. Save hero runs summary
     hero_data = []
@@ -970,6 +1100,16 @@ def save_ranking_results(macro_results, micro_results, efficient_clusters, n_clu
             'n_total_clusters': int(n_clusters),
             'efficiency_ratio': float(len(efficient_clusters) / n_clusters)
         },
+        'consensus_rankings': {
+            'borda': {
+                'ranking': borda_results['borda_ranking'].to_dict('records') if borda_results else [],
+                'methodology': 'Borda count: best cluster on each metric gets (n_clusters-1) points, worst gets 0'
+            },
+            'copeland': {
+                'ranking': copeland_results['copeland_ranking'].to_dict('records') if copeland_results else [],
+                'methodology': 'Copeland: head-to-head pairwise comparisons, winner of each pair gets 1 point'
+            }
+        },
         'cluster_signatures': cluster_signatures,
         'micro_ranking': {
             'hero_runs': {
@@ -1032,12 +1172,20 @@ def main():
         df_clustered
     )
     
+    # COPELAND'S RANKING (Head-to-head pairwise comparisons)
+    copeland_results = copeland_ranking_clusters(
+        macro_results['cluster_signatures'],
+        macro_results['cluster_metrics'],
+        n_clusters,
+        df_clustered
+    )
+    
     # LEVEL 2: MICRO-RANKING (only for efficient clusters)
     micro_results = micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_clusters)
     
-    # Save results (include borda_results)
+    # Save results (include borda_results and copeland_results)
     save_ranking_results(macro_results, micro_results, efficient_clusters, n_clusters, 
-                        data_folder, os.path.basename(data_folder), insights, borda_results, export_csv, csv_dir)
+                        data_folder, os.path.basename(data_folder), insights, borda_results, copeland_results, export_csv, csv_dir)
     
     # Print summary
     print("\n" + "="*80)
@@ -1054,6 +1202,12 @@ def main():
         for _, row in top_5.iterrows():
             print(f"  #{int(row['borda_rank'])}: Cluster {int(row['cluster_id'])} (score: {int(row['borda_score'])}, size: {int(row['cluster_size'])})")
     
+    print(f"\nCopeland's Ranking (Top 5):")
+    if 'copeland_ranking' in copeland_results and not copeland_results['copeland_ranking'].empty:
+        top_5 = copeland_results['copeland_ranking'].head(5)
+        for _, row in top_5.iterrows():
+            print(f"  #{int(row['copeland_rank'])}: Cluster {int(row['cluster_id'])} (score: {row['copeland_score']:.1f}, size: {int(row['cluster_size'])})")
+    
     print(f"\nBest Clusters (Pareto Frontier):")
     for cid in efficient_clusters:
         print(f"  - Cluster {cid} (size: {len(df_clustered[df_clustered['cluster'] == cid])})")
@@ -1068,6 +1222,7 @@ def main():
         print(f"  {csv_dir}/")
         print("  - {prefix}_pareto_frontier.csv (macro-ranking results)")
         print("  - {prefix}_borda_ranking.csv (Borda consensus ranking)")
+        print("  - {prefix}_copeland_ranking.csv (Copeland's pairwise ranking)")
         print("  - {prefix}_hero_runs.csv (best runs per cluster)")
         print("  - cluster_X_run_rankings.csv (per-cluster run rankings)")
     else:
