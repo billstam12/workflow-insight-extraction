@@ -31,3 +31,7 @@ readme.md
 5_representative_metric_quality.py
 6_discriminative_power_analysis.py
 /data
+
+/ok.ipynb
+
+/4_validate_cluster_quality_copy.py

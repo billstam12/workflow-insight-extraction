@@ -64,6 +64,364 @@ def read_data(file_path: str) -> pd.DataFrame:
     return clustered_data, clusters_insights, X_scaled, metric_cols
 
 
+####################################EXPLANATION QUALITY SCORE (QSE)####################################
+
+def count_predicates_in_rule(rule_str: str) -> int:
+    """
+    Count the number of predicates in a rule string.
+    Predicates are separated by 'and' operators.
+    """
+    if not rule_str or pd.isna(rule_str):
+        return 0
+    # Split by 'and' and count non-empty parts
+    predicates = [p.strip() for p in rule_str.split(' and ') if p.strip()]
+    return len(predicates)
+
+
+def calculate_rule_based_coverage(rule_str: str, cluster_id: int, all_data: pd.DataFrame) -> float:
+    """
+    Calculate coverage based on actual decision rule.
+    
+    Coverage(E_c) = |{x ∈ X | E_c(x) = true ∧ CL(x) = c}| / |{x ∈ X | CL(x) = c}|
+    
+    This is the ratio of points in cluster c that satisfy the rule.
+    Note: This is equivalent to the 'recall' metric already calculated for rules.
+    """
+    if not rule_str or pd.isna(rule_str):
+        return 0.0
+    
+    # Convert rule to pandas query format
+    pandas_rule = convert_rule_to_pandas(rule_str)
+    
+    try:
+        # Get all points in the target cluster
+        cluster_data = all_data[all_data['cluster'] == cluster_id]
+        cluster_size = len(cluster_data)
+        
+        if cluster_size == 0:
+            return 0.0
+        
+        # Apply rule to get points that satisfy it
+        satisfying_data = cluster_data.query(pandas_rule)
+        
+        # Coverage = points in cluster that satisfy rule / total points in cluster
+        coverage = len(satisfying_data) / cluster_size
+        return coverage
+        
+    except Exception as e:
+        print(f"Error evaluating rule for cluster {cluster_id}: {e}")
+        return 0.0
+
+
+def calculate_rule_based_separation_error(rule_str: str, cluster_id: int, all_data: pd.DataFrame) -> float:
+    """
+    Calculate separation error based on actual decision rule.
+    
+    SeparationErr(E_c) = |{x ∈ X | E_c(x) = True ∧ CL(x) ∈ C\{c}}| / |{x ∈ X | E(x) = true}|
+    
+    This is the ratio of points satisfying the rule that DON'T belong to cluster c.
+    Note: This is equivalent to (1 - precision) of the rule.
+    """
+    if not rule_str or pd.isna(rule_str):
+        return 1.0
+    
+    # Convert rule to pandas query format
+    pandas_rule = convert_rule_to_pandas(rule_str)
+    
+    try:
+        # Apply rule to all data to get points that satisfy it
+        satisfying_data = all_data.query(pandas_rule)
+        total_satisfying = len(satisfying_data)
+        
+        if total_satisfying == 0:
+            return 0.0
+        
+        # Count points that satisfy the rule but are NOT in cluster c
+        other_cluster_satisfying = len(satisfying_data[satisfying_data['cluster'] != cluster_id])
+        
+        # Separation error = wrong cluster points / all satisfying points
+        separation_error = other_cluster_satisfying / total_satisfying
+        return separation_error
+        
+    except Exception as e:
+        print(f"Error evaluating rule for cluster {cluster_id}: {e}")
+        return 1.0
+
+
+def calculate_rule_based_conciseness(rule_str: str) -> float:
+    """
+    Calculate conciseness based on actual decision rule.
+    
+    Conciseness(E_c) = 1 / |{P | P is a predicate in E_c}|
+    
+    Counts the actual number of predicates (conditions) in the rule.
+    """
+    n_predicates = count_predicates_in_rule(rule_str)
+    if n_predicates == 0:
+        return 0.0
+    return 1.0 / n_predicates
+
+
+def calculate_qse_for_rule(rule_str: str, cluster_id: int, all_data: pd.DataFrame) -> dict:
+    """
+    Calculate Quality Score for Explanation (QSE) for a single rule.
+    
+    Based on the paper's Section 3.2, QSE combines three quality measures:
+    1. Coverage: ratio of points in cluster c for which explanation (rule) holds
+    2. Separation Error: ratio of non-cluster points that satisfy the explanation
+    3. Conciseness: inverse of number of predicates in the rule
+    
+    QSE(E_c) = [Coverage(E_c) + (1 - SeparationErr(E_c)) + Conciseness(E_c)] / 3
+    
+    Args:
+        rule_str: The decision rule string
+        cluster_id: ID of the cluster
+        all_data: DataFrame with all workflows (must include 'cluster' column)
+        
+    Returns:
+        Dictionary with coverage, separation error, conciseness, and QSE scores
+    """
+    # Calculate the three quality measures based on the actual rule
+    coverage = calculate_rule_based_coverage(rule_str, cluster_id, all_data)
+    separation_err = calculate_rule_based_separation_error(rule_str, cluster_id, all_data)
+    conciseness = calculate_rule_based_conciseness(rule_str)
+    
+    # Calculate QSE as the average of the three normalized measures
+    # Note: Separation error is inverted (1 - err) to align with "higher is better"
+    qse = (coverage + (1 - separation_err) + conciseness) / 3
+    
+    n_predicates = count_predicates_in_rule(rule_str)
+    
+    return {
+        'coverage': coverage,
+        'separation_error': separation_err,
+        'separation_quality': 1 - separation_err,
+        'conciseness': conciseness,
+        'qse': qse,
+        'n_predicates': n_predicates
+    }
+
+
+def calculate_all_qse_from_rules(rules_df: pd.DataFrame, all_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate QSE for all cluster rules.
+    
+    Args:
+        rules_df: DataFrame with cluster decision rules
+        all_data: DataFrame with all workflows (must include 'cluster' column)
+    
+    Returns:
+        DataFrame with QSE metrics for each cluster-rule combination
+    """
+    results = []
+    
+    for _, row in rules_df.iterrows():
+        cluster_id = row['cluster_id']
+        rule_num = row['rule_number']
+        rule_str = row['rule']
+        
+        # Calculate QSE for this rule
+        qse_metrics = calculate_qse_for_rule(rule_str, cluster_id, all_data)
+        
+        # Combine with rule info
+        result = {
+            'cluster_id': cluster_id,
+            'rule_number': rule_num,
+            **qse_metrics
+        }
+        results.append(result)
+    
+    qse_df = pd.DataFrame(results)
+    qse_df = qse_df.sort_values(['cluster_id', 'rule_number'])
+    
+    return qse_df
+
+
+def calculate_best_qse_per_cluster(qse_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    For each cluster, select the rule with the highest QSE score.
+    
+    Returns:
+        DataFrame with best QSE metrics per cluster
+    """
+    # Group by cluster and get the row with max QSE
+    best_qse = qse_df.loc[qse_df.groupby('cluster_id')['qse'].idxmax()]
+    return best_qse.reset_index(drop=True)
+
+
+def plot_qse_components(qse_df: pd.DataFrame, save_path: str = None):
+    """
+    Plot QSE components (Coverage, Separation Quality, Conciseness) for each cluster.
+    """
+    fig, ax = plt.subplots()
+    
+    clusters = qse_df['cluster_id'].values
+    x = np.arange(len(clusters))
+    width = 0.25
+    
+    # Plot the three components
+    bars1 = ax.bar(x - width, qse_df['coverage'], width, 
+                   label='Coverage', color='#3498db', alpha=0.8, edgecolor='black')
+    bars2 = ax.bar(x, qse_df['separation_quality'], width,
+                   label='Separation Quality (1-Error)', color='#2ecc71', alpha=0.8, edgecolor='black')
+    bars3 = ax.bar(x + width, qse_df['conciseness'], width,
+                   label='Conciseness', color='#e74c3c', alpha=0.8, edgecolor='black')
+    
+    # Add value labels
+    for bars in [bars1, bars2, bars3]:
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{height:.2f}',
+                   ha='center', va='bottom', fontsize=9)
+    
+    ax.set_xlabel('Cluster ID')
+    ax.set_ylabel('Score')
+    ax.set_xticks(x)
+    ax.set_xticklabels(clusters)
+    ax.legend()
+    ax.set_ylim(0, 1.1)
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"QSE components plot saved to {save_path}")
+
+
+def plot_qse_scores(qse_df: pd.DataFrame, save_path: str = None):
+    """
+    Plot overall QSE scores for each cluster.
+    """
+    fig, ax = plt.subplots()
+    
+    clusters = qse_df['cluster_id'].values
+    qse_scores = qse_df['qse'].values
+    
+    bars = ax.bar(clusters, qse_scores, color='#9b59b6', alpha=0.8, edgecolor='black')
+    
+    # Add value labels
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+               f'{height:.3f}',
+               ha='center', va='bottom', fontsize=10)
+    
+    # Add horizontal line for average QSE
+    avg_qse = qse_scores.mean()
+    ax.axhline(y=avg_qse, color='red', linestyle='--', linewidth=2, 
+               label=f'Average QSE: {avg_qse:.3f}')
+    
+    ax.set_xlabel('Cluster ID')
+    ax.set_ylabel('Quality Score for Explanation (QSE)')
+    ax.set_xticks(clusters)
+    ax.set_ylim(0, 1.1)
+    ax.legend()
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"QSE scores plot saved to {save_path}")
+
+
+def plot_qse_per_cluster_all_rules(qse_all_rules_df: pd.DataFrame, save_path: str = None):
+    """
+    Plot QSE scores for all rules within each cluster.
+    Creates a grouped bar chart showing how QSE varies across rules for each cluster.
+    """
+    clusters = sorted(qse_all_rules_df['cluster_id'].unique())
+    n_clusters = len(clusters)
+    
+    # Determine grid layout
+    n_cols = min(3, n_clusters)
+    n_rows = (n_clusters + n_cols - 1) // n_cols
+    
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6*n_cols, 5*n_rows))
+    if n_clusters == 1:
+        axes = np.array([axes])
+    axes = axes.flatten()
+    
+    for idx, cluster_id in enumerate(clusters):
+        ax = axes[idx]
+        cluster_data = qse_all_rules_df[qse_all_rules_df['cluster_id'] == cluster_id]
+        
+        rules = cluster_data['rule_number'].values
+        x = np.arange(len(rules))
+        width = 0.2
+        
+        # Plot components
+        ax.bar(x - 1.5*width, cluster_data['coverage'], width, 
+               label='Coverage', color='#3498db', alpha=0.8, edgecolor='black')
+        ax.bar(x - 0.5*width, cluster_data['separation_quality'], width,
+               label='Sep. Quality', color='#2ecc71', alpha=0.8, edgecolor='black')
+        ax.bar(x + 0.5*width, cluster_data['conciseness'], width,
+               label='Conciseness', color='#e74c3c', alpha=0.8, edgecolor='black')
+        ax.bar(x + 1.5*width, cluster_data['qse'], width,
+               label='QSE', color='#9b59b6', alpha=0.8, edgecolor='black')
+        
+        # Formatting
+        ax.set_xlabel('Rule Number')
+        ax.set_ylabel('Score')
+        ax.set_title(f'Cluster {cluster_id}')
+        ax.set_xticks(x)
+        ax.set_xticklabels(rules)
+        ax.set_ylim(0, 1.1)
+        ax.grid(axis='y', linestyle='--', alpha=0.3)
+        
+        if idx == 0:
+            ax.legend(loc='best', fontsize=9)
+    
+    # Hide unused subplots
+    for idx in range(n_clusters, len(axes)):
+        axes[idx].set_visible(False)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"QSE per cluster (all rules) plot saved to {save_path}")
+
+
+def plot_qse_heatmap_all_rules(qse_all_rules_df: pd.DataFrame, save_path: str = None):
+    """
+    Plot a heatmap showing QSE scores for all cluster-rule combinations.
+    """
+    # Pivot data to create a matrix: clusters x rules
+    pivot_data = qse_all_rules_df.pivot(index='cluster_id', columns='rule_number', values='qse')
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # Create heatmap
+    im = ax.imshow(pivot_data.values, cmap='RdYlGn', aspect='auto', vmin=0, vmax=1)
+    
+    # Set ticks
+    ax.set_xticks(np.arange(len(pivot_data.columns)))
+    ax.set_yticks(np.arange(len(pivot_data.index)))
+    ax.set_xticklabels(pivot_data.columns)
+    ax.set_yticklabels(pivot_data.index)
+    
+    # Labels
+    ax.set_xlabel('Rule Number')
+    ax.set_ylabel('Cluster ID')
+    
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label('QSE Score', rotation=270, labelpad=20)
+    
+    # Add text annotations
+    for i in range(len(pivot_data.index)):
+        for j in range(len(pivot_data.columns)):
+            value = pivot_data.iloc[i, j]
+            if not pd.isna(value):
+                text = ax.text(j, i, f'{value:.2f}',
+                             ha="center", va="center", color="black", fontsize=10)
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+        print(f"QSE heatmap saved to {save_path}")
+
+
 
 ####################################CLUSTER QUALITY##################################
 def calculate_cluster_quality(clustered_data: pd.DataFrame, X_scaled: np.ndarray) -> pd.DataFrame:
@@ -759,6 +1117,7 @@ if __name__ == "__main__":
     result_dir_predictive_quality = f"./results/{dataset_name}/{ablation}/predictive_quality"
     result_dir_rule_quality = f"./results/{dataset_name}/{ablation}/rule_quality"
     result_dir_representative_quality = f"./results/{dataset_name}/{ablation}/representative_quality"
+    result_dir_qse = f"./results/{dataset_name}/{ablation}/explanation_quality"
 
 
 
@@ -777,25 +1136,76 @@ if __name__ == "__main__":
     ##Predictive Quality 
     predictive_df = calculate_predictive_quality(clusters_insights)
     os.makedirs(result_dir_predictive_quality, exist_ok=True)
-    predictive_df.to_csv(os.path.join(result_dir_predictive_quality, "predictive_quality_metrics.csv"), index=False)
-    plot_predictive_quality(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality.png"))
-    plot_predictive_quality_table(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality_table.png"))
+    if not predictive_df.empty and len(predictive_df) > 0:
+        predictive_df.to_csv(os.path.join(result_dir_predictive_quality, "predictive_quality_metrics.csv"), index=False)
+        plot_predictive_quality(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality.png"))
+        plot_predictive_quality_table(predictive_df, save_path=os.path.join(result_dir_predictive_quality, "predictive_quality_table.png"))
+    else:
+        print("Warning: No predictive quality metrics available. Skipping predictive quality plots.")
        
     ##Rule quality
-    rules_df = pd.read_csv(f"{path}/cluster_decision_rules.csv")
-    raw_data_full = pd.read_csv(f"{path}/workflows.csv")
-    cluster_labels = pd.read_csv(f"{path}/workflows_clustered.csv")[['workflowId', 'cluster']]
-    _,sub_frames=overall_for_rules(rules_df, raw_data_full, cluster_labels)
-    cv_summary_df=rule_quality(sub_frames, clusters_insights)
-    os.makedirs(result_dir_rule_quality, exist_ok=True)
-    cv_summary_df.to_csv(os.path.join(result_dir_rule_quality, "rule_quality_metrics.csv"), index=False)
-    plot_rule_quality(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality.png"))
-    plot_rule_quality_box_plot(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality_boxplot.png"))
+    rules_list = []
+    for cluster_id_str, cluster_info in clusters_insights.items():
+        cluster_id = int(cluster_id_str)
+        if 'decision_tree_rules' in cluster_info and cluster_info['decision_tree_rules']:
+            for rule_num, rule_data in enumerate(cluster_info['decision_tree_rules'], start=1):
+                rules_list.append({
+                    'cluster_id': cluster_id,
+                    'rule_number': rule_num,
+                    'rule': rule_data['rule'],
+                    'precision': rule_data.get('precision', 0),
+                    'recall': rule_data.get('recall', 0),
+                    'f1_score': rule_data.get('f1_score', 0),
+                    'n_workflows_in_cluster': rule_data.get('n_workflows_in_cluster', 0),
+                    'combined_score': rule_data.get('combined_score', 0)
+                })
+    
+    if rules_list:
+        rules_df = pd.DataFrame(rules_list)
+        raw_data_full = pd.read_csv(f"{path}/workflows.csv")
+        cluster_labels = pd.read_csv(f"{path}/workflows_clustered.csv")[['workflowId', 'cluster']]
+        _,sub_frames=overall_for_rules(rules_df, raw_data_full, cluster_labels)
+        cv_summary_df=rule_quality(sub_frames, clusters_insights)
+        os.makedirs(result_dir_rule_quality, exist_ok=True)
+        cv_summary_df.to_csv(os.path.join(result_dir_rule_quality, "rule_quality_metrics.csv"), index=False)
+        plot_rule_quality(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality.png"))
+        plot_rule_quality_box_plot(cv_summary_df, save_path=os.path.join(result_dir_rule_quality, "rule_quality_boxplot.png"))
+    else:
+        print("Warning: No decision tree rules found. Skipping rule quality analysis.")
    
     ## Representative Metrics Quality
     os.makedirs(result_dir_representative_quality, exist_ok=True)
     representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
     representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
     plot_representative_metrics_cv_comparison(representative_quality_df, save_path=os.path.join(result_dir_representative_quality, "cv_comparison.png"))
+    
+    ## Explanation Quality Score (QSE)
+    os.makedirs(result_dir_qse, exist_ok=True)
+    
+    if rules_list:
+        # Load workflow data for QSE calculation
+        raw_data_full = pd.read_csv(f"{path}/workflows.csv")
+        cluster_labels = pd.read_csv(f"{path}/workflows_clustered.csv")[['workflowId', 'cluster']]
+        all_data_with_clusters = pd.merge(raw_data_full, cluster_labels, on='workflowId')
+        all_data_with_clusters.columns = [c.replace(' ', '_') for c in all_data_with_clusters.columns]
+        
+        # Calculate QSE for all rules
+        qse_all_rules_df = calculate_all_qse_from_rules(rules_df, all_data_with_clusters)
+        qse_all_rules_df.to_csv(os.path.join(result_dir_qse, "qse_all_rules.csv"), index=False)
+        
+        # Get best QSE per cluster
+        qse_best_df = calculate_best_qse_per_cluster(qse_all_rules_df)
+        qse_best_df.to_csv(os.path.join(result_dir_qse, "qse_best_per_cluster.csv"), index=False)
+        
+        # Plot QSE for best rules per cluster
+        plot_qse_components(qse_best_df, save_path=os.path.join(result_dir_qse, "qse_components.png"))
+        plot_qse_scores(qse_best_df, save_path=os.path.join(result_dir_qse, "qse_scores.png"))
+        
+        # Plot QSE for all rules
+        plot_qse_per_cluster_all_rules(qse_all_rules_df, save_path=os.path.join(result_dir_qse, "qse_per_cluster_all_rules.png"))
+        plot_qse_heatmap_all_rules(qse_all_rules_df, save_path=os.path.join(result_dir_qse, "qse_heatmap.png"))
+    else:
+        print("Warning: No rules available. Skipping QSE calculation.")
+
 
 

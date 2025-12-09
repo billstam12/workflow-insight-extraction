@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 # Load the wine quality dataset
 
 data =pd.read_parquet('taxi.parquet')
-data = data.iloc[:1000000]
+# data = data.iloc[:1000000]
 data = data.drop(['tpep_pickup_datetime', 'tpep_dropoff_datetime',"store_and_fwd_flag"], axis=1)
 data=data.dropna()
 # Split the data into training and test sets (75/25 split)
@@ -46,8 +46,8 @@ param_grid = {
     'max_iter': [1000, 5000],
     'tol': [1e-4, 1e-3, 1e-2],
     'selection': ['cyclic', 'random'],
-    'fit_intercept': [True, False],
-    'normalize': [True,False]  # normalize is deprecated but we keep it simple
+    'fit_intercept': [True],
+    'normalize': [True]  # normalize is deprecated but we keep it simple
 }
 
 # Generate all combinations
@@ -169,7 +169,7 @@ for idx, params in enumerate(param_combinations, 1):
     results_list.append(result)
     
     # Print progress every 50 runs
-    if idx % 100 == 0:
+    if idx % 10 == 0:
         elapsed = time.time() - start_time
         avg_time = elapsed / idx
         remaining = avg_time * (len(param_combinations) - idx)

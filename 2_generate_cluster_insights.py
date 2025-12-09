@@ -869,14 +869,34 @@ def step_phase1_model_training_and_evaluation(results, pipeline, **kwargs):
         # Create binary classification: this cluster vs. others
         y_binary = (cluster_labels == cluster_id).astype(int)
         
+        # Check if we have enough samples in both classes
+        unique_classes, class_counts = np.unique(y_binary, return_counts=True)
+        min_class_count = class_counts.min()
+        
+        if min_class_count < 2:
+            print(f"\n⊘ Cluster {cluster_id}: Skipping - minority class has only {min_class_count} sample(s)")
+            print(f"   Class distribution: {dict(zip(unique_classes, class_counts))}")
+            print(f"   This happens when almost all data is in one cluster (likely due to small cluster filtering)")
+            continue
+        
+        print(f"y_binary distribution: {dict(zip(unique_classes, class_counts))}")
+        
         # Get feature indices
         feature_indices = [metric_cols.index(f) for f in selected_features]
         X_selected = X_standardized[:, feature_indices]
         
         # Train-test split (80-20)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_selected, y_binary, test_size=0.2, random_state=42, stratify=y_binary
-        )
+        # Check if we have enough samples for stratification
+        if min_class_count < 10:
+            # Don't use stratify if classes are too imbalanced
+            print(f"Warning: Minority class has only {min_class_count} samples, using random split instead of stratified")
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_selected, y_binary, test_size=0.2, random_state=42
+            )
+        else:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_selected, y_binary, test_size=0.2, random_state=42, stratify=y_binary
+            )
         
         print(f"Train: {len(X_train)} | Test: {len(X_test)}")
         print(f"Class distribution (train): {np.bincount(y_train)}")
