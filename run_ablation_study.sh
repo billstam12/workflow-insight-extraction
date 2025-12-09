@@ -9,6 +9,9 @@
 
 set -e  # Exit on error
 
+# Activate virtual environment
+source env/bin/activate
+
 # Configuration
 WORKFLOW_FOLDER="./data/workflows_adult"
 DATASET_NAME="adult"
