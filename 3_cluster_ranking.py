@@ -166,6 +166,138 @@ def get_metric_directionality(df_clustered, metric):
     return 1
 
 
+def compute_hero_run_for_cluster(signature, cluster_data, df_clustered):
+    """
+    Compute a "hero" run within a cluster (best trade-off) using the same logic
+    as the micro-ranking step, but without requiring Pareto efficiency.
+
+    Returns a dict with:
+      - row (Series) for the chosen run
+      - workflow_id
+      - score components
+    """
+    if cluster_data.empty:
+        return None
+
+    all_metrics = signature['all_metrics']
+    if not all_metrics:
+        return None
+
+    # Build ideal point per metric
+    ideal_point = {}
+    for metric in all_metrics:
+        if metric in df_clustered.columns:
+            direction = get_metric_directionality(df_clustered, metric)
+            if direction == 1:
+                ideal_point[metric] = cluster_data[metric].max()
+            else:
+                ideal_point[metric] = cluster_data[metric].min()
+
+    # Normalize metrics to [0, 1]
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    metrics_data = cluster_data.reindex(columns=all_metrics).copy()
+    for metric in all_metrics:
+        if metric not in metrics_data.columns:
+            metrics_data[metric] = 0.5
+
+    metrics_normalized = pd.DataFrame(
+        scaler.fit_transform(metrics_data.fillna(metrics_data.mean())),
+        columns=all_metrics,
+        index=metrics_data.index
+    )
+
+    run_scores = []
+    alpha, gamma = 0.70, 0.30
+
+    for run_idx in cluster_data.index:
+        score_components = {'representatives': 0.0, 'tradeoffs': 0.0}
+
+        # Representatives distance
+        rep_distances = []
+        for metric in signature['representatives']:
+            if metric in metrics_normalized.columns:
+                actual_val = metrics_normalized.loc[run_idx, metric]
+                direction = get_metric_directionality(df_clustered, metric)
+                distance = abs(1.0 - actual_val) if direction == 1 else abs(actual_val)
+                rep_distances.append(distance)
+        score_components['representatives'] = np.mean(rep_distances) if rep_distances else 0.0
+
+        # Trade-off costs distance
+        trade_distances = []
+        for tradeoff in signature['tradeoff_pairs']:
+            cost_metric = tradeoff['cost']
+            if cost_metric in metrics_normalized.columns:
+                actual_val = metrics_normalized.loc[run_idx, cost_metric]
+                direction = get_metric_directionality(df_clustered, cost_metric)
+                distance = abs(actual_val) if direction == 1 else abs(0 - actual_val)
+                trade_distances.append(distance)
+        score_components['tradeoffs'] = np.mean(trade_distances) if trade_distances else 0.0
+
+        ensemble_score = alpha * score_components['representatives'] + gamma * score_components['tradeoffs']
+
+        run_scores.append({
+            'run_idx': run_idx,
+            'workflow_id': cluster_data.loc[run_idx, 'workflowId'] if 'workflowId' in cluster_data.columns else str(run_idx),
+            'representatives_dist': score_components['representatives'],
+            'tradeoffs_dist': score_components['tradeoffs'],
+            'ensemble_score': ensemble_score
+        })
+
+    run_scores.sort(key=lambda x: x['ensemble_score'])
+    best = run_scores[0]
+
+    return {
+        'row': cluster_data.loc[best['run_idx']],
+        'workflow_id': best['workflow_id'],
+        'ensemble_score': best['ensemble_score'],
+        'representatives_dist': best['representatives_dist'],
+        'tradeoffs_dist': best['tradeoffs_dist']
+    }
+
+
+def select_cluster_metric_row(cluster_id, cluster_data, df_clustered, df_medoids, signature, metric_source='mean'):
+    """
+    Select the row/values used to represent a cluster when comparing metrics.
+
+    metric_source options:
+      - 'mean': use cluster mean (legacy behavior)
+      - 'medoid': use cluster medoid row if available
+      - 'hero': use best (hero) run within the cluster
+    """
+    metric_source = metric_source.lower()
+
+    if metric_source == 'mean':
+        return cluster_data.mean(numeric_only=True)
+
+    if metric_source == 'medoid' and df_medoids is not None:
+        medoid_row = df_medoids[df_medoids['cluster_id'] == cluster_id]
+        if not medoid_row.empty:
+            medoid_index = medoid_row.iloc[0]['medoid_index']
+            try:
+                medoid_index = int(medoid_index)
+            except Exception:
+                pass
+            if medoid_index in cluster_data.index:
+                return cluster_data.loc[medoid_index]
+            # Fallback via workflow_id match if index not aligned
+            workflow_id = medoid_row.iloc[0].get('workflow_id')
+            if workflow_id is not None and 'workflowId' in cluster_data.columns:
+                matched = cluster_data[cluster_data['workflowId'] == workflow_id]
+                if not matched.empty:
+                    return matched.iloc[0]
+        # Fallback to mean if medoid missing
+        return cluster_data.mean(numeric_only=True)
+
+    if metric_source == 'hero':
+        hero = compute_hero_run_for_cluster(signature, cluster_data, df_clustered)
+        if hero:
+            return hero['row']
+        return cluster_data.mean(numeric_only=True)
+
+    # Default fallback
+    return cluster_data.mean(numeric_only=True)
+
+
 def analyze_cluster_dominance(cluster_signatures, cluster_metrics, n_clusters, df_clustered, dominated_by_macro):
     """
     Analyze and document where each cluster dominates others and how.
@@ -658,14 +790,14 @@ def copeland_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, d
         print(f"{row['copeland_rank']:<6} {int(row['cluster_id']):<10} {row['copeland_score']:<18.1f} {int(row['n_representatives']):<18} {int(row['cluster_size'])}")
     
     return {
-        'copeland_ranking': copeland_df,
+        'copeland_ranking': copeland_df, 
         'copeland_scores': copeland_scores,
         'copeland_details': copeland_details,
         'all_representatives': all_representatives
     }
 
 
-def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters):
+def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters, df_medoids=None, metric_source='mean'):
     """
     LEVEL 1: MACRO-RANKING (Global Efficiency)
     
@@ -698,17 +830,21 @@ def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters):
     for cluster_id in range(n_clusters):
         cluster_data = df_clustered[df_clustered['cluster'] == cluster_id]
         metrics_values = {}
-        
-        # Compute mean for ALL metrics that exist in any cluster's signature
+
+        # Select representative row based on configured metric source
+        representative_row = select_cluster_metric_row(
+            cluster_id, cluster_data, df_clustered, df_medoids, cluster_signatures[cluster_id], metric_source
+        )
+
+        # Collect values for ALL metrics that exist in any cluster's signature
         for metric in all_metrics_global:
-            if metric in df_clustered.columns:
-                mean_val = cluster_data[metric].mean()
-                metrics_values[metric] = mean_val
-        
+            if metric in df_clustered.columns and metric in representative_row:
+                metrics_values[metric] = representative_row[metric]
+
         cluster_metrics[cluster_id] = metrics_values
-        
+
         signature = cluster_signatures[cluster_id]
-        print(f"\nCluster {cluster_id}:")
+        print(f"\nCluster {cluster_id} ({metric_source}):")
         print(f"  Representatives: {signature['representatives']}")
         tradeoff_str = ", ".join([f"{tp['benefit']} vs {tp['cost']}" for tp in signature['tradeoff_pairs']])
         print(f"  Trade-offs: {tradeoff_str if tradeoff_str else 'None'}")
@@ -818,7 +954,7 @@ def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters):
     }
 
 
-def micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_clusters):
+def micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_clusters, precomputed_hero_runs=None):
     """
     LEVEL 2: MICRO-RANKING (Local - Best Run per Cluster)
     
@@ -849,98 +985,22 @@ def micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_cluste
             print(f"  ⚠ No data for cluster {cluster_id}")
             continue
         
-        # Build ideal point (I_k)
-        ideal_point = {}
-        all_metrics = signature['all_metrics']
+        hero_run = None
+        if precomputed_hero_runs is not None and cluster_id in precomputed_hero_runs:
+            hero_run = precomputed_hero_runs.get(cluster_id)
+
+        if hero_run is None:
+            # Fallback to compute if not precomputed
+            hero = compute_hero_run_for_cluster(signature, cluster_data, df_clustered)
+            if hero:
+                hero_run = {
+                    'workflow_id': hero['workflow_id'],
+                    'ensemble_score': hero['ensemble_score'],
+                    'representatives_dist': hero['representatives_dist'],
+                    'tradeoffs_dist': hero['tradeoffs_dist'],
+                    'index': hero['row'].name if hasattr(hero['row'], 'name') else None
+                }
         
-        for metric in all_metrics:
-            if metric in df_clustered.columns:
-                direction = get_metric_directionality(df_clustered, metric)
-                
-                if direction == 1:  # Higher is better
-                    ideal_point[metric] = cluster_data[metric].max()
-                else:  # Lower is better
-                    ideal_point[metric] = cluster_data[metric].min()
-        
-        # Normalize metrics to [0, 1] for distance calculation
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        metrics_data = cluster_data[all_metrics].copy()
-        
-        # Handle missing values
-        for metric in all_metrics:
-            if metric not in metrics_data.columns:
-                metrics_data[metric] = 0.5
-        
-        metrics_normalized = pd.DataFrame(
-            scaler.fit_transform(metrics_data.fillna(metrics_data.mean())),
-            columns=all_metrics,
-            index=metrics_data.index
-        )
-        
-        # Score each run
-        run_scores = []
-        
-        for idx, run_id in enumerate(cluster_data.index):
-            score_components = {
-                'representatives': 0.0,
-                'tradeoffs': 0.0
-            }
-            
-            # Distance to ideal on Representatives (α = 0.70 - High Priority)
-            if signature['representatives']:
-                rep_distances = []
-                for metric in signature['representatives']:
-                    if metric in metrics_normalized.columns:
-                        actual_val = metrics_normalized.loc[run_id, metric]
-                        ideal_val = 1.0  # Normalized ideal is 1.0 (best)
-                        direction = get_metric_directionality(df_clustered, metric)
-                        
-                        if direction == 1:  # Higher is better - distance is (1 - actual)
-                            distance = abs(ideal_val - actual_val)
-                        else:  # Lower is better - ideal is 0, distance is actual
-                            distance = abs(0 - actual_val)
-                        
-                        rep_distances.append(distance)
-                
-                score_components['representatives'] = np.mean(rep_distances) if rep_distances else 0.0
-            
-            # Distance on Trade-offs (γ = 0.30 - Constraint/Cost)
-            # For each trade-off pair (benefit, cost), we want to minimize cost impact
-            if signature['tradeoff_pairs']:
-                trade_distances = []
-                for tradeoff in signature['tradeoff_pairs']:
-                    cost_metric = tradeoff['cost']
-                    if cost_metric in metrics_normalized.columns:
-                        actual_val = metrics_normalized.loc[run_id, cost_metric]
-                        direction = get_metric_directionality(df_clustered, cost_metric)
-                        
-                        # For costs, we want to MINIMIZE (distance to 0)
-                        if direction == -1:  # Lower is better for costs
-                            distance = abs(0 - actual_val)  # Minimize towards 0
-                        else:
-                            distance = abs(actual_val)  # Penalize high values
-                        
-                        trade_distances.append(distance)
-                
-                score_components['tradeoffs'] = np.mean(trade_distances) if trade_distances else 0.0
-            
-            # Weighted ensemble score (lower is better)
-            alpha, gamma = 0.70, 0.30
-            ensemble_score = (alpha * score_components['representatives'] +
-                            gamma * score_components['tradeoffs'])
-            
-            run_scores.append({
-                'workflow_id': cluster_data.loc[run_id, 'workflowId'],
-                'index': run_id,
-                'representatives_dist': score_components['representatives'],
-                'tradeoffs_dist': score_components['tradeoffs'],
-                'ensemble_score': ensemble_score
-            })
-        
-        # Sort by ensemble score (lower is better)
-        run_scores.sort(key=lambda x: x['ensemble_score'])
-        
-        hero_run = run_scores[0] if run_scores else None
         
         if hero_run:
             print(f"  Hero Run: {hero_run['workflow_id']}")
@@ -949,7 +1009,11 @@ def micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_cluste
             print(f"    Ensemble Score: {hero_run['ensemble_score']:.4f}")
             
             hero_runs[cluster_id] = hero_run
-            cluster_rankings[cluster_id] = run_scores
+            # If rankings not available (because we reused), store minimal
+            if precomputed_hero_runs is not None:
+                cluster_rankings[cluster_id] = [hero_run]
+            else:
+                cluster_rankings[cluster_id] = []
         
     return {
         'hero_runs': hero_runs,
@@ -959,7 +1023,7 @@ def micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_cluste
 
 def save_ranking_results(macro_results, micro_results, efficient_clusters, n_clusters, 
                         output_dir='data', filename_prefix='workflows', insights=None, borda_results=None, copeland_results=None,
-                        export_csv=True, csv_dir=None):
+                        export_csv=True, csv_dir=None, metric_source='mean'):
     """Save ranking results to CSV and JSON files."""
     
     os.makedirs(output_dir, exist_ok=True)
@@ -1098,7 +1162,8 @@ def save_ranking_results(macro_results, micro_results, efficient_clusters, n_clu
             'efficient_clusters': [int(cid) for cid in efficient_clusters],
             'n_efficient': int(len(efficient_clusters)),
             'n_total_clusters': int(n_clusters),
-            'efficiency_ratio': float(len(efficient_clusters) / n_clusters)
+            'efficiency_ratio': float(len(efficient_clusters) / n_clusters),
+            'metric_source': metric_source
         },
         'consensus_rankings': {
             'borda': {
@@ -1141,17 +1206,26 @@ def main():
     
     # Parse command-line arguments
     if len(sys.argv) < 2:
-        print("Usage: python 5_cluster_ranking.py <data_folder> [--no-csv]")
+        print("Usage: python 3_cluster_ranking.py <data_folder> [--no-csv] [--metric-sources=mean,medoid,hero|all]")
         print("\nArguments:")
-        print("  data_folder - Path to folder containing clustering results and insights")
-        print("  --no-csv    - Skip writing CSV outputs (JSON still generated)")
+        print("  data_folder           - Path to folder containing clustering results and insights")
+        print("  --no-csv              - Skip writing CSV outputs (JSON still generated)")
+        print("  --metric-sources=...  - Comma-separated sources: mean (default), medoid, hero, or 'all'")
         sys.exit(1)
-    
+
     data_folder = sys.argv[1]
     export_csv = '--no-csv' not in sys.argv
-    csv_dir = os.path.join(data_folder, 'csv')
-    if export_csv:
-        os.makedirs(csv_dir, exist_ok=True)
+
+    metric_sources_arg = next((arg for arg in sys.argv if arg.startswith('--metric-sources=')), None)
+    if metric_sources_arg:
+        metric_sources = [src.strip().lower() for src in metric_sources_arg.split('=', 1)[1].split(',') if src.strip()]
+        if 'all' in metric_sources:
+            metric_sources = ['mean', 'medoid', 'hero']
+    else:
+        metric_sources = ['hero']
+
+    metric_sources = list(dict.fromkeys(metric_sources))  # de-duplicate, preserve order
+    multiple_sources = len(metric_sources) > 1
     
     # Load data
     print("\nLoading cluster data and insights...")
@@ -1159,76 +1233,115 @@ def main():
     print(f"✓ Loaded {len(df_clustered)} workflows in {df_clustered['cluster'].max() + 1} clusters")
     
     n_clusters = df_clustered['cluster'].max() + 1
-    
-    # LEVEL 1: MACRO-RANKING
-    macro_results = macro_ranking_pareto_dominance(df_clustered, insights, n_clusters)
-    efficient_clusters = macro_results['efficient_clusters']
-    
-    # BORDA COUNT RANKING (Consensus ranking across all representative metrics)
-    borda_results = borda_ranking_clusters(
-        macro_results['cluster_signatures'],
-        macro_results['cluster_metrics'],
-        n_clusters,
-        df_clustered
-    )
-    
-    # COPELAND'S RANKING (Head-to-head pairwise comparisons)
-    copeland_results = copeland_ranking_clusters(
-        macro_results['cluster_signatures'],
-        macro_results['cluster_metrics'],
-        n_clusters,
-        df_clustered
-    )
-    
-    # LEVEL 2: MICRO-RANKING (only for efficient clusters)
-    micro_results = micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_clusters)
-    
-    # Save results (include borda_results and copeland_results)
-    save_ranking_results(macro_results, micro_results, efficient_clusters, n_clusters, 
-                        data_folder, os.path.basename(data_folder), insights, borda_results, copeland_results, export_csv, csv_dir)
-    
-    # Print summary
-    print("\n" + "="*80)
-    print("RANKING PIPELINE SUMMARY")
-    print("="*80)
-    print(f"\nGlobal Analysis (Macro-Ranking):")
-    print(f"  Total Clusters: {n_clusters}")
-    print(f"  Efficient Clusters: {len(efficient_clusters)}")
-    print(f"  Efficiency Ratio: {len(efficient_clusters) / n_clusters:.1%}")
-    
-    print(f"\nBorda Consensus Ranking (Top 5):")
-    if 'borda_ranking' in borda_results and not borda_results['borda_ranking'].empty:
-        top_5 = borda_results['borda_ranking'].head(5)
-        for _, row in top_5.iterrows():
-            print(f"  #{int(row['borda_rank'])}: Cluster {int(row['cluster_id'])} (score: {int(row['borda_score'])}, size: {int(row['cluster_size'])})")
-    
-    print(f"\nCopeland's Ranking (Top 5):")
-    if 'copeland_ranking' in copeland_results and not copeland_results['copeland_ranking'].empty:
-        top_5 = copeland_results['copeland_ranking'].head(5)
-        for _, row in top_5.iterrows():
-            print(f"  #{int(row['copeland_rank'])}: Cluster {int(row['cluster_id'])} (score: {row['copeland_score']:.1f}, size: {int(row['cluster_size'])})")
-    
-    print(f"\nBest Clusters (Pareto Frontier):")
-    for cid in efficient_clusters:
-        print(f"  - Cluster {cid} (size: {len(df_clustered[df_clustered['cluster'] == cid])})")
-    
-    print(f"\nBest Runs (Micro-Ranking - Hero Runs):")
-    for cluster_id, hero_run in micro_results['hero_runs'].items():
-        print(f"  Cluster {cluster_id}: {hero_run['workflow_id']} (score: {hero_run['ensemble_score']:.4f})")
-    
-    print("\n" + "="*80)
-    if export_csv:
-        print("Output files generated in folder:")
-        print(f"  {csv_dir}/")
-        print("  - {prefix}_pareto_frontier.csv (macro-ranking results)")
-        print("  - {prefix}_borda_ranking.csv (Borda consensus ranking)")
-        print("  - {prefix}_copeland_ranking.csv (Copeland's pairwise ranking)")
-        print("  - {prefix}_hero_runs.csv (best runs per cluster)")
-        print("  - cluster_X_run_rankings.csv (per-cluster run rankings)")
-    else:
-        print("CSV export disabled (--no-csv). Skipped writing CSV outputs.")
-    print("  - {prefix}_ranking_summary.json (comprehensive ranking summary)")
-    print("="*80 + "\n")
+    for metric_source in metric_sources:
+        print("\n" + "#"*80)
+        print(f"USING METRIC SOURCE: {metric_source.upper()}")
+        print("#"*80)
+
+        csv_dir = os.path.join(data_folder, 'csv')
+        if export_csv:
+            os.makedirs(csv_dir, exist_ok=True)
+
+        # Precompute hero runs once (for reuse and for hero metric source)
+        precomputed_hero_runs = {}
+        for cid in range(n_clusters):
+            sig = extract_cluster_signature(insights, cid)
+            cluster_data = df_clustered[df_clustered['cluster'] == cid]
+            hero = compute_hero_run_for_cluster(sig, cluster_data, df_clustered)
+            if hero:
+                precomputed_hero_runs[cid] = {
+                    'workflow_id': hero['workflow_id'],
+                    'ensemble_score': hero['ensemble_score'],
+                    'representatives_dist': hero['representatives_dist'],
+                    'tradeoffs_dist': hero['tradeoffs_dist'],
+                    'index': hero['row'].name if hasattr(hero['row'], 'name') else None
+                }
+
+        # LEVEL 1: MACRO-RANKING
+        macro_results = macro_ranking_pareto_dominance(df_clustered, insights, n_clusters, df_medoids, metric_source)
+        efficient_clusters = macro_results['efficient_clusters']
+
+        # BORDA COUNT RANKING (Consensus ranking across all representative metrics)
+        borda_results = borda_ranking_clusters(
+            macro_results['cluster_signatures'],
+            macro_results['cluster_metrics'],
+            n_clusters,
+            df_clustered
+        )
+
+        # COPELAND'S RANKING (Head-to-head pairwise comparisons)
+        copeland_results = copeland_ranking_clusters(
+            macro_results['cluster_signatures'],
+            macro_results['cluster_metrics'],
+            n_clusters,
+            df_clustered
+        )
+
+        # LEVEL 2: MICRO-RANKING (only for efficient clusters)
+        micro_results = micro_ranking_hero_runs(df_clustered, insights, n_clusters, efficient_clusters, precomputed_hero_runs)
+
+        # Determine file prefix (avoid collisions when multiple sources requested)
+        base_prefix = os.path.basename(data_folder)
+        filename_prefix = f"{base_prefix}_{metric_source}" if multiple_sources else base_prefix
+
+        # Save results (include borda_results and copeland_results)
+        save_ranking_results(
+            macro_results,
+            micro_results,
+            efficient_clusters,
+            n_clusters,
+            data_folder,
+            filename_prefix,
+            insights,
+            borda_results,
+            copeland_results,
+            export_csv,
+            csv_dir,
+            metric_source
+        )
+
+        # Print summary
+        print("\n" + "="*80)
+        print(f"RANKING PIPELINE SUMMARY (metric source: {metric_source})")
+        print("="*80)
+        print(f"\nGlobal Analysis (Macro-Ranking):")
+        print(f"  Total Clusters: {n_clusters}")
+        print(f"  Efficient Clusters: {len(efficient_clusters)}")
+        print(f"  Efficiency Ratio: {len(efficient_clusters) / n_clusters:.1%}")
+
+        print(f"\nBorda Consensus Ranking (Top 5):")
+        if 'borda_ranking' in borda_results and not borda_results['borda_ranking'].empty:
+            top_5 = borda_results['borda_ranking'].head(5)
+            for _, row in top_5.iterrows():
+                print(f"  #{int(row['borda_rank'])}: Cluster {int(row['cluster_id'])} (score: {int(row['borda_score'])}, size: {int(row['cluster_size'])})")
+
+        print(f"\nCopeland's Ranking (Top 5):")
+        if 'copeland_ranking' in copeland_results and not copeland_results['copeland_ranking'].empty:
+            top_5 = copeland_results['copeland_ranking'].head(5)
+            for _, row in top_5.iterrows():
+                print(f"  #{int(row['copeland_rank'])}: Cluster {int(row['cluster_id'])} (score: {row['copeland_score']:.1f}, size: {int(row['cluster_size'])})")
+
+        print(f"\nBest Clusters (Pareto Frontier):")
+        for cid in efficient_clusters:
+            print(f"  - Cluster {cid} (size: {len(df_clustered[df_clustered['cluster'] == cid])})")
+
+        print(f"\nBest Runs (Micro-Ranking - Hero Runs):")
+        for cluster_id, hero_run in micro_results['hero_runs'].items():
+            print(f"  Cluster {cluster_id}: {hero_run['workflow_id']} (score: {hero_run['ensemble_score']:.4f})")
+
+        print("\n" + "="*80)
+        if export_csv:
+            print("Output files generated in folder:")
+            print(f"  {csv_dir}/")
+            print(f"  - {filename_prefix}_pareto_frontier.csv (macro-ranking results)")
+            print(f"  - {filename_prefix}_borda_ranking.csv (Borda consensus ranking)")
+            print(f"  - {filename_prefix}_copeland_ranking.csv (Copeland's pairwise ranking)")
+            print(f"  - {filename_prefix}_hero_runs.csv (best runs per cluster)")
+            print("  - cluster_X_run_rankings.csv (per-cluster run rankings)")
+        else:
+            print("CSV export disabled (--no-csv). Skipped writing CSV outputs.")
+        print(f"  - {filename_prefix}_ranking_summary.json (comprehensive ranking summary)")
+        print("="*80 + "\n")
 
 
 if __name__ == "__main__":

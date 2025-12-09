@@ -494,8 +494,6 @@ def plot_feature_correlation_network(ax, df_clustered, cluster_id, cluster_insig
 # VISUALIZATION: PER-CLUSTER DASHBOARDS (Comprehensive Cluster Highlights)
 # ============================================================================
 
-
-
 def plot_per_cluster_dashboards(df_clustered, insights, df_model_eval=None, 
                                 output_dir='results/dashboards', use_high_shap_only=True):
     """
