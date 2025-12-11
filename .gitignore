@@ -28,6 +28,7 @@ readme.md
 
 /results/**
 
+train_copy.py
 5_representative_metric_quality.py
 6_discriminative_power_analysis.py
 /data

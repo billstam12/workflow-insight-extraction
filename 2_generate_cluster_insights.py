@@ -1498,6 +1498,10 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
         for hyperparam in hyperparameters:
             if hyperparam in cluster_df.columns:
                 value_counts = cluster_df[hyperparam].value_counts()
+                # Skip if no values
+                if len(value_counts) == 0:
+                    continue
+                    
                 dominant_value = value_counts.index[0]
                 dominant_pct = round((value_counts.iloc[0] / n_cluster) * 100, 2)
                 
