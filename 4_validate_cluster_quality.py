@@ -11,16 +11,15 @@ from sklearn.metrics import silhouette_score
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.metrics import silhouette_samples
 
-# Publication-ready font size configuration
 FONT_SIZE = {
     'title': 22,
-    'xlabel': 20,
-    'ylabel': 20,
-    'xtick': 20,
-    'ytick': 20,
-    'legend': 20,
+    'xlabel': 26,
+    'ylabel': 26,
+    'xtick': 26,
+    'ytick': 26,
+    'legend': 24,
     'figure': 12,
-    'figsize': [16, 6]
+    'figsize': [8, 6]
 }
  
 # Set publication-ready plotting style

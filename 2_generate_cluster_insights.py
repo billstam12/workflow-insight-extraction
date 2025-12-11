@@ -356,14 +356,23 @@ def main():
 
     # Parse command-line arguments
     if len(sys.argv) < 2:
-        print("Usage: python 2_generate_cluster_insights.py <data_folder> [--no-csv]")
+        print("Usage: python 2_generate_cluster_insights.py <data_folder> [ablation_mode] [--no-csv]")
         print("\nArguments:")
-        print("  data_folder - Path to folder containing clustering results and parameter/metric files")
-        print("  --no-csv    - Skip writing CSV outputs (JSON still generated)")
+        print("  data_folder    - Path to folder containing clustering results and parameter/metric files")
+        print("  ablation_mode  - Optional: 'full', 'no_variance_filter', 'no_dim_reduction', 'no_iterative_filter'")
+        print("  --no-csv       - Skip writing CSV outputs (JSON still generated)")
         sys.exit(1)
     
     data_folder = sys.argv[1]
+    ablation_mode = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith('--') else 'full'
     export_csv = '--no-csv' not in sys.argv
+    
+    # Print ablation mode
+    if ablation_mode == 'no_iterative_filter':
+        print("\n" + "="*80)
+        print("ABLATION MODE: No Iterative Feature Selection")
+        print("Using all metrics without SHAP-based iterative filtering")
+        print("="*80 + "\n")
     csv_dir = os.path.join(data_folder, 'csv')
     if export_csv:
         os.makedirs(csv_dir, exist_ok=True)
@@ -443,7 +452,8 @@ def main():
         'n_iterations': None,
         'data_folder': data_folder,
         'csv_dir': csv_dir,
-        'export_csv': export_csv
+        'export_csv': export_csv,
+        'ablation_mode': ablation_mode
     }
     
     # Run the pipeline
@@ -541,6 +551,7 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
 
     correlation_threshold = kwargs.get('correlation_threshold', 0.75)
     n_iterations = kwargs.get('n_iterations', None)
+    ablation_mode = kwargs.get('ablation_mode', 'full')
     
     if any(v is None for v in [X_standardized, metric_cols, cluster_labels]):
         raise KeyError("step_phase1_load_data: Required data not loaded")
@@ -574,10 +585,17 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         X_train = X_standardized
         y_train = y_binary
     
-        # Feature selection (Steps 1-3 from paper)
-        selected_features, selection_history, removed_features_analysis = feature_selection_shap_iterative(
-            X_train, y_train, metric_cols, n_iterations, correlation_threshold
-        )
+        # Feature selection (Steps 1-3 from paper) - Skip if ablation mode is no_iterative_filter
+        if ablation_mode == 'no_iterative_filter':
+            print(f"\n  ⚠ ABLATION: Skipping iterative feature selection")
+            print(f"  Using all {len(metric_cols)} metrics without filtering")
+            selected_features = metric_cols
+            selection_history = []
+            removed_features_analysis = {}
+        else:
+            selected_features, selection_history, removed_features_analysis = feature_selection_shap_iterative(
+                X_train, y_train, metric_cols, n_iterations, correlation_threshold
+            )
         
         print(f"\n✓ Final selected features ({len(selected_features)}): {selected_features}")
         

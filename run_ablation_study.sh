@@ -13,8 +13,8 @@ set -e  # Exit on error
 source env/bin/activate
 
 # Configuration
-WORKFLOW_FOLDER="./data/workflows_adult"
-DATASET_NAME="adult"
+WORKFLOW_FOLDER="./data/workflows_wine"
+DATASET_NAME="wine"
 
 echo "=========================================="
 echo "Starting Ablation Study"
@@ -43,7 +43,7 @@ for mode in "${modes[@]}"; do
     
     echo ""
     echo "Step 3: Validating cluster quality..."
-    python 4_validate_cluster_quality.py "$WORKFLOW_FOLDER" "$DATASET_NAME" "$mode"
+    python 4_validate_cluster_quality_copy.py "$WORKFLOW_FOLDER" "$DATASET_NAME" "$mode"
     
     echo ""
     echo "✓ Completed: $mode"
