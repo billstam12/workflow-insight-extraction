@@ -390,6 +390,177 @@ def calculate_cluster_quality(clustered_data: pd.DataFrame, X_scaled: np.ndarray
 
     return scaled_davies_bouldin_score, scaled_calinski_harabasz_score, scaled_silhouette_score, all_df
 
+
+
+def plot_representative_metrics_cv_boxplot(detailed_df: pd.DataFrame, save_path: str = None):
+    """
+    Create box plots comparing CV distribution for selected vs non-selected metrics per cluster.
+    
+    Args:
+        detailed_df: DataFrame with individual CV values per metric (from representative_metrics_quality_detailed)
+        save_path: Path to save the plot
+    """
+    from matplotlib.patches import Patch
+    
+    # Create REAL box plots with actual data
+    clusters = sorted(detailed_df['Cluster'].unique())
+
+    all_data = []
+    positions = []
+
+    pos = 1
+    for cluster in clusters:
+        cluster_data = detailed_df[detailed_df['Cluster'] == cluster]
+        
+        # Get actual CV values (not simulated!)
+        selected_cvs = cluster_data[cluster_data['Type'] == 'Selected']['CV'].values
+        non_selected_cvs = cluster_data[cluster_data['Type'] == 'Non-Selected']['CV'].values
+        
+        all_data.append(selected_cvs)
+        all_data.append(non_selected_cvs)
+        positions.append(pos)
+        positions.append(pos + 0.5)
+        pos += 1.5
+
+    # Create box plot with explicit figure size to match bar chart
+    fig, ax = plt.subplots(figsize=(8, 6.2))
+
+    bp = ax.boxplot(all_data, 
+                    positions=positions,
+                    patch_artist=True,
+                    showmeans=False,
+                    widths=0.4)
+
+    # Colorblind-friendly colors: blue for good (representative), orange for bad (other)
+    # These colors are distinguishable for all types of colorblindness and in grayscale
+    if ablation=="no_iterative_filter":
+        color_bad = '#DE8F05'       # Vermillion - other metrics (bad)
+        color_good = '#DE8F05'      # Green - representative metrics (good)
+    else:
+        color_good = '#0173B2' 
+            # Blue - representative metrics (good)
+        color_bad = '#DE8F05'       # Orange - other metrics (bad)
+
+    colors = [color_good, color_bad] * len(clusters)
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.8)
+        patch.set_edgecolor('black')
+        patch.set_linewidth(1.2)
+
+    # Set x-axis to show only cluster numbers
+    cluster_positions = [pos + 0.25 for pos in positions[::2]]
+    ax.set_xticks(cluster_positions)
+    ax.set_xticklabels([f'{c}' for c in clusters], fontsize=FONT_SIZE['xtick'])
+
+    ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
+    ax.set_ylabel('CV Values', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
+    ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
+    # ax.set_title('Selected vs Non-Selected CV Distribution by Cluster - Adult Dataset (Real Data)', 
+    #              fontsize=14, fontweight='bold')
+    ax.grid(axis='y', alpha=0.3)
+
+    # Add legend with colorblind-friendly colors
+    from matplotlib.patches import Patch
+    if ablation=="no_iterative_filter":
+        legend_elements = [Patch(facecolor=color_good, edgecolor='black', linewidth=1.2, label='All Metrics'),
+                    ]
+    else:
+        legend_elements = [Patch(facecolor=color_good, edgecolor='black', linewidth=1.2, label='Representative Metrics'),
+                    Patch(facecolor=color_bad, edgecolor='black', linewidth=1.2, label='Other Metrics')]
+    ax.legend(handles=legend_elements, fontsize=FONT_SIZE['legend'], frameon=True, edgecolor='black', fancybox=False)
+
+    plt.tight_layout()
+    ax.set_ylim(0, 1)
+
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Representative metrics CV boxplot saved to {save_path}")
+    
+    return fig, ax
+
+def representative_metrics_quality_detailed(clustered_data: pd.DataFrame, clusters_insights: dict, metric_cols: list):
+    """
+    Returns both summary statistics AND individual CV values for box plots.
+    """
+    summary_results = []
+    detailed_cvs = []  # Store individual CV values
+    
+    for cluster_id_str, cluster_info in clusters_insights.items():
+        cluster_id = int(cluster_id_str)
+        
+        # Get selected features for this cluster
+        selected_features_raw = cluster_info['feature_selection']['selected_features']
+        selected_features = selected_features_raw
+        
+        # Filter to only include metrics that exist in our metric_cols
+        selected_metrics = [f for f in selected_features if f in metric_cols]
+        non_selected_metrics = [f for f in metric_cols if f not in selected_metrics]
+        
+        # Get data for this cluster only
+        cluster_mask = clustered_data['cluster'] == cluster_id
+        cluster_data = clustered_data[cluster_mask]
+        
+        if len(cluster_data) < 2:
+            continue
+        
+        # Calculate CV for selected metrics
+        selected_cvs = []
+        for metric in selected_metrics:
+            if metric in cluster_data.columns:
+                mean_val = cluster_data[metric].mean()
+                std_val = cluster_data[metric].std()
+                
+                if abs(mean_val) > 1e-9:
+                    cv = std_val / abs(mean_val)
+                    selected_cvs.append(cv)
+                    # Store individual CV value
+                    detailed_cvs.append({
+                        'Cluster': cluster_id,
+                        'Metric': metric,
+                        'Type': 'Selected',
+                        'CV': cv
+                    })
+        
+        # Calculate CV for non-selected metrics
+        non_selected_cvs = []
+        for metric in non_selected_metrics:
+            if metric in cluster_data.columns:
+                mean_val = cluster_data[metric].mean()
+                std_val = cluster_data[metric].std()
+                
+                if abs(mean_val) > 1e-9:
+                    cv = std_val / abs(mean_val)
+                    non_selected_cvs.append(cv)
+                    # Store individual CV value
+                    detailed_cvs.append({
+                        'Cluster': cluster_id,
+                        'Metric': metric,
+                        'Type': 'Non-Selected',
+                        'CV': cv
+                    })
+        
+        # Compute summary statistics
+        summary_results.append({
+            'Cluster': cluster_id,
+            'N_Workflows': len(cluster_data),
+            'N_Selected_Metrics': len(selected_metrics),
+            'N_Non_Selected_Metrics': len(non_selected_metrics),
+            'Selected_CV_Mean': np.mean(selected_cvs) if selected_cvs else np.nan,
+            'Selected_CV_Median': np.median(selected_cvs) if selected_cvs else np.nan,
+            'Selected_CV_Std': np.std(selected_cvs) if selected_cvs else np.nan,
+            'Non_Selected_CV_Mean': np.mean(non_selected_cvs) if non_selected_cvs else np.nan,
+            'Non_Selected_CV_Median': np.median(non_selected_cvs) if non_selected_cvs else np.nan,
+            'Non_Selected_CV_Std': np.std(non_selected_cvs) if non_selected_cvs else np.nan,
+            'CV_Difference': (np.mean(non_selected_cvs) - np.mean(selected_cvs)) if (selected_cvs and non_selected_cvs) else np.nan
+        })
+    
+    summary_df = pd.DataFrame(summary_results)
+    detailed_df = pd.DataFrame(detailed_cvs)
+    
+    return summary_df, detailed_df
+
+
 def silhouette_statistics(clustered_data: pd.DataFrame, X_scaled: np.ndarray) -> pd.DataFrame:
     silhouette_vals = silhouette_samples(X_scaled, clustered_data['cluster'].values)
     unique_labels = np.unique(clustered_data['cluster'].values)
@@ -877,16 +1048,24 @@ if __name__ == "__main__":
     # Load clustered workflows for analyses that need raw metrics
     clustered_data, clusters_insights, X_scaled_metrics, metric_cols = read_data(path)
     # Load processed PCs specifically for cluster-quality validation
-    pcs_df, X_scaled_pcs = read_processed_pcs(path)
 
-    ##Cluster Quality 
-    db_index, ch_score, sil_score, all_scores = calculate_cluster_quality(pcs_df, X_scaled_pcs)
-    cluster_silhouette_df = silhouette_statistics(pcs_df, X_scaled_pcs)
-    os.makedirs(result_dir_cluster_quality, exist_ok=True)
-    all_scores.to_csv(os.path.join(result_dir_cluster_quality, "overall_cluster_quality_scores.csv"), index=False)
-    cluster_silhouette_df.to_csv(os.path.join(result_dir_cluster_quality, "per_cluster_silhouette_metrics.csv"), index=False)
-    plot_silhouette_boxplot(X_scaled_pcs, pcs_df['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_boxplot.png"))
+    if ablation != "no_dim_reduction":
+        pcs_df, X_scaled_pcs = read_processed_pcs(path)
 
+
+        db_index, ch_score, sil_score, all_scores = calculate_cluster_quality(pcs_df, X_scaled_pcs)
+        cluster_silhouette_df = silhouette_statistics(pcs_df, X_scaled_pcs)
+        os.makedirs(result_dir_cluster_quality, exist_ok=True)
+        all_scores.to_csv(os.path.join(result_dir_cluster_quality, "overall_cluster_quality_scores.csv"), index=False)
+        cluster_silhouette_df.to_csv(os.path.join(result_dir_cluster_quality, "per_cluster_silhouette_metrics.csv"), index=False)
+        plot_silhouette_boxplot(X_scaled_pcs, pcs_df['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_boxplot.png"))
+    else:
+        db_index, ch_score, sil_score, all_scores = calculate_cluster_quality(clustered_data, X_scaled_metrics)
+        cluster_silhouette_df = silhouette_statistics(clustered_data, X_scaled_metrics)
+        os.makedirs(result_dir_cluster_quality, exist_ok=True)
+        all_scores.to_csv(os.path.join(result_dir_cluster_quality, "overall_cluster_quality_scores.csv"), index=False)
+        cluster_silhouette_df.to_csv(os.path.join(result_dir_cluster_quality, "per_cluster_silhouette_metrics.csv"), index=False)
+        plot_silhouette_boxplot(X_scaled_metrics, clustered_data['cluster'], sil_score, cluster_silhouette_df, save_path=os.path.join(result_dir_cluster_quality, "silhouette_boxplot.png"))
     ##Predictive Quality 
     predictive_df = calculate_predictive_quality(clusters_insights)
     os.makedirs(result_dir_predictive_quality, exist_ok=True)
@@ -926,9 +1105,13 @@ if __name__ == "__main__":
    
     ## Representative Metrics Quality
     os.makedirs(result_dir_representative_quality, exist_ok=True)
-    representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
-    representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
-    plot_representative_metrics_cv_comparison(representative_quality_df, save_path=os.path.join(result_dir_representative_quality, "cv_comparison.png"))
+    summary_df, detailed_df = representative_metrics_quality_detailed(clustered_data, clusters_insights, metric_cols)
+    detailed_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_detailed.csv"), index=False)
+    plot_representative_metrics_cv_boxplot(detailed_df, save_path=os.path.join(result_dir_representative_quality, "cv_boxplot.png"))
+
+    # representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
+    # representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
+    # plot_representative_metrics_cv_comparison(representative_quality_df, save_path=os.path.join(result_dir_representative_quality, "cv_comparison.png"))
     
     ## Explanation Quality Score (QSE)
     os.makedirs(result_dir_qse, exist_ok=True)
