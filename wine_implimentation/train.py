@@ -22,8 +22,38 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 import time
 from itertools import product
+import psutil
 
 warnings.filterwarnings("ignore")
+
+
+# ============================================================================
+# SYSTEM RESOURCE MONITORING
+# ============================================================================
+def get_system_metrics():
+    """Collect current system resource utilization metrics"""
+    metrics = {}
+    
+    # CPU utilization
+    metrics['system/cpu_utilization_percentage'] = psutil.cpu_percent(interval=0.1)
+    
+    # Memory usage
+    mem = psutil.virtual_memory()
+    metrics['system/system_memory_usage_megabytes'] = mem.used / (1024 * 1024)  # Convert to MB
+    metrics['system/system_memory_usage_percentage'] = mem.percent
+    
+    # Disk usage
+    disk = psutil.disk_usage('/')
+    metrics['system/disk_usage_megabytes'] = disk.used / (1024 * 1024)  # Convert to MB
+    # metrics['system/disk_available_megabytes'] = disk.free / (1024 * 1024)  # Convert to MB
+    # metrics['system/disk_usage_percentage'] = disk.percent
+    
+    # Network I/O
+    net = psutil.net_io_counters()
+    metrics['system/network_receive_megabytes'] = net.bytes_recv / (1024 * 1024)  # Convert to MB
+    metrics['system/network_transmit_megabytes'] = net.bytes_sent / (1024 * 1024)  # Convert to MB
+    
+    return metrics
 
 
 # ============================================================================
@@ -173,25 +203,59 @@ def compute_fairness_metrics(y_true, y_pred, y_proba):
 def evaluate_model(model, X_train, X_val, X_test, y_train, y_val, y_test):
     """Compute comprehensive performance and fairness metrics"""
     
-    # Predictions
+    # Predictions for all sets
     y_test_pred = model.predict(X_test)
     y_test_proba = model.predict_proba(X_test)[:, 1]
     
+    y_val_pred = model.predict(X_val)
+    y_val_proba = model.predict_proba(X_val)[:, 1]
+    
+    y_train_pred = model.predict(X_train)
+    y_train_proba = model.predict_proba(X_train)[:, 1]
+    
     metrics = {}
     
+    # ===== TEST SET METRICS =====
     # Core Performance Metrics
-    metrics['AUC_ROC'] = roc_auc_score(y_test, y_test_proba)
-    metrics['Accuracy'] = accuracy_score(y_test, y_test_pred)
-    metrics['Precision'] = precision_score(y_test, y_test_pred)
-    metrics['Recall'] = recall_score(y_test, y_test_pred)
-    metrics['F1_Score'] = f1_score(y_test, y_test_pred)
-    metrics['Log_Loss'] = log_loss(y_test, y_test_proba)
-    metrics['Matthews_Corrcoef'] = matthews_corrcoef(y_test, y_test_pred)
-    metrics['Cohen_Kappa'] = cohen_kappa_score(y_test, y_test_pred)
+    metrics['test_AUC_ROC'] = roc_auc_score(y_test, y_test_proba)
+    metrics['test_Accuracy'] = accuracy_score(y_test, y_test_pred)
+    metrics['test_Precision'] = precision_score(y_test, y_test_pred)
+    metrics['test_Recall'] = recall_score(y_test, y_test_pred)
+    metrics['test_F1_Score'] = f1_score(y_test, y_test_pred)
+    metrics['test_Log_Loss'] = log_loss(y_test, y_test_proba)
+    metrics['test_Matthews_Corrcoef'] = matthews_corrcoef(y_test, y_test_pred)
+    metrics['test_Cohen_Kappa'] = cohen_kappa_score(y_test, y_test_pred)
+    metrics['test_Balanced_Accuracy'] = balanced_accuracy_score(y_test, y_test_pred)
     
-    # Fairness Metrics
-    fairness_metrics = compute_fairness_metrics(y_test, y_test_pred, y_test_proba)
-    metrics.update(fairness_metrics)
+    # Test Confusion Matrix components
+    tn_test, fp_test, fn_test, tp_test = confusion_matrix(y_test, y_test_pred).ravel()
+    metrics['test_True_Positives'] = tp_test
+    metrics['test_True_Negatives'] = tn_test
+    metrics['test_False_Positives'] = fp_test
+    metrics['test_False_Negatives'] = fn_test
+    metrics['test_Specificity'] = tn_test / (tn_test + fp_test) if (tn_test + fp_test) > 0 else 0
+    metrics['test_Sensitivity'] = tp_test / (tp_test + fn_test) if (tp_test + fn_test) > 0 else 0
+    
+    # Test Fairness Metrics
+    fairness_metrics_test = compute_fairness_metrics(y_test, y_test_pred, y_test_proba)
+    for key, value in fairness_metrics_test.items():
+        metrics[f'test_{key}'] = value
+    
+    # Validation set is used internally but metrics not reported to reduce output size
+    
+    # ===== TRAIN SET METRICS (for overfitting detection) =====
+    metrics['train_Accuracy'] = accuracy_score(y_train, y_train_pred)
+    metrics['train_F1_Score'] = f1_score(y_train, y_train_pred)
+    metrics['train_AUC_ROC'] = roc_auc_score(y_train, y_train_proba)
+    metrics['train_Precision'] = precision_score(y_train, y_train_pred)
+    metrics['train_Recall'] = recall_score(y_train, y_train_pred)
+    
+    # Overfitting indicators (Train vs Test)
+    metrics['overfitting_Accuracy_diff'] = metrics['train_Accuracy'] - metrics['test_Accuracy']
+    metrics['overfitting_F1_diff'] = metrics['train_F1_Score'] - metrics['test_F1_Score']
+    metrics['overfitting_AUC_diff'] = metrics['train_AUC_ROC'] - metrics['test_AUC_ROC']
+    
+    # Generalization gap removed (validation metrics not reported)
     
     # Learning Curves (use subset for speed)
     try:
@@ -250,10 +314,10 @@ param_grid = {
     'classifier': ['random_forest'],
     
     # Random Forest params - tuned for ~600 workflows
-    'n_estimators': [10, 50, 100, 150, 200, 300],
+    'n_estimators': [50,100, 20,200],
     'criterion': ['gini', 'entropy', 'log_loss'],
-    'max_depth': [None, 5, 10, 15, 20, 30],
-    'fairness_method': [None, 'balanced'],  # Maps to class_weight
+    'max_depth': [3,10, 20, 30,100],
+    'fairness_method': ["balanced_subsample", "balanced",None],  # Maps to class_weight
     'random_state': [42]  # Fixed for reproducibility
 }
 
@@ -315,6 +379,9 @@ for normalization in param_grid['normalization']:
                         y_train, y_val, y_test
                     )
                     
+                    # Collect system metrics
+                    system_metrics = get_system_metrics()
+                    
                     # Store results (only RF-relevant parameters)
                     result = {
                         'workflowId': workflow_id,
@@ -326,7 +393,8 @@ for normalization in param_grid['normalization']:
                         'fairness_method': str(fairness_method),
                         'random_state': rand_state,
                         'training_time_seconds': train_time,
-                        **metrics
+                        **metrics,
+                        **system_metrics
                     }
                     
                     results_list.append(result)
@@ -335,7 +403,7 @@ for normalization in param_grid['normalization']:
                     elapsed = time.time() - start_time
                     avg_time = elapsed / workflow_id
                     print(f"[{workflow_id}] RandomForest | {normalization} | n_est={n_est} | depth={max_d} | criterion={criterion} | "
-                          f"acc={metrics['Accuracy']:.4f} | time={train_time:.2f}s | avg={avg_time:.2f}s")
+                          f"acc={metrics['test_Accuracy']:.4f} | time={train_time:.2f}s | avg={avg_time:.2f}s")
                     
                     workflow_id += 1
                         
@@ -365,8 +433,8 @@ results_df.to_csv(output_file, index=False)
 
 print(f"Results saved to: {output_file}")
 print(f"Shape: {results_df.shape}")
-print(f"\nBest models by Accuracy:")
-print(results_df.nlargest(5, 'Accuracy')[['workflowId', 'normalization', 'classifier', 'Accuracy', 'F1_Score', 'AUC_ROC']])
+print(f"\nBest models by Test Accuracy:")
+print(results_df.nlargest(5, 'test_Accuracy')[['workflowId', 'normalization', 'classifier', 'test_Accuracy', 'test_F1_Score', 'test_AUC_ROC']])
 
 # Save parameter names (Random Forest only)
 param_names = ['normalization', 'classifier', 'criterion', 'max_depth', 'n_estimators', 'fairness_method', 'random_state']
