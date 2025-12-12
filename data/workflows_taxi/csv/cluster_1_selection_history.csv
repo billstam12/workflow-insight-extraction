@@ -1,0 +1,16 @@
+iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
+1,feature_importance_std,0.12111192925795622,feature_importance_max,0.9016124031007752
+1,feature_importance_std,0.12111192925795622,feature_importance_std,0.0
+2,test_mape,0.07043022892634915,cv_rmse_mean,0.7532224035785056
+2,test_mape,0.07043022892634915,cv_mse_mean,0.7531871968819215
+2,test_mape,0.07043022892634915,test_mape,0.0
+3,cv_mae_mean,0.12245093554623403,test_mae,0.9431883357394664
+3,cv_mae_mean,0.12245093554623403,train_mae,0.9124411118217062
+3,cv_mae_mean,0.12245093554623403,test_median_absolute_error,0.9038062177572362
+3,cv_mae_mean,0.12245093554623403,cv_mae_mean,0.0
+4,test_rmse,0.15226800968665,test_mse,0.999868306261033
+4,test_rmse,0.15226800968665,test_rmse,0.0
+5,test_max_error,0.17330846881763404,test_max_error,0.0
+6,training_time_seconds,0.18408362366868844,training_time_seconds,0.0
+7,train_mse,0.19473268896742565,train_rmse,0.999767600514182
+7,train_mse,0.19473268896742565,train_mse,0.0

@@ -1,0 +1,591 @@
+{
+  "macro_ranking": {
+    "efficient_clusters": [
+      0,
+      3,
+      4,
+      5,
+      6
+    ],
+    "n_efficient": 5,
+    "n_total_clusters": 7,
+    "efficiency_ratio": 0.7142857142857143,
+    "metric_source": "medoid"
+  },
+  "consensus_rankings": {
+    "borda": {
+      "ranking": [
+        {
+          "cluster_id": 6,
+          "borda_score": 53,
+          "n_representatives": 5,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 20,
+          "borda_rank": 1
+        },
+        {
+          "cluster_id": 4,
+          "borda_score": 50,
+          "n_representatives": 3,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 38,
+          "borda_rank": 2
+        },
+        {
+          "cluster_id": 0,
+          "borda_score": 46,
+          "n_representatives": 6,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 60,
+          "borda_rank": 3
+        },
+        {
+          "cluster_id": 1,
+          "borda_score": 44,
+          "n_representatives": 0,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 202,
+          "borda_rank": 4
+        },
+        {
+          "cluster_id": 5,
+          "borda_score": 40,
+          "n_representatives": 2,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 40,
+          "borda_rank": 5
+        },
+        {
+          "cluster_id": 3,
+          "borda_score": 31,
+          "n_representatives": 2,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 80,
+          "borda_rank": 6
+        },
+        {
+          "cluster_id": 2,
+          "borda_score": 30,
+          "n_representatives": 1,
+          "n_metrics_ranked_on": 14,
+          "cluster_size": 40,
+          "borda_rank": 7
+        }
+      ],
+      "methodology": "Borda count: best cluster on each metric gets (n_clusters-1) points, worst gets 0"
+    },
+    "copeland": {
+      "ranking": [
+        {
+          "cluster_id": 6,
+          "copeland_score": 5.0,
+          "n_representatives": 5,
+          "cluster_size": 20,
+          "copeland_rank": 1
+        },
+        {
+          "cluster_id": 0,
+          "copeland_score": 4.5,
+          "n_representatives": 6,
+          "cluster_size": 60,
+          "copeland_rank": 2
+        },
+        {
+          "cluster_id": 4,
+          "copeland_score": 4.5,
+          "n_representatives": 3,
+          "cluster_size": 38,
+          "copeland_rank": 3
+        },
+        {
+          "cluster_id": 1,
+          "copeland_score": 3.5,
+          "n_representatives": 0,
+          "cluster_size": 202,
+          "copeland_rank": 4
+        },
+        {
+          "cluster_id": 5,
+          "copeland_score": 2.0,
+          "n_representatives": 2,
+          "cluster_size": 40,
+          "copeland_rank": 5
+        },
+        {
+          "cluster_id": 3,
+          "copeland_score": 1.5,
+          "n_representatives": 2,
+          "cluster_size": 80,
+          "copeland_rank": 6
+        },
+        {
+          "cluster_id": 2,
+          "copeland_score": 0.0,
+          "n_representatives": 1,
+          "cluster_size": 40,
+          "copeland_rank": 7
+        }
+      ],
+      "methodology": "Copeland: head-to-head pairwise comparisons, winner of each pair gets 1 point"
+    }
+  },
+  "cluster_signatures": {
+    "0": {
+      "representatives": [
+        "Precision",
+        "Well Calibration",
+        "Conditional Statistical Parity",
+        "Equal Negative Predictive Value",
+        "Balance for Negative Class",
+        "Treatment Equality"
+      ],
+      "representative_value_categories": {
+        "Precision": "low",
+        "Well Calibration": "high",
+        "Conditional Statistical Parity": "high",
+        "Equal Negative Predictive Value": "high",
+        "Balance for Negative Class": "low",
+        "Treatment Equality": "high"
+      },
+      "tradeoff_pairs": [
+        {
+          "benefit": "Treatment Equality",
+          "cost": "Predictive Equality",
+          "correlation": -0.8046893456831933
+        }
+      ],
+      "n_representatives": 6,
+      "n_tradeoff_pairs": 1,
+      "is_efficient": true,
+      "strengths": [
+        {
+          "metric": "Well Calibration",
+          "value": 0.6601602746658215,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 27.54017760340449
+        },
+        {
+          "metric": "Conditional Statistical Parity",
+          "value": 0.5039248120300752,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 137.34401014684227
+        },
+        {
+          "metric": "Equal Negative Predictive Value",
+          "value": 0.5520577011627341,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 5,
+          "beats_by_default": 5,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 20.370697281308598
+        },
+        {
+          "metric": "Treatment Equality",
+          "value": 0.8980144355481633,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 5,
+          "beats_by_default": 4,
+          "beats_in_competition": 1,
+          "avg_improvement_pct": 242.3158350779363
+        }
+      ],
+      "weaknesses": [
+        {
+          "metric": "Precision",
+          "value": 0.6413502109704642,
+          "direction": "higher",
+          "value_category": "low",
+          "worse_than_n_clusters": 1,
+          "reason": "value_category_mismatch"
+        },
+        {
+          "metric": "Balance for Negative Class",
+          "value": 0.5450144986879073,
+          "direction": "higher",
+          "value_category": "low",
+          "worse_than_n_clusters": 0,
+          "reason": "value_category_mismatch"
+        }
+      ],
+      "dominates": [
+        {
+          "dominated_cluster": 2,
+          "reasons": [
+            {
+              "metric": "Equal Opportunity",
+              "type": "representative",
+              "cluster_value": 0.3644970414201183,
+              "dominated_cluster_value": 0.1185603387438249,
+              "improvement_pct": 207.43589743589757,
+              "direction": "higher is better"
+            },
+            {
+              "metric": "Equal Negative Predictive Value",
+              "type": "tradeoff_cost",
+              "cluster_value": 0.5520577011627341,
+              "dominated_cluster_value": 0.5499530946967094,
+              "improvement_pct": 0.38268835766537246,
+              "direction": "higher is better",
+              "related_benefit": "Equal Opportunity"
+            }
+          ]
+        }
+      ],
+      "dominated_by": []
+    },
+    "1": {
+      "representatives": [],
+      "representative_value_categories": {},
+      "tradeoff_pairs": [],
+      "n_representatives": 0,
+      "n_tradeoff_pairs": 0,
+      "is_efficient": false,
+      "strengths": [],
+      "weaknesses": [],
+      "dominates": [],
+      "dominated_by": []
+    },
+    "2": {
+      "representatives": [
+        "Equal Opportunity"
+      ],
+      "representative_value_categories": {
+        "Equal Opportunity": "low"
+      },
+      "tradeoff_pairs": [
+        {
+          "benefit": "Equal Opportunity",
+          "cost": "Equal Negative Predictive Value",
+          "correlation": -0.9285714285714286
+        }
+      ],
+      "n_representatives": 1,
+      "n_tradeoff_pairs": 1,
+      "is_efficient": false,
+      "strengths": [],
+      "weaknesses": [
+        {
+          "metric": "Equal Opportunity",
+          "value": 0.1185603387438249,
+          "direction": "higher",
+          "value_category": "low",
+          "worse_than_n_clusters": 0,
+          "reason": "value_category_mismatch"
+        }
+      ],
+      "dominates": [],
+      "dominated_by": [
+        {
+          "dominating_cluster": 0,
+          "n_reasons": 2
+        },
+        {
+          "dominating_cluster": 5,
+          "n_reasons": 2
+        },
+        {
+          "dominating_cluster": 6,
+          "n_reasons": 2
+        }
+      ]
+    },
+    "3": {
+      "representatives": [
+        "Treatment Equality",
+        "Precision"
+      ],
+      "representative_value_categories": {
+        "Treatment Equality": "low",
+        "Precision": "high"
+      },
+      "tradeoff_pairs": [],
+      "n_representatives": 2,
+      "n_tradeoff_pairs": 0,
+      "is_efficient": true,
+      "strengths": [
+        {
+          "metric": "Precision",
+          "value": 0.8085106382978723,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 5,
+          "beats_in_competition": 1,
+          "avg_improvement_pct": 11.224041332412867
+        }
+      ],
+      "weaknesses": [
+        {
+          "metric": "Treatment Equality",
+          "value": 0.0,
+          "direction": "higher",
+          "value_category": "low",
+          "worse_than_n_clusters": 2,
+          "reason": "value_category_mismatch"
+        }
+      ],
+      "dominates": [],
+      "dominated_by": []
+    },
+    "4": {
+      "representatives": [
+        "system_network_transmit_megabytes",
+        "Recall",
+        "Conditional Use Accuracy Equality"
+      ],
+      "representative_value_categories": {
+        "system_network_transmit_megabytes": "high",
+        "Recall": "high",
+        "Conditional Use Accuracy Equality": "high"
+      },
+      "tradeoff_pairs": [],
+      "n_representatives": 3,
+      "n_tradeoff_pairs": 0,
+      "is_efficient": true,
+      "strengths": [
+        {
+          "metric": "system_network_transmit_megabytes",
+          "value": 40.044119999999566,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 569.1882530679496
+        },
+        {
+          "metric": "Recall",
+          "value": 0.6505576208178439,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 46.72583041432322
+        },
+        {
+          "metric": "Conditional Use Accuracy Equality",
+          "value": 0.905843362887466,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 371.8020494711122
+        }
+      ],
+      "weaknesses": [],
+      "dominates": [],
+      "dominated_by": []
+    },
+    "5": {
+      "representatives": [
+        "Balance for Positive Class",
+        "Predictive Equality"
+      ],
+      "representative_value_categories": {
+        "Balance for Positive Class": "high",
+        "Predictive Equality": "high"
+      },
+      "tradeoff_pairs": [],
+      "n_representatives": 2,
+      "n_tradeoff_pairs": 0,
+      "is_efficient": true,
+      "strengths": [
+        {
+          "metric": "Balance for Positive Class",
+          "value": 0.7047349378637723,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 141.19475922410285
+        },
+        {
+          "metric": "Predictive Equality",
+          "value": 0.7086524390243902,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 77.79050830536572
+        }
+      ],
+      "weaknesses": [],
+      "dominates": [
+        {
+          "dominated_cluster": 2,
+          "reasons": [
+            {
+              "metric": "Equal Opportunity",
+              "type": "representative",
+              "cluster_value": 0.2451532207629768,
+              "dominated_cluster_value": 0.1185603387438249,
+              "improvement_pct": 106.77506775067758,
+              "direction": "higher is better"
+            },
+            {
+              "metric": "Equal Negative Predictive Value",
+              "type": "tradeoff_cost",
+              "cluster_value": 0.5516456056809446,
+              "dominated_cluster_value": 0.5499530946967094,
+              "improvement_pct": 0.3077555159806069,
+              "direction": "higher is better",
+              "related_benefit": "Equal Opportunity"
+            }
+          ]
+        }
+      ],
+      "dominated_by": []
+    },
+    "6": {
+      "representatives": [
+        "system_network_receive_megabytes",
+        "Treatment Equality",
+        "Overall Accuracy Equality",
+        "Balance for Negative Class",
+        "Equal Negative Predictive Value"
+      ],
+      "representative_value_categories": {
+        "system_network_receive_megabytes": "high",
+        "Treatment Equality": "high",
+        "Overall Accuracy Equality": "high",
+        "Balance for Negative Class": "low",
+        "Equal Negative Predictive Value": "high"
+      },
+      "tradeoff_pairs": [
+        {
+          "benefit": "Treatment Equality",
+          "cost": "Predictive Equality",
+          "correlation": -0.7717042614792412
+        }
+      ],
+      "n_representatives": 5,
+      "n_tradeoff_pairs": 1,
+      "is_efficient": true,
+      "strengths": [
+        {
+          "metric": "system_network_receive_megabytes",
+          "value": 43.22734400000081,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 623.6388364099263
+        },
+        {
+          "metric": "Treatment Equality",
+          "value": 0.9100307774677816,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 4,
+          "beats_in_competition": 2,
+          "avg_improvement_pct": 205.5239559401828
+        },
+        {
+          "metric": "Overall Accuracy Equality",
+          "value": 0.5609388739797853,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 6,
+          "beats_in_competition": 0,
+          "avg_improvement_pct": 20.211484760375104
+        },
+        {
+          "metric": "Equal Negative Predictive Value",
+          "value": 0.5551950392962722,
+          "direction": "higher",
+          "value_category": "high",
+          "beats_n_clusters": 6,
+          "beats_by_default": 5,
+          "beats_in_competition": 1,
+          "avg_improvement_pct": 17.64035206978051
+        }
+      ],
+      "weaknesses": [
+        {
+          "metric": "Balance for Negative Class",
+          "value": 0.5330171980100245,
+          "direction": "higher",
+          "value_category": "low",
+          "worse_than_n_clusters": 1,
+          "reason": "value_category_mismatch"
+        }
+      ],
+      "dominates": [
+        {
+          "dominated_cluster": 2,
+          "reasons": [
+            {
+              "metric": "Equal Opportunity",
+              "type": "representative",
+              "cluster_value": 0.3197115384615384,
+              "dominated_cluster_value": 0.1185603387438249,
+              "improvement_pct": 169.66145833333343,
+              "direction": "higher is better"
+            },
+            {
+              "metric": "Equal Negative Predictive Value",
+              "type": "tradeoff_cost",
+              "cluster_value": 0.5551950392962722,
+              "dominated_cluster_value": 0.5499530946967094,
+              "improvement_pct": 0.953162124208737,
+              "direction": "higher is better",
+              "related_benefit": "Equal Opportunity"
+            }
+          ]
+        }
+      ],
+      "dominated_by": []
+    }
+  },
+  "micro_ranking": {
+    "hero_runs": {
+      "0": {
+        "workflow_id": "1128f16afd884d76b8b1a2a2352750ec",
+        "ensemble_score": 0.210413685942876,
+        "representatives_distance": 0.3005909799183943,
+        "tradeoffs_distance": 0.0
+      },
+      "3": {
+        "workflow_id": "9c69c588fd5440b9a7c5bcf0195a8ce4",
+        "ensemble_score": 0.2100698384984726,
+        "representatives_distance": 0.3000997692835323,
+        "tradeoffs_distance": 0.0
+      },
+      "4": {
+        "workflow_id": "5650e7607b524599a4152fc9a0f3a211",
+        "ensemble_score": 0.13475561609530576,
+        "representatives_distance": 0.19250802299329395,
+        "tradeoffs_distance": 0.0
+      },
+      "5": {
+        "workflow_id": "1a2a05dfac9845a7bdbf71c4b1f16d8b",
+        "ensemble_score": 0.19096111918604644,
+        "representatives_distance": 0.2728015988372092,
+        "tradeoffs_distance": 0.0
+      },
+      "6": {
+        "workflow_id": "36ab91ce2b50497699aacab1e94db911",
+        "ensemble_score": 0.32781086883048105,
+        "representatives_distance": 0.46830124118640154,
+        "tradeoffs_distance": 0.0
+      }
+    }
+  }
+}

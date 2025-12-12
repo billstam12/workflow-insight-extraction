@@ -1,0 +1,5 @@
+cluster_id,borda_score,n_representatives,n_metrics_ranked_on,cluster_size,borda_rank
+0,6,1,4,36,1
+1,6,2,4,18,2
+2,6,1,4,36,3
+3,6,2,4,18,4

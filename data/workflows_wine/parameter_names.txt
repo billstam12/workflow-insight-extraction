@@ -1,0 +1,7 @@
+normalization
+classifier
+criterion
+max_depth
+n_estimators
+fairness_method
+random_state

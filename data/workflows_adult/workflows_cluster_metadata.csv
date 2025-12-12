@@ -1,0 +1,8 @@
+cluster_id,size,is_small,outlier_status
+0,60,False,NORMAL
+1,202,False,NORMAL
+2,40,False,NORMAL
+3,80,False,NORMAL
+4,38,False,NORMAL
+5,40,False,NORMAL
+6,20,False,NORMAL

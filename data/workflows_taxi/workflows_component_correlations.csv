@@ -1,0 +1,12 @@
+component,variable,correlation
+PC_1,cv_rmse_mean,0.9910513203371768
+PC_1,cv_mse_mean,0.9843611614103669
+PC_1,test_rmse,0.9694132642711576
+PC_1,test_mse,0.9584133618485742
+PC_1,cv_mae_mean,0.9506057798782458
+PC_1,test_mae,0.9499234557821491
+PC_1,test_median_absolute_error,0.9414431416739096
+PC_1,train_rmse,0.9231080099506875
+PC_1,train_mae,0.9221895621898346
+PC_1,train_mse,0.9193636002256668
+PC_1,test_mape,0.9178444548406578

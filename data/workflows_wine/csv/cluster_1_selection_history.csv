@@ -1,0 +1,11 @@
+iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
+1,test_Test_Fairness,0.09743681622358986,test_Test_Fairness,0.0
+2,test_Log_Loss,0.12859565183124264,test_Log_Loss,0.0
+3,test_Conditional_Statistical_Parity,0.151350762743195,test_Conditional_Statistical_Parity,0.0
+4,test_Well_Calibration,0.16506007908957818,test_Well_Calibration,0.0
+5,test_Equal_Opportunity,0.0642320887542152,test_Equalized_Odds,1.0
+5,test_Equal_Opportunity,0.0642320887542152,test_Predictive_Equality,1.0
+5,test_Equal_Opportunity,0.0642320887542152,test_Overall_Accuracy_Equality,1.0
+5,test_Equal_Opportunity,0.0642320887542152,test_Equal_Opportunity,0.0
+6,test_False_Negatives,0.150049940322234,test_False_Negatives,0.0
+7,test_Treatment_Equality,0.15425246604245396,test_Treatment_Equality,0.0

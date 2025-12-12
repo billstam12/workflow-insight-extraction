@@ -1,0 +1,13 @@
+component,variable,correlation
+PC_1,test_False_Positives,0.9776973496029507
+PC_1,overfitting_F1_diff,-0.9341383849452027
+PC_1,overfitting_Accuracy_diff,-0.9341008897426386
+PC_1,test_Treatment_Equality,0.8468841122346837
+PC_1,test_Equalized_Odds,0.8200279902873301
+PC_1,test_Equal_Opportunity,0.8200279902873298
+PC_1,test_Predictive_Equality,0.8200279902873293
+PC_1,test_Overall_Accuracy_Equality,0.820027990287325
+PC_2,test_Conditional_Statistical_Parity,0.9939146593257789
+PC_2,test_False_Negatives,0.9929883235059478
+PC_2,test_Log_Loss,0.8306082948999071
+PC_2,test_Well_Calibration,0.8147307101267997

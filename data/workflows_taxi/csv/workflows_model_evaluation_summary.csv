@@ -1,0 +1,5 @@
+cluster_id,n_samples,n_features_used,selected_features,test_auc,precision,recall,f1_score,balanced_accuracy,tn,fp,fn,tp,high_shap_features
+0,24,7,"feature_importance_max,train_mae,test_mape,test_max_error,train_mse,test_rmse,training_time_seconds",1.0,1.0,0.8,0.8888888888888888,0.9,67,0,1,4,"feature_importance_max,train_mae,train_mse"
+1,192,7,"feature_importance_std,test_mape,cv_mae_mean,test_rmse,test_max_error,training_time_seconds,train_mse",1.0,1.0,1.0,1.0,1.0,34,0,0,38,"feature_importance_std,test_mape,cv_mae_mean,train_mse"
+2,48,7,"train_mse,test_median_absolute_error,cv_rmse_mean,test_rmse,test_max_error,feature_importance_std,training_time_seconds",1.0,1.0,1.0,1.0,1.0,62,0,0,10,train_mse
+3,96,7,"cv_rmse_mean,test_rmse,cv_mae_mean,feature_importance_max,train_mse,training_time_seconds,test_max_error",0.9905660377358491,0.95,1.0,0.9743589743589743,0.9905660377358491,52,1,0,19,cv_rmse_mean

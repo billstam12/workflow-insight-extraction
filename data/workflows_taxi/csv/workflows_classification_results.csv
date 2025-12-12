@@ -1,0 +1,5 @@
+cluster_id,n_samples,n_features_selected,selected_features
+0,24,7,"feature_importance_max,train_mae,test_mape,test_max_error,train_mse,test_rmse,training_time_seconds"
+1,192,7,"feature_importance_std,test_mape,cv_mae_mean,test_rmse,test_max_error,training_time_seconds,train_mse"
+2,48,7,"train_mse,test_median_absolute_error,cv_rmse_mean,test_rmse,test_max_error,feature_importance_std,training_time_seconds"
+3,96,7,"cv_rmse_mean,test_rmse,cv_mae_mean,feature_importance_max,train_mse,training_time_seconds,test_max_error"

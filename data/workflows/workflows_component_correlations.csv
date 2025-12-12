@@ -1,0 +1,19 @@
+component,variable,correlation
+PC_1,Conditional Use Accuracy Equality,0.9859199990143157
+PC_1,Equalized Odds,0.9859199990143157
+PC_1,Equal Opportunity,0.9827820784030105
+PC_1,Cohen Kappa,0.9804418049957095
+PC_1,Recall,0.9745375248560723
+PC_1,F1 Score,0.9712511360481377
+PC_1,Matthews Corrcoef,0.9487642741220211
+PC_1,learning_curve_train_score,0.941986396588979
+PC_1,Accuracy,0.8306452971232688
+PC_1,Statistical Parity,-0.8081090613719762
+PC_1,Conditional Statistical Parity,0.7914061844798398
+PC_1,Disparate Impact,0.7914061844798398
+PC_2,Equal Negative Predictive Value,0.9368092723872571
+PC_2,Overall Accuracy Equality,0.9244230420455384
+PC_2,Precision,-0.8182515179714488
+PC_2,Treatment Equality,0.8019957797403705
+PC_2,Balance for Positive Class,0.792134343067747
+PC_2,AUC-ROC,-0.7796625175459716
