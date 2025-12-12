@@ -572,7 +572,7 @@ def analyze_cluster_dominance(cluster_signatures, cluster_metrics, n_clusters, d
     return dominance_report
 
 
-def borda_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_clustered):
+def borda_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_clustered, representative_rows=None):
     """
     Compute Borda count ranking for all clusters based on representative metrics.
     
@@ -616,7 +616,13 @@ def borda_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_c
         # Get metric values for all clusters
         metric_values = []
         for cluster_id in range(n_clusters):
-            val = cluster_metrics[cluster_id].get(metric, None)
+            # Use the same representative row that powered Pareto dominance
+            rep_row = representative_rows.get(cluster_id) if representative_rows else None
+            val = None
+            if rep_row is not None and metric in rep_row:
+                val = rep_row[metric]
+            elif cluster_metrics[cluster_id].get(metric, None) is not None:
+                val = cluster_metrics[cluster_id][metric]
             if val is not None:
                 metric_values.append((cluster_id, val))
         
@@ -675,7 +681,7 @@ def borda_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_c
     }
 
 
-def copeland_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_clustered):
+def copeland_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, df_clustered, representative_rows=None):
     """
     Compute Copeland count ranking for all clusters based on representative metrics.
     
@@ -726,8 +732,11 @@ def copeland_ranking_clusters(cluster_signatures, cluster_metrics, n_clusters, d
         
         # Compare on each representative metric
         for metric in all_representatives:
-            val_i = cluster_metrics[i].get(metric, None)
-            val_j = cluster_metrics[j].get(metric, None)
+            # Use the same representative row used during Pareto dominance
+            rep_i = representative_rows.get(i) if representative_rows else None
+            rep_j = representative_rows.get(j) if representative_rows else None
+            val_i = rep_i[metric] if rep_i is not None and metric in rep_i else cluster_metrics[i].get(metric, None)
+            val_j = rep_j[metric] if rep_j is not None and metric in rep_j else cluster_metrics[j].get(metric, None)
             
             if val_i is not None and val_j is not None:
                 direction = get_metric_directionality(df_clustered, metric)
@@ -818,6 +827,7 @@ def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters, df_medoid
     
     cluster_signatures = {}
     cluster_metrics = {}
+    representative_rows = {}
     
     # First pass: Extract all signatures to collect ALL metrics across all clusters
     all_metrics_global = set()
@@ -835,6 +845,7 @@ def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters, df_medoid
         representative_row = select_cluster_metric_row(
             cluster_id, cluster_data, df_clustered, df_medoids, cluster_signatures[cluster_id], metric_source
         )
+        representative_rows[cluster_id] = representative_row
 
         # Collect values for ALL metrics that exist in any cluster's signature
         for metric in all_metrics_global:
@@ -949,6 +960,7 @@ def macro_ranking_pareto_dominance(df_clustered, insights, n_clusters, df_medoid
         'dominated_by': dominated_by,
         'cluster_signatures': cluster_signatures,
         'cluster_metrics': cluster_metrics,
+        'representative_rows': representative_rows,
         'pareto_frontier': pareto_frontier_df,
         'dominance_analysis': dominance_analysis
     }
@@ -1266,7 +1278,8 @@ def main():
             macro_results['cluster_signatures'],
             macro_results['cluster_metrics'],
             n_clusters,
-            df_clustered
+            df_clustered,
+            macro_results.get('representative_rows')
         )
 
         # COPELAND'S RANKING (Head-to-head pairwise comparisons)
@@ -1274,7 +1287,8 @@ def main():
             macro_results['cluster_signatures'],
             macro_results['cluster_metrics'],
             n_clusters,
-            df_clustered
+            df_clustered,
+            macro_results.get('representative_rows')
         )
 
         # LEVEL 2: MICRO-RANKING (only for efficient clusters)
@@ -1320,10 +1334,6 @@ def main():
             top_5 = copeland_results['copeland_ranking'].head(5)
             for _, row in top_5.iterrows():
                 print(f"  #{int(row['copeland_rank'])}: Cluster {int(row['cluster_id'])} (score: {row['copeland_score']:.1f}, size: {int(row['cluster_size'])})")
-
-        print(f"\nBest Clusters (Pareto Frontier):")
-        for cid in efficient_clusters:
-            print(f"  - Cluster {cid} (size: {len(df_clustered[df_clustered['cluster'] == cid])})")
 
         print(f"\nBest Runs (Micro-Ranking - Hero Runs):")
         for cluster_id, hero_run in micro_results['hero_runs'].items():

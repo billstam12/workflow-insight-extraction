@@ -452,7 +452,6 @@ def cluster_workflows(X_scaled, n_clusters=4, random_state=42):
 
     # Find medoids (actual workflows closest to centroids)
     medoid_indices, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, X_scaled)
-
     print(f"Clustering complete. Silhouette score: {compute_silhouette(X_scaled, cluster_labels):.3f}")
 
     return cluster_labels, medoid_indices

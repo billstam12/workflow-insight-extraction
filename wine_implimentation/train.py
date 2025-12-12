@@ -284,40 +284,15 @@ print("\n" + "="*70)
 print("STEP 3-5: TRANSFORM → TRAIN → EVALUATE")
 print("="*70)
 
-# Define expanded hyperparameter grid for more workflows
-# param_grid = {
-#     'transformer': ['standard', 'minmax', 'robust', 'none'],
-#     'classifier': ['logistic', 'random_forest', 'svm'],
-    
-#     # Logistic Regression params
-#     'C': [0.001, 0.01, 0.1, 0.5, 1.0, 5.0, 10.0, 100.0],
-#     'penalty': ['l1', 'l2'],
-#     'solver': ['liblinear', 'saga'],
-#     'class_weight': [None, 'balanced'],
-    
-#     # Random Forest params
-#     'n_estimators': [10, 50, 100, 150, 200, 300],
-#     'max_depth': [None, 5, 10, 15, 20, 30],
-#     'min_samples_split': [2, 5, 10, 15],
-#     'min_samples_leaf': [1, 2, 4],
-#     'max_features': ['sqrt', 'log2'],
-    
-#     # SVM params
-#     'svm_C': [0.1, 1.0, 10.0, 50.0, 100.0],
-#     'kernel': ['linear', 'rbf', 'poly'],
-#     'gamma': ['scale', 'auto', 0.001, 0.01, 0.1],
-#     'degree': [2, 3, 4]  # for poly kernel
-# }
 
 param_grid = {
     'normalization': ['standard', 'minmax', 'robust'],
     'classifier': ['random_forest'],
-    
-    # Random Forest params - tuned for ~600 workflows
-    'n_estimators': [50,100, 20,200],
+    # Random Forest params -
+    'n_estimators': [50, 100, 200],
     'criterion': ['gini', 'entropy', 'log_loss'],
-    'max_depth': [3,10, 20, 30,100],
-    'fairness_method': ["balanced_subsample", "balanced",None],  # Maps to class_weight
+    'max_depth': [3, 10, 20],
+    'fairness_method': ["balanced_subsample", "balanced", None],  # Maps to class_weight
     'random_state': [42]  # Fixed for reproducibility
 }
 
