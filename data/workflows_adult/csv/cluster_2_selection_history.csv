@@ -1,0 +1,16 @@
+iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
+1,Balance for Positive Class,0.04830081544535316,Balance for Positive Class,0.0
+2,Recall,0.06679556615223697,Recall,0.0
+3,Equal Opportunity,0.05016527679806412,Conditional Use Accuracy Equality,0.9004949704004698
+3,Equal Opportunity,0.05016527679806412,Equalized Odds,0.9004949704004698
+3,Equal Opportunity,0.05016527679806412,Equal Opportunity,0.0
+4,learning_curve_train_score,0.048740894625658816,learning_curve_train_score,0.0
+5,Well Calibration,0.06268438862288093,Well Calibration,0.0
+6,F1 Score,0.03996731049521613,Cohen Kappa,0.9118569251519558
+6,F1 Score,0.03996731049521613,Matthews Corrcoef,0.8307905200651615
+6,F1 Score,0.03996731049521613,Accuracy,0.7785508616185786
+6,F1 Score,0.03996731049521613,F1 Score,0.0
+7,Test Fairness,0.060945443644516484,Test Fairness,0.0
+8,Balance for Negative Class,0.06080984349340793,Balance for Negative Class,0.0
+9,AUC-ROC,0.07617326032319126,AUC-ROC,0.0
+10,Overall Accuracy Equality,0.07635697957302183,Overall Accuracy Equality,0.0

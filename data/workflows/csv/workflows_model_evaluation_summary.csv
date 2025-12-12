@@ -1,0 +1,5 @@
+cluster_id,n_samples,n_features_used,selected_features,test_auc,precision,recall,f1_score,balanced_accuracy,tn,fp,fn,tp,high_shap_features
+0,36,10,"Well Calibration,Recall,Statistical Parity,AUC-ROC,Balance for Negative Class,Equal Opportunity,Matthews Corrcoef,learning_curve_train_score,Log Loss,Disparate Impact",1.0,1.0,1.0,1.0,1.0,15,0,0,7,Well Calibration
+1,18,10,"Well Calibration,AUC-ROC,learning_curve_train_score,Log Loss,Equal Opportunity,Matthews Corrcoef,Test Fairness,Overall Accuracy Equality,Balance for Negative Class,Statistical Parity",1.0,1.0,1.0,1.0,1.0,18,0,0,4,"Well Calibration,AUC-ROC"
+2,36,10,"Precision,Statistical Parity,Equal Negative Predictive Value,Test Fairness,Recall,Balance for Positive Class,Equal Opportunity,Disparate Impact,Accuracy,learning_curve_train_score",1.0,1.0,1.0,1.0,1.0,15,0,0,7,Precision
+3,18,10,"Treatment Equality,Balance for Negative Class,Overall Accuracy Equality,Precision,Accuracy,Log Loss,Well Calibration,Equalized Odds,learning_curve_train_score,Cohen Kappa",1.0,1.0,1.0,1.0,1.0,18,0,0,4,"Treatment Equality,Precision"

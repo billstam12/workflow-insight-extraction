@@ -1,0 +1,5 @@
+cluster_id,n_samples,n_features_selected,selected_features
+0,36,10,"Well Calibration,Recall,Statistical Parity,AUC-ROC,Balance for Negative Class,Equal Opportunity,Matthews Corrcoef,learning_curve_train_score,Log Loss,Disparate Impact"
+1,18,10,"Well Calibration,AUC-ROC,learning_curve_train_score,Log Loss,Equal Opportunity,Matthews Corrcoef,Test Fairness,Overall Accuracy Equality,Balance for Negative Class,Statistical Parity"
+2,36,10,"Precision,Statistical Parity,Equal Negative Predictive Value,Test Fairness,Recall,Balance for Positive Class,Equal Opportunity,Disparate Impact,Accuracy,learning_curve_train_score"
+3,18,10,"Treatment Equality,Balance for Negative Class,Overall Accuracy Equality,Precision,Accuracy,Log Loss,Well Calibration,Equalized Odds,learning_curve_train_score,Cohen Kappa"

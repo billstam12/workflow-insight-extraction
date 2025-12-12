@@ -1,0 +1,17 @@
+iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
+1,system_network_transmit_megabytes,0.0501402620549262,system_network_receive_megabytes,0.9643309165492939
+1,system_network_transmit_megabytes,0.0501402620549262,system_network_transmit_megabytes,0.0
+2,system_cpu_utilization_percentage,0.0419930659483284,system_cpu_utilization_percentage,0.0
+3,Log Loss,0.030404620597950963,Log Loss,0.0
+4,learning_curve_train_score,0.02928725739280645,learning_curve_train_score,0.0
+5,Recall,0.025318716995787856,Recall,0.0
+6,Conditional Use Accuracy Equality,0.021842241737424696,Equalized Odds,1.0
+6,Conditional Use Accuracy Equality,0.021842241737424696,Equal Opportunity,0.9004949704004698
+6,Conditional Use Accuracy Equality,0.021842241737424696,Conditional Use Accuracy Equality,0.0
+7,F1 Score,0.029806084444467133,Cohen Kappa,0.9118569251519558
+7,F1 Score,0.029806084444467133,Matthews Corrcoef,0.8307905200651615
+7,F1 Score,0.029806084444467133,Accuracy,0.7785508616185786
+7,F1 Score,0.029806084444467133,F1 Score,0.0
+8,AUC-ROC,0.03470316748394372,AUC-ROC,0.0
+9,Well Calibration,0.029003973815418773,Well Calibration,0.0
+10,Balance for Negative Class,0.03273648017921379,Balance for Negative Class,0.0

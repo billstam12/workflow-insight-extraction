@@ -67,21 +67,26 @@ def read_processed_pcs(file_path: str):
     Load the processed data used to create clusters (principal components)
     and prepare scaled features for cluster quality validation.
 
-    Expects a CSV with columns: 'PC_1', 'PC_2', 'cluster'.
+    Expects a CSV with columns: 'PC_*' and 'cluster'.
+    Automatically detects and uses all available principal component columns
+    matching the pattern 'PC_*' (e.g., PC_1, PC_2, PC_3, ...).
     """
     pcs_path = os.path.join(file_path, 'workflows_processed_data.csv')
     if not os.path.exists(pcs_path):
         raise FileNotFoundError(f"Processed PCs file not found: {pcs_path}")
 
     pcs_df = pd.read_csv(pcs_path)
-    # Ensure expected columns exist
-    expected_cols = ['PC_1', 'PC_2', 'cluster']
-    missing = [c for c in expected_cols if c not in pcs_df.columns]
-    if missing:
-        raise ValueError(f"Processed PCs file missing columns: {missing}")
+    
+    # Detect all principal component columns automatically
+    pc_cols = [c for c in pcs_df.columns if re.match(r'^PC_\d+$', str(c))]
+    
+    if 'cluster' not in pcs_df.columns:
+        raise ValueError("Processed PCs file missing required column: 'cluster'")
+    if not pc_cols:
+        raise ValueError("Processed PCs file contains no principal component columns (expected columns like 'PC_1', 'PC_2', ...)")
 
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(pcs_df[['PC_1', 'PC_2']].values)
+    X_scaled = scaler.fit_transform(pcs_df[pc_cols].values)
 
     return pcs_df, X_scaled
 
@@ -572,7 +577,7 @@ def rule_quality(sub_frames: dict, clusters_insights: dict):
             print(f"Warning: No insights found for Cluster {cluster_id}")
             continue
             
-        selected_features_raw = clusters_insights[cluster_key]['feature_selection']['selected_features']
+        selected_features_raw = clusters_insights[cluster_key]['high_shap_features']['features']
         
         # 2. Map feature names to dataframe columns (spaces to underscores)
         selected_features = [f.replace(' ', '_') for f in selected_features_raw]
@@ -769,7 +774,7 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
     Compare CV distribution for selected (discriminative) vs non-selected metrics.
     
     For each cluster:
-    - Selected metrics = those in feature_selection.selected_features
+    - Selected metrics = those in high_shap_features.features
     - Non-selected metrics = all other metrics
     
     We expect selected metrics to have lower CV (more stable within cluster).
@@ -783,7 +788,7 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
         cluster_id = int(cluster_id_str)
         
         # Get selected features for this cluster
-        selected_features_raw = cluster_info['feature_selection']['selected_features']
+        selected_features_raw = cluster_info['high_shap_features']["features"]
         
         # Don't normalize - the column names in the dataframe have spaces, matching the JSON
         selected_features = selected_features_raw

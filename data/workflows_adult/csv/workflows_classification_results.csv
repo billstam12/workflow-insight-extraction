@@ -1,0 +1,6 @@
+cluster_id,n_samples,n_features_selected,selected_features
+0,202,10,"Well Calibration,Conditional Use Accuracy Equality,Matthews Corrcoef,Recall,Balance for Negative Class,Overall Accuracy Equality,Log Loss,Balance for Positive Class,Equal Negative Predictive Value,Disparate Impact"
+1,80,10,"Conditional Statistical Parity,Overall Accuracy Equality,Precision,Balance for Negative Class,Treatment Equality,Accuracy,Equal Negative Predictive Value,Balance for Positive Class,Log Loss,Well Calibration"
+2,80,10,"Balance for Positive Class,Recall,Equal Opportunity,learning_curve_train_score,Well Calibration,F1 Score,Test Fairness,Balance for Negative Class,AUC-ROC,Overall Accuracy Equality"
+3,38,10,"system_network_transmit_megabytes,system_cpu_utilization_percentage,Log Loss,learning_curve_train_score,Recall,Conditional Use Accuracy Equality,F1 Score,AUC-ROC,Well Calibration,Balance for Negative Class"
+4,80,10,"Treatment Equality,Balance for Positive Class,Disparate Impact,Recall,learning_curve_train_score,Precision,Equal Negative Predictive Value,AUC-ROC,Conditional Use Accuracy Equality,F1 Score"

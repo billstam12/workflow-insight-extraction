@@ -2,370 +2,6 @@
   "0": {
     "cluster_id": 0,
     "metadata": {
-      "n_workflows": 60,
-      "percentage_of_total": 12.5,
-      "medoid_workflow_id": "393a43a392514969a2d3fc1e57352e9d",
-      "medoid_index": 27
-    },
-    "feature_selection": {
-      "n_features_selected": 10,
-      "selected_features": [
-        "Conditional Statistical Parity",
-        "Overall Accuracy Equality",
-        "Precision",
-        "Balance for Negative Class",
-        "Treatment Equality",
-        "Equal Negative Predictive Value",
-        "Accuracy",
-        "Balance for Positive Class",
-        "Well Calibration",
-        "Equal Opportunity"
-      ],
-      "n_metrics_total": 27,
-      "feature_statistics": {
-        "Conditional Statistical Parity": {
-          "cluster_mean": 1.5531,
-          "cluster_std": 0.2305,
-          "other_clusters_mean": -0.2219,
-          "other_clusters_std": 0.8611,
-          "value_category": "high",
-          "distinctiveness_score": 2.0614,
-          "z-score": 1.5531
-        },
-        "Overall Accuracy Equality": {
-          "cluster_mean": 1.5165,
-          "cluster_std": 0.0472,
-          "other_clusters_mean": -0.2166,
-          "other_clusters_std": 0.8758,
-          "value_category": "high",
-          "distinctiveness_score": 1.9788,
-          "z-score": 1.5165
-        },
-        "Precision": {
-          "cluster_mean": -1.9229,
-          "cluster_std": 0.4329,
-          "other_clusters_mean": 0.2747,
-          "other_clusters_std": 0.7158,
-          "value_category": "low",
-          "distinctiveness_score": 3.0702,
-          "z-score": -1.9229
-        },
-        "Balance for Negative Class": {
-          "cluster_mean": -1.2613,
-          "cluster_std": 0.0564,
-          "other_clusters_mean": 0.1802,
-          "other_clusters_std": 0.9395,
-          "value_category": "low",
-          "distinctiveness_score": 1.5343,
-          "z-score": -1.2613
-        },
-        "Treatment Equality": {
-          "cluster_mean": 1.9937,
-          "cluster_std": 0.2005,
-          "other_clusters_mean": -0.2848,
-          "other_clusters_std": 0.6987,
-          "value_category": "high",
-          "distinctiveness_score": 3.2613,
-          "z-score": 1.9937
-        },
-        "Equal Negative Predictive Value": {
-          "cluster_mean": 1.4544,
-          "cluster_std": 0.0321,
-          "other_clusters_mean": -0.2078,
-          "other_clusters_std": 0.8929,
-          "value_category": "high",
-          "distinctiveness_score": 1.8615,
-          "z-score": 1.4544
-        },
-        "Accuracy": {
-          "cluster_mean": -1.5639,
-          "cluster_std": 0.1855,
-          "other_clusters_mean": 0.2234,
-          "other_clusters_std": 0.8594,
-          "value_category": "low",
-          "distinctiveness_score": 2.0797,
-          "z-score": -1.5639
-        },
-        "Balance for Positive Class": {
-          "cluster_mean": 0.6505,
-          "cluster_std": 0.1127,
-          "other_clusters_mean": -0.0929,
-          "other_clusters_std": 1.0354,
-          "value_category": "mid",
-          "distinctiveness_score": 0.718,
-          "z-score": 0.6505
-        },
-        "Well Calibration": {
-          "cluster_mean": 1.207,
-          "cluster_std": 0.0569,
-          "other_clusters_mean": -0.1724,
-          "other_clusters_std": 0.9511,
-          "value_category": "high",
-          "distinctiveness_score": 1.4503,
-          "z-score": 1.207
-        },
-        "Equal Opportunity": {
-          "cluster_mean": -0.8382,
-          "cluster_std": 0.0585,
-          "other_clusters_mean": 0.1197,
-          "other_clusters_std": 1.0137,
-          "value_category": "mid",
-          "distinctiveness_score": 0.945,
-          "z-score": -0.8382
-        }
-      }
-    },
-    "model_evaluation": {
-      "test_auc": 0.9891,
-      "balanced_accuracy": 0.9405,
-      "precision": 0.7857,
-      "recall": 0.9167,
-      "f1_score": 0.8462,
-      "model_quality_score": 0.9319,
-      "quality_interpretation": "Excellent - Cluster is very well distinguished",
-      "confusion_matrix": {
-        "true_negatives": 81,
-        "false_positives": 3,
-        "false_negatives": 1,
-        "true_positives": 11
-      }
-    },
-    "high_shap_features": {
-      "features": [
-        "Precision",
-        "Well Calibration",
-        "Conditional Statistical Parity",
-        "Equal Negative Predictive Value",
-        "Balance for Negative Class",
-        "Equal Opportunity",
-        "Treatment Equality"
-      ],
-      "feature_statistics": {
-        "Precision": {
-          "cluster_mean": -1.9229,
-          "cluster_std": 0.4329,
-          "other_clusters_mean": 0.2747,
-          "other_clusters_std": 0.7158,
-          "value_category": "low",
-          "distinctiveness_score": 3.0702,
-          "z-score": -1.9229
-        },
-        "Well Calibration": {
-          "cluster_mean": 1.207,
-          "cluster_std": 0.0569,
-          "other_clusters_mean": -0.1724,
-          "other_clusters_std": 0.9511,
-          "value_category": "high",
-          "distinctiveness_score": 1.4503,
-          "z-score": 1.207
-        },
-        "Conditional Statistical Parity": {
-          "cluster_mean": 1.5531,
-          "cluster_std": 0.2305,
-          "other_clusters_mean": -0.2219,
-          "other_clusters_std": 0.8611,
-          "value_category": "high",
-          "distinctiveness_score": 2.0614,
-          "z-score": 1.5531
-        },
-        "Equal Negative Predictive Value": {
-          "cluster_mean": 1.4544,
-          "cluster_std": 0.0321,
-          "other_clusters_mean": -0.2078,
-          "other_clusters_std": 0.8929,
-          "value_category": "high",
-          "distinctiveness_score": 1.8615,
-          "z-score": 1.4544
-        },
-        "Balance for Negative Class": {
-          "cluster_mean": -1.2613,
-          "cluster_std": 0.0564,
-          "other_clusters_mean": 0.1802,
-          "other_clusters_std": 0.9395,
-          "value_category": "low",
-          "distinctiveness_score": 1.5343,
-          "z-score": -1.2613
-        },
-        "Equal Opportunity": {
-          "cluster_mean": -0.8382,
-          "cluster_std": 0.0585,
-          "other_clusters_mean": 0.1197,
-          "other_clusters_std": 1.0137,
-          "value_category": "mid",
-          "distinctiveness_score": 0.945,
-          "z-score": -0.8382
-        },
-        "Treatment Equality": {
-          "cluster_mean": 1.9937,
-          "cluster_std": 0.2005,
-          "other_clusters_mean": -0.2848,
-          "other_clusters_std": 0.6987,
-          "value_category": "high",
-          "distinctiveness_score": 3.2613,
-          "z-score": 1.9937
-        }
-      }
-    },
-    "correlation_analysis": {
-      "n_removed_features": 8,
-      "removed_features": {
-        "Disparate Impact": {
-          "max_relationship": 1.0,
-          "related_to": "Conditional Statistical Parity",
-          "all_relationships": [
-            {
-              "selected_feature": "Conditional Statistical Parity",
-              "relationship_measure": 1.0
-            }
-          ]
-        },
-        "Predictive Equality": {
-          "max_relationship": 0.7784,
-          "related_to": "Treatment Equality",
-          "all_relationships": [
-            {
-              "selected_feature": "Treatment Equality",
-              "relationship_measure": 0.7783899771334027
-            }
-          ]
-        },
-        "Matthews Corrcoef": {
-          "max_relationship": 0.9483,
-          "related_to": "Accuracy",
-          "all_relationships": [
-            {
-              "selected_feature": "Accuracy",
-              "relationship_measure": 0.948277139467917
-            }
-          ]
-        },
-        "Cohen Kappa": {
-          "max_relationship": 0.8674,
-          "related_to": "Accuracy",
-          "all_relationships": [
-            {
-              "selected_feature": "Accuracy",
-              "relationship_measure": 0.867423143630844
-            }
-          ]
-        },
-        "AUC-ROC": {
-          "max_relationship": 0.8223,
-          "related_to": "Accuracy",
-          "all_relationships": [
-            {
-              "selected_feature": "Accuracy",
-              "relationship_measure": 0.8223264927331584
-            }
-          ]
-        },
-        "F1 Score": {
-          "max_relationship": 0.7786,
-          "related_to": "Accuracy",
-          "all_relationships": [
-            {
-              "selected_feature": "Accuracy",
-              "relationship_measure": 0.7785508616185786
-            }
-          ]
-        },
-        "Conditional Use Accuracy Equality": {
-          "max_relationship": 0.9005,
-          "related_to": "Equal Opportunity",
-          "all_relationships": [
-            {
-              "selected_feature": "Equal Opportunity",
-              "relationship_measure": 0.9004949704004698
-            }
-          ]
-        },
-        "Equalized Odds": {
-          "max_relationship": 0.9005,
-          "related_to": "Equal Opportunity",
-          "all_relationships": [
-            {
-              "selected_feature": "Equal Opportunity",
-              "relationship_measure": 0.9004949704004698
-            }
-          ]
-        }
-      }
-    },
-    "trade_off_analysis": {
-      "n_total_tradeoffs": 89,
-      "n_strong_tradeoffs": 1,
-      "strong_threshold": -0.75,
-      "strong_tradeoffs": [
-        {
-          "metric_1": "Treatment Equality",
-          "metric_2": "Predictive Equality",
-          "relationship_type": "Kendall",
-          "relationship_strength": -0.8046893456831933,
-          "is_tradeoff": 1
-        }
-      ]
-    },
-    "hyperparameter_patterns": {
-      "criterion": {
-        "dominant_value": "entropy",
-        "dominant_percentage": 50.0,
-        "unique_values": 2,
-        "value_distribution": {
-          "entropy": 30,
-          "gini": 30
-        }
-      },
-      "normalization": {
-        "dominant_value": "robust",
-        "dominant_percentage": 20.0,
-        "unique_values": 5,
-        "value_distribution": {
-          "robust": 12,
-          "standard": 12,
-          "maxabs": 12,
-          "minmax": 12,
-          "none": 12
-        }
-      },
-      "splitter": {
-        "dominant_value": "basic",
-        "dominant_percentage": 100.0,
-        "unique_values": 1,
-        "value_distribution": {
-          "basic": 60
-        }
-      }
-    },
-    "decision_tree_rules": [
-      {
-        "rule": "fairness_method = 'relabel_data' and max_depth > 15.0 and n_estimators <= 150.0",
-        "f1_score": 1.0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "n_workflows_in_cluster": 60,
-        "combined_score": 1.0
-      },
-      {
-        "rule": "fairness_method = 'relabel_data' and n_estimators <= 75.0 and normalization IN {'maxabs', 'minmax', 'none', 'robust'}",
-        "f1_score": 0.5755395683453237,
-        "precision": 0.625,
-        "recall": 0.5333333333333333,
-        "n_workflows_in_cluster": 32,
-        "combined_score": 0.3069544364508393
-      },
-      {
-        "rule": "fairness_method = 'relabel_data' and max_depth > 25.0 and normalization IN {'maxabs', 'minmax', 'none', 'robust'}",
-        "f1_score": 0.5405405405405406,
-        "precision": 0.8333333333333334,
-        "recall": 0.4,
-        "n_workflows_in_cluster": 24,
-        "combined_score": 0.21621621621621623
-      }
-    ]
-  },
-  "1": {
-    "cluster_id": 1,
-    "metadata": {
       "n_workflows": 202,
       "percentage_of_total": 42.08,
       "medoid_workflow_id": "b8c80ef21bde40b4af3d6d0e03e86b1b",
@@ -729,119 +365,119 @@
       }
     ]
   },
-  "2": {
-    "cluster_id": 2,
+  "1": {
+    "cluster_id": 1,
     "metadata": {
-      "n_workflows": 40,
-      "percentage_of_total": 8.33,
-      "medoid_workflow_id": "e4096a83dccc4383b6369298a04f221a",
-      "medoid_index": 151
+      "n_workflows": 80,
+      "percentage_of_total": 16.67,
+      "medoid_workflow_id": "a591eed004e3476eb28f39962cf5b3cf",
+      "medoid_index": 17
     },
     "feature_selection": {
       "n_features_selected": 10,
       "selected_features": [
-        "Equal Opportunity",
-        "Well Calibration",
-        "Recall",
-        "F1 Score",
-        "Balance for Positive Class",
-        "learning_curve_train_score",
-        "Log Loss",
-        "AUC-ROC",
         "Conditional Statistical Parity",
-        "Overall Accuracy Equality"
+        "Overall Accuracy Equality",
+        "Precision",
+        "Balance for Negative Class",
+        "Treatment Equality",
+        "Accuracy",
+        "Equal Negative Predictive Value",
+        "Balance for Positive Class",
+        "Log Loss",
+        "Well Calibration"
       ],
       "n_metrics_total": 27,
       "feature_statistics": {
-        "Equal Opportunity": {
-          "cluster_mean": -1.4955,
-          "cluster_std": 0.0743,
-          "other_clusters_mean": 0.136,
-          "other_clusters_std": 0.932,
-          "value_category": "low",
-          "distinctiveness_score": 1.7506,
-          "z-score": -1.4955
-        },
-        "Well Calibration": {
-          "cluster_mean": 1.823,
-          "cluster_std": 0.0242,
-          "other_clusters_mean": -0.1657,
-          "other_clusters_std": 0.8725,
-          "value_category": "high",
-          "distinctiveness_score": 2.2793,
-          "z-score": 1.823
-        },
-        "Recall": {
-          "cluster_mean": -1.5822,
-          "cluster_std": 0.1075,
-          "other_clusters_mean": 0.1438,
-          "other_clusters_std": 0.9174,
-          "value_category": "low",
-          "distinctiveness_score": 1.8815,
-          "z-score": -1.5822
-        },
-        "F1 Score": {
-          "cluster_mean": -1.5822,
-          "cluster_std": 0.0899,
-          "other_clusters_mean": 0.1438,
-          "other_clusters_std": 0.9176,
-          "value_category": "low",
-          "distinctiveness_score": 1.8811,
-          "z-score": -1.5822
-        },
-        "Balance for Positive Class": {
-          "cluster_mean": 1.7938,
-          "cluster_std": 0.6987,
-          "other_clusters_mean": -0.1631,
-          "other_clusters_std": 0.8529,
-          "value_category": "high",
-          "distinctiveness_score": 2.2945,
-          "z-score": 1.7938
-        },
-        "learning_curve_train_score": {
-          "cluster_mean": -1.6982,
-          "cluster_std": 0.03,
-          "other_clusters_mean": 0.1544,
-          "other_clusters_std": 0.8971,
-          "value_category": "low",
-          "distinctiveness_score": 2.0651,
-          "z-score": -1.6982
-        },
-        "Log Loss": {
-          "cluster_mean": 0.8607,
-          "cluster_std": 0.0121,
-          "other_clusters_mean": -0.0782,
-          "other_clusters_std": 1.0087,
-          "value_category": "mid",
-          "distinctiveness_score": 0.9309,
-          "z-score": 0.8607
-        },
-        "AUC-ROC": {
-          "cluster_mean": -1.4157,
-          "cluster_std": 0.056,
-          "other_clusters_mean": 0.1287,
-          "other_clusters_std": 0.9444,
-          "value_category": "low",
-          "distinctiveness_score": 1.6353,
-          "z-score": -1.4157
-        },
         "Conditional Statistical Parity": {
-          "cluster_mean": -1.4988,
-          "cluster_std": 0.2092,
-          "other_clusters_mean": 0.1363,
-          "other_clusters_std": 0.9296,
-          "value_category": "low",
-          "distinctiveness_score": 1.7588,
-          "z-score": -1.4988
+          "cluster_mean": 1.5325,
+          "cluster_std": 0.2369,
+          "other_clusters_mean": -0.3065,
+          "other_clusters_std": 0.7907,
+          "value_category": "high",
+          "distinctiveness_score": 2.3258,
+          "z-score": 1.5325
         },
         "Overall Accuracy Equality": {
-          "cluster_mean": 1.296,
-          "cluster_std": 0.0628,
-          "other_clusters_mean": -0.1178,
-          "other_clusters_std": 0.9612,
+          "cluster_mean": 1.5268,
+          "cluster_std": 0.0486,
+          "other_clusters_mean": -0.3054,
+          "other_clusters_std": 0.8,
           "value_category": "high",
-          "distinctiveness_score": 1.4709,
-          "z-score": 1.296
+          "distinctiveness_score": 2.2902,
+          "z-score": 1.5268
+        },
+        "Precision": {
+          "cluster_mean": -1.8809,
+          "cluster_std": 0.4425,
+          "other_clusters_mean": 0.3762,
+          "other_clusters_std": 0.5584,
+          "value_category": "low",
+          "distinctiveness_score": 4.0421,
+          "z-score": -1.8809
+        },
+        "Balance for Negative Class": {
+          "cluster_mean": -1.2681,
+          "cluster_std": 0.0543,
+          "other_clusters_mean": 0.2536,
+          "other_clusters_std": 0.9019,
+          "value_category": "low",
+          "distinctiveness_score": 1.6872,
+          "z-score": -1.2681
+        },
+        "Treatment Equality": {
+          "cluster_mean": 2.0064,
+          "cluster_std": 0.1828,
+          "other_clusters_mean": -0.4013,
+          "other_clusters_std": 0.4766,
+          "value_category": "high",
+          "distinctiveness_score": 5.0513,
+          "z-score": 2.0064
+        },
+        "Accuracy": {
+          "cluster_mean": -1.5487,
+          "cluster_std": 0.1845,
+          "other_clusters_mean": 0.3097,
+          "other_clusters_std": 0.7859,
+          "value_category": "low",
+          "distinctiveness_score": 2.3648,
+          "z-score": -1.5487
+        },
+        "Equal Negative Predictive Value": {
+          "cluster_mean": 1.4593,
+          "cluster_std": 0.032,
+          "other_clusters_mean": -0.2919,
+          "other_clusters_std": 0.8299,
+          "value_category": "high",
+          "distinctiveness_score": 2.1101,
+          "z-score": 1.4593
+        },
+        "Balance for Positive Class": {
+          "cluster_mean": 0.6237,
+          "cluster_std": 0.1206,
+          "other_clusters_mean": -0.1247,
+          "other_clusters_std": 1.0506,
+          "value_category": "mid",
+          "distinctiveness_score": 0.7124,
+          "z-score": 0.6237
+        },
+        "Log Loss": {
+          "cluster_mean": 1.6177,
+          "cluster_std": 1.0539,
+          "other_clusters_mean": -0.3235,
+          "other_clusters_std": 0.5914,
+          "value_category": "high",
+          "distinctiveness_score": 3.2826,
+          "z-score": 1.6177
+        },
+        "Well Calibration": {
+          "cluster_mean": 1.1873,
+          "cluster_std": 0.0631,
+          "other_clusters_mean": -0.2375,
+          "other_clusters_std": 0.9278,
+          "value_category": "high",
+          "distinctiveness_score": 1.5357,
+          "z-score": 1.1873
         }
       }
     },
@@ -854,30 +490,324 @@
       "model_quality_score": 1.0,
       "quality_interpretation": "Excellent - Cluster is very well distinguished",
       "confusion_matrix": {
-        "true_negatives": 88,
+        "true_negatives": 80,
         "false_positives": 0,
         "false_negatives": 0,
-        "true_positives": 8
+        "true_positives": 16
       }
     },
     "high_shap_features": {
       "features": [
-        "Equal Opportunity"
+        "Conditional Statistical Parity",
+        "Treatment Equality"
       ],
       "feature_statistics": {
-        "Equal Opportunity": {
-          "cluster_mean": -1.4955,
-          "cluster_std": 0.0743,
-          "other_clusters_mean": 0.136,
-          "other_clusters_std": 0.932,
-          "value_category": "low",
-          "distinctiveness_score": 1.7506,
-          "z-score": -1.4955
+        "Conditional Statistical Parity": {
+          "cluster_mean": 1.5325,
+          "cluster_std": 0.2369,
+          "other_clusters_mean": -0.3065,
+          "other_clusters_std": 0.7907,
+          "value_category": "high",
+          "distinctiveness_score": 2.3258,
+          "z-score": 1.5325
+        },
+        "Treatment Equality": {
+          "cluster_mean": 2.0064,
+          "cluster_std": 0.1828,
+          "other_clusters_mean": -0.4013,
+          "other_clusters_std": 0.4766,
+          "value_category": "high",
+          "distinctiveness_score": 5.0513,
+          "z-score": 2.0064
         }
       }
     },
     "correlation_analysis": {
       "n_removed_features": 6,
+      "removed_features": {
+        "Disparate Impact": {
+          "max_relationship": 1.0,
+          "related_to": "Conditional Statistical Parity",
+          "all_relationships": [
+            {
+              "selected_feature": "Conditional Statistical Parity",
+              "relationship_measure": 1.0
+            }
+          ]
+        },
+        "Predictive Equality": {
+          "max_relationship": 0.7784,
+          "related_to": "Treatment Equality",
+          "all_relationships": [
+            {
+              "selected_feature": "Treatment Equality",
+              "relationship_measure": 0.7783899771334027
+            }
+          ]
+        },
+        "Matthews Corrcoef": {
+          "max_relationship": 0.9483,
+          "related_to": "Accuracy",
+          "all_relationships": [
+            {
+              "selected_feature": "Accuracy",
+              "relationship_measure": 0.948277139467917
+            }
+          ]
+        },
+        "Cohen Kappa": {
+          "max_relationship": 0.8674,
+          "related_to": "Accuracy",
+          "all_relationships": [
+            {
+              "selected_feature": "Accuracy",
+              "relationship_measure": 0.867423143630844
+            }
+          ]
+        },
+        "AUC-ROC": {
+          "max_relationship": 0.8223,
+          "related_to": "Accuracy",
+          "all_relationships": [
+            {
+              "selected_feature": "Accuracy",
+              "relationship_measure": 0.8223264927331584
+            }
+          ]
+        },
+        "F1 Score": {
+          "max_relationship": 0.7786,
+          "related_to": "Accuracy",
+          "all_relationships": [
+            {
+              "selected_feature": "Accuracy",
+              "relationship_measure": 0.7785508616185786
+            }
+          ]
+        }
+      }
+    },
+    "trade_off_analysis": {
+      "n_total_tradeoffs": 86,
+      "n_strong_tradeoffs": 1,
+      "strong_threshold": -0.75,
+      "strong_tradeoffs": [
+        {
+          "metric_1": "Treatment Equality",
+          "metric_2": "Predictive Equality",
+          "relationship_type": "Kendall",
+          "relationship_strength": -0.7866486723363246,
+          "is_tradeoff": 1
+        }
+      ]
+    },
+    "hyperparameter_patterns": {
+      "criterion": {
+        "dominant_value": "entropy",
+        "dominant_percentage": 50.0,
+        "unique_values": 2,
+        "value_distribution": {
+          "entropy": 40,
+          "gini": 40
+        }
+      },
+      "normalization": {
+        "dominant_value": "robust",
+        "dominant_percentage": 20.0,
+        "unique_values": 5,
+        "value_distribution": {
+          "robust": 16,
+          "standard": 16,
+          "maxabs": 16,
+          "minmax": 16,
+          "none": 16
+        }
+      },
+      "splitter": {
+        "dominant_value": "basic",
+        "dominant_percentage": 100.0,
+        "unique_values": 1,
+        "value_distribution": {
+          "basic": 80
+        }
+      }
+    },
+    "decision_tree_rules": [
+      {
+        "rule": "fairness_method = 'relabel_data' and max_depth > 15.0",
+        "f1_score": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "n_workflows_in_cluster": 80,
+        "combined_score": 1.0
+      },
+      {
+        "rule": "fairness_method = 'relabel_data' and n_estimators <= 150.0 and normalization IN {'robust', 'standard'}",
+        "f1_score": 0.4485981308411215,
+        "precision": 0.8888888888888888,
+        "recall": 0.3,
+        "n_workflows_in_cluster": 24,
+        "combined_score": 0.13457943925233645
+      },
+      {
+        "rule": "max_depth > 25.0 and normalization IN {'none', 'robust', 'standard'}",
+        "f1_score": 0.3853211009174312,
+        "precision": 0.5384615384615384,
+        "recall": 0.3,
+        "n_workflows_in_cluster": 24,
+        "combined_score": 0.11559633027522936
+      }
+    ]
+  },
+  "2": {
+    "cluster_id": 2,
+    "metadata": {
+      "n_workflows": 80,
+      "percentage_of_total": 16.67,
+      "medoid_workflow_id": "9d219814af90463791b8938d875ed09e",
+      "medoid_index": 116
+    },
+    "feature_selection": {
+      "n_features_selected": 10,
+      "selected_features": [
+        "Balance for Positive Class",
+        "Recall",
+        "Equal Opportunity",
+        "learning_curve_train_score",
+        "Well Calibration",
+        "F1 Score",
+        "Test Fairness",
+        "Balance for Negative Class",
+        "AUC-ROC",
+        "Overall Accuracy Equality"
+      ],
+      "n_metrics_total": 27,
+      "feature_statistics": {
+        "Balance for Positive Class": {
+          "cluster_mean": 1.8383,
+          "cluster_std": 0.6583,
+          "other_clusters_mean": -0.3677,
+          "other_clusters_std": 0.5498,
+          "value_category": "high",
+          "distinctiveness_score": 4.0122,
+          "z-score": 1.8383
+        },
+        "Recall": {
+          "cluster_mean": -1.306,
+          "cluster_std": 0.2882,
+          "other_clusters_mean": 0.2612,
+          "other_clusters_std": 0.8798,
+          "value_category": "low",
+          "distinctiveness_score": 1.7812,
+          "z-score": -1.306
+        },
+        "Equal Opportunity": {
+          "cluster_mean": -1.2851,
+          "cluster_std": 0.2189,
+          "other_clusters_mean": 0.257,
+          "other_clusters_std": 0.8911,
+          "value_category": "low",
+          "distinctiveness_score": 1.7305,
+          "z-score": -1.2851
+        },
+        "learning_curve_train_score": {
+          "cluster_mean": -1.4018,
+          "cluster_std": 0.2982,
+          "other_clusters_mean": 0.2804,
+          "other_clusters_std": 0.843,
+          "value_category": "low",
+          "distinctiveness_score": 1.9955,
+          "z-score": -1.4018
+        },
+        "Well Calibration": {
+          "cluster_mean": 1.5587,
+          "cluster_std": 0.2651,
+          "other_clusters_mean": -0.3117,
+          "other_clusters_std": 0.7764,
+          "value_category": "high",
+          "distinctiveness_score": 2.409,
+          "z-score": 1.5587
+        },
+        "F1 Score": {
+          "cluster_mean": -1.2925,
+          "cluster_std": 0.3011,
+          "other_clusters_mean": 0.2585,
+          "other_clusters_std": 0.8837,
+          "value_category": "low",
+          "distinctiveness_score": 1.7551,
+          "z-score": -1.2925
+        },
+        "Test Fairness": {
+          "cluster_mean": -1.1315,
+          "cluster_std": 0.2531,
+          "other_clusters_mean": 0.2263,
+          "other_clusters_std": 0.9381,
+          "value_category": "low",
+          "distinctiveness_score": 1.4474,
+          "z-score": -1.1315
+        },
+        "Balance for Negative Class": {
+          "cluster_mean": -1.0498,
+          "cluster_std": 0.0811,
+          "other_clusters_mean": 0.21,
+          "other_clusters_std": 0.9665,
+          "value_category": "low",
+          "distinctiveness_score": 1.3033,
+          "z-score": -1.0498
+        },
+        "AUC-ROC": {
+          "cluster_mean": -1.293,
+          "cluster_std": 0.1336,
+          "other_clusters_mean": 0.2586,
+          "other_clusters_std": 0.8917,
+          "value_category": "low",
+          "distinctiveness_score": 1.7399,
+          "z-score": -1.293
+        },
+        "Overall Accuracy Equality": {
+          "cluster_mean": 1.2858,
+          "cluster_std": 0.0744,
+          "other_clusters_mean": -0.2572,
+          "other_clusters_std": 0.8956,
+          "value_category": "high",
+          "distinctiveness_score": 1.7227,
+          "z-score": 1.2858
+        }
+      }
+    },
+    "model_evaluation": {
+      "test_auc": 1.0,
+      "balanced_accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "model_quality_score": 1.0,
+      "quality_interpretation": "Excellent - Cluster is very well distinguished",
+      "confusion_matrix": {
+        "true_negatives": 80,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "true_positives": 16
+      }
+    },
+    "high_shap_features": {
+      "features": [
+        "Balance for Positive Class"
+      ],
+      "feature_statistics": {
+        "Balance for Positive Class": {
+          "cluster_mean": 1.8383,
+          "cluster_std": 0.6583,
+          "other_clusters_mean": -0.3677,
+          "other_clusters_std": 0.5498,
+          "value_category": "high",
+          "distinctiveness_score": 4.0122,
+          "z-score": 1.8383
+        }
+      }
+    },
+    "correlation_analysis": {
+      "n_removed_features": 5,
       "removed_features": {
         "Conditional Use Accuracy Equality": {
           "max_relationship": 0.9005,
@@ -928,357 +858,19 @@
               "relationship_measure": 0.7785508616185786
             }
           ]
-        },
-        "Disparate Impact": {
-          "max_relationship": 1.0,
-          "related_to": "Conditional Statistical Parity",
-          "all_relationships": [
-            {
-              "selected_feature": "Conditional Statistical Parity",
-              "relationship_measure": 1.0
-            }
-          ]
         }
       }
     },
     "trade_off_analysis": {
-      "n_total_tradeoffs": 87,
+      "n_total_tradeoffs": 77,
       "n_strong_tradeoffs": 1,
       "strong_threshold": -0.75,
       "strong_tradeoffs": [
         {
-          "metric_1": "Equal Opportunity",
-          "metric_2": "Equal Negative Predictive Value",
+          "metric_1": "AUC-ROC",
+          "metric_2": "Log Loss",
           "relationship_type": "Kendall",
-          "relationship_strength": -0.9285714285714286,
-          "is_tradeoff": 1
-        }
-      ]
-    },
-    "hyperparameter_patterns": {
-      "criterion": {
-        "dominant_value": "entropy",
-        "dominant_percentage": 50.0,
-        "unique_values": 2,
-        "value_distribution": {
-          "entropy": 20,
-          "gini": 20
-        }
-      },
-      "normalization": {
-        "dominant_value": "robust",
-        "dominant_percentage": 20.0,
-        "unique_values": 5,
-        "value_distribution": {
-          "robust": 8,
-          "standard": 8,
-          "maxabs": 8,
-          "minmax": 8,
-          "none": 8
-        }
-      },
-      "splitter": {
-        "dominant_value": "basic",
-        "dominant_percentage": 100.0,
-        "unique_values": 1,
-        "value_distribution": {
-          "basic": 40
-        }
-      }
-    },
-    "decision_tree_rules": [
-      {
-        "rule": "fairness_method = 'relabel_data' and max_depth <= 7.5",
-        "f1_score": 1.0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "n_workflows_in_cluster": 40,
-        "combined_score": 1.0
-      },
-      {
-        "rule": "max_depth <= 7.5 and n_estimators <= 75.0 and n_estimators > 35.0 and normalization IN {'minmax', 'none', 'robust', 'standard'}",
-        "f1_score": 0.3,
-        "precision": 0.6,
-        "recall": 0.2,
-        "n_workflows_in_cluster": 8,
-        "combined_score": 0.06
-      },
-      {
-        "rule": "max_depth <= 7.5 and n_estimators > 35.0 and normalization IN {'maxabs', 'minmax'} and normalization IN {'minmax', 'none', 'robust', 'standard'}",
-        "f1_score": 0.2526315789473684,
-        "precision": 0.8,
-        "recall": 0.15,
-        "n_workflows_in_cluster": 6,
-        "combined_score": 0.03789473684210525
-      }
-    ]
-  },
-  "3": {
-    "cluster_id": 3,
-    "metadata": {
-      "n_workflows": 80,
-      "percentage_of_total": 16.67,
-      "medoid_workflow_id": "df6b46dde2cc4deea4339fbeb42bb26c",
-      "medoid_index": 191
-    },
-    "feature_selection": {
-      "n_features_selected": 10,
-      "selected_features": [
-        "Treatment Equality",
-        "Balance for Positive Class",
-        "Disparate Impact",
-        "Recall",
-        "learning_curve_train_score",
-        "Precision",
-        "Equal Negative Predictive Value",
-        "AUC-ROC",
-        "Conditional Use Accuracy Equality",
-        "F1 Score"
-      ],
-      "n_metrics_total": 27,
-      "feature_statistics": {
-        "Treatment Equality": {
-          "cluster_mean": -1.0776,
-          "cluster_std": 0.1017,
-          "other_clusters_mean": 0.2155,
-          "other_clusters_std": 0.9588,
-          "value_category": "low",
-          "distinctiveness_score": 1.3487,
-          "z-score": -1.0776
-        },
-        "Balance for Positive Class": {
-          "cluster_mean": -0.9598,
-          "cluster_std": 0.2254,
-          "other_clusters_mean": 0.192,
-          "other_clusters_std": 0.9842,
-          "value_category": "mid",
-          "distinctiveness_score": 1.1702,
-          "z-score": -0.9598
-        },
-        "Disparate Impact": {
-          "cluster_mean": -1.4583,
-          "cluster_std": 0.1507,
-          "other_clusters_mean": 0.2917,
-          "other_clusters_std": 0.8277,
-          "value_category": "low",
-          "distinctiveness_score": 2.1144,
-          "z-score": -1.4583
-        },
-        "Recall": {
-          "cluster_mean": -0.9107,
-          "cluster_std": 0.0453,
-          "other_clusters_mean": 0.1821,
-          "other_clusters_std": 1.0003,
-          "value_category": "mid",
-          "distinctiveness_score": 1.0925,
-          "z-score": -0.9107
-        },
-        "learning_curve_train_score": {
-          "cluster_mean": -1.0067,
-          "cluster_std": 0.0278,
-          "other_clusters_mean": 0.2013,
-          "other_clusters_std": 0.9781,
-          "value_category": "low",
-          "distinctiveness_score": 1.2352,
-          "z-score": -1.0067
-        },
-        "Precision": {
-          "cluster_mean": 1.0512,
-          "cluster_std": 0.2521,
-          "other_clusters_mean": -0.2102,
-          "other_clusters_std": 0.9602,
-          "value_category": "high",
-          "distinctiveness_score": 1.3137,
-          "z-score": 1.0512
-        },
-        "Equal Negative Predictive Value": {
-          "cluster_mean": -0.6926,
-          "cluster_std": 0.0246,
-          "other_clusters_mean": 0.1385,
-          "other_clusters_std": 1.0415,
-          "value_category": "mid",
-          "distinctiveness_score": 0.798,
-          "z-score": -0.6926
-        },
-        "AUC-ROC": {
-          "cluster_mean": 0.4819,
-          "cluster_std": 0.0286,
-          "other_clusters_mean": -0.0964,
-          "other_clusters_std": 1.0696,
-          "value_category": "mid",
-          "distinctiveness_score": 0.5407,
-          "z-score": 0.4819
-        },
-        "Conditional Use Accuracy Equality": {
-          "cluster_mean": -0.8139,
-          "cluster_std": 0.1601,
-          "other_clusters_mean": 0.1628,
-          "other_clusters_std": 1.0178,
-          "value_category": "mid",
-          "distinctiveness_score": 0.9597,
-          "z-score": -0.8139
-        },
-        "F1 Score": {
-          "cluster_mean": -0.6421,
-          "cluster_std": 0.0384,
-          "other_clusters_mean": 0.1284,
-          "other_clusters_std": 1.0492,
-          "value_category": "mid",
-          "distinctiveness_score": 0.7344,
-          "z-score": -0.6421
-        }
-      }
-    },
-    "model_evaluation": {
-      "test_auc": 1.0,
-      "balanced_accuracy": 1.0,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "model_quality_score": 1.0,
-      "quality_interpretation": "Excellent - Cluster is very well distinguished",
-      "confusion_matrix": {
-        "true_negatives": 80,
-        "false_positives": 0,
-        "false_negatives": 0,
-        "true_positives": 16
-      }
-    },
-    "high_shap_features": {
-      "features": [
-        "Treatment Equality",
-        "Precision",
-        "Balance for Positive Class"
-      ],
-      "feature_statistics": {
-        "Treatment Equality": {
-          "cluster_mean": -1.0776,
-          "cluster_std": 0.1017,
-          "other_clusters_mean": 0.2155,
-          "other_clusters_std": 0.9588,
-          "value_category": "low",
-          "distinctiveness_score": 1.3487,
-          "z-score": -1.0776
-        },
-        "Precision": {
-          "cluster_mean": 1.0512,
-          "cluster_std": 0.2521,
-          "other_clusters_mean": -0.2102,
-          "other_clusters_std": 0.9602,
-          "value_category": "high",
-          "distinctiveness_score": 1.3137,
-          "z-score": 1.0512
-        },
-        "Balance for Positive Class": {
-          "cluster_mean": -0.9598,
-          "cluster_std": 0.2254,
-          "other_clusters_mean": 0.192,
-          "other_clusters_std": 0.9842,
-          "value_category": "mid",
-          "distinctiveness_score": 1.1702,
-          "z-score": -0.9598
-        }
-      }
-    },
-    "correlation_analysis": {
-      "n_removed_features": 7,
-      "removed_features": {
-        "Predictive Equality": {
-          "max_relationship": 0.7784,
-          "related_to": "Treatment Equality",
-          "all_relationships": [
-            {
-              "selected_feature": "Treatment Equality",
-              "relationship_measure": 0.7783899771334027
-            }
-          ]
-        },
-        "Conditional Statistical Parity": {
-          "max_relationship": 1.0,
-          "related_to": "Disparate Impact",
-          "all_relationships": [
-            {
-              "selected_feature": "Disparate Impact",
-              "relationship_measure": 1.0
-            }
-          ]
-        },
-        "Accuracy": {
-          "max_relationship": 0.8223,
-          "related_to": "AUC-ROC",
-          "all_relationships": [
-            {
-              "selected_feature": "AUC-ROC",
-              "relationship_measure": 0.8223264927331584
-            }
-          ]
-        },
-        "Matthews Corrcoef": {
-          "max_relationship": 0.8117,
-          "related_to": "AUC-ROC",
-          "all_relationships": [
-            {
-              "selected_feature": "AUC-ROC",
-              "relationship_measure": 0.8117023605469121
-            }
-          ]
-        },
-        "Cohen Kappa": {
-          "max_relationship": 0.7963,
-          "related_to": "AUC-ROC",
-          "all_relationships": [
-            {
-              "selected_feature": "AUC-ROC",
-              "relationship_measure": 0.796334667056496
-            }
-          ]
-        },
-        "Equalized Odds": {
-          "max_relationship": 1.0,
-          "related_to": "Conditional Use Accuracy Equality",
-          "all_relationships": [
-            {
-              "selected_feature": "Conditional Use Accuracy Equality",
-              "relationship_measure": 1.0
-            }
-          ]
-        },
-        "Equal Opportunity": {
-          "max_relationship": 0.9005,
-          "related_to": "Conditional Use Accuracy Equality",
-          "all_relationships": [
-            {
-              "selected_feature": "Conditional Use Accuracy Equality",
-              "relationship_measure": 0.9004949704004698
-            }
-          ]
-        }
-      }
-    },
-    "trade_off_analysis": {
-      "n_total_tradeoffs": 70,
-      "n_strong_tradeoffs": 3,
-      "strong_threshold": -0.75,
-      "strong_tradeoffs": [
-        {
-          "metric_1": "Equal Negative Predictive Value",
-          "metric_2": "Equalized Odds",
-          "relationship_type": "Kendall",
-          "relationship_strength": -0.8305084745762711,
-          "is_tradeoff": 1
-        },
-        {
-          "metric_1": "Equal Negative Predictive Value",
-          "metric_2": "Equal Opportunity",
-          "relationship_type": "Kendall",
-          "relationship_strength": -0.9479521354771157,
-          "is_tradeoff": 1
-        },
-        {
-          "metric_1": "Equal Negative Predictive Value",
-          "metric_2": "Balance for Negative Class",
-          "relationship_type": "Kendall",
-          "relationship_strength": -0.9999999999999999,
+          "relationship_strength": -0.8331214661187684,
           "is_tradeoff": 1
         }
       ]
@@ -1316,7 +908,7 @@
     },
     "decision_tree_rules": [
       {
-        "rule": "fairness_method IN {'disparate_impact_remover', 'none'} and max_depth <= 7.5",
+        "rule": "fairness_method = 'relabel_data' and max_depth <= 15.0",
         "f1_score": 1.0,
         "precision": 1.0,
         "recall": 1.0,
@@ -1324,25 +916,25 @@
         "combined_score": 1.0
       },
       {
-        "rule": "max_depth <= 7.5 and n_estimators > 35.0 and normalization IN {'none', 'robust', 'standard'}",
-        "f1_score": 0.5373134328358209,
-        "precision": 0.6666666666666666,
-        "recall": 0.45,
-        "n_workflows_in_cluster": 36,
-        "combined_score": 0.2417910447761194
+        "rule": "max_depth <= 7.5 and n_estimators > 35.0 and normalization IN {'minmax', 'none', 'robust', 'standard'}",
+        "f1_score": 0.37499999999999994,
+        "precision": 0.5,
+        "recall": 0.3,
+        "n_workflows_in_cluster": 24,
+        "combined_score": 0.11249999999999998
       },
       {
-        "rule": "max_depth <= 7.5 and normalization IN {'maxabs', 'minmax', 'none'} and normalization IN {'minmax', 'none', 'robust', 'standard'}",
-        "f1_score": 0.48780487804878053,
-        "precision": 0.625,
-        "recall": 0.4,
-        "n_workflows_in_cluster": 32,
-        "combined_score": 0.19512195121951223
+        "rule": "fairness_method = 'relabel_data' and n_estimators > 75.0 and normalization IN {'maxabs', 'minmax', 'none'}",
+        "f1_score": 0.37499999999999994,
+        "precision": 0.5,
+        "recall": 0.3,
+        "n_workflows_in_cluster": 24,
+        "combined_score": 0.11249999999999998
       }
     ]
   },
-  "4": {
-    "cluster_id": 4,
+  "3": {
+    "cluster_id": 3,
     "metadata": {
       "n_workflows": 38,
       "percentage_of_total": 7.92,
@@ -1667,119 +1259,119 @@
       }
     ]
   },
-  "5": {
-    "cluster_id": 5,
+  "4": {
+    "cluster_id": 4,
     "metadata": {
-      "n_workflows": 40,
-      "percentage_of_total": 8.33,
-      "medoid_workflow_id": "885bd8db1c5342e3a14a81c015797864",
-      "medoid_index": 69
+      "n_workflows": 80,
+      "percentage_of_total": 16.67,
+      "medoid_workflow_id": "df6b46dde2cc4deea4339fbeb42bb26c",
+      "medoid_index": 191
     },
     "feature_selection": {
       "n_features_selected": 10,
       "selected_features": [
-        "Predictive Equality",
+        "Treatment Equality",
         "Balance for Positive Class",
+        "Disparate Impact",
         "Recall",
-        "Equal Opportunity",
-        "AUC-ROC",
-        "Well Calibration",
         "learning_curve_train_score",
-        "Balance for Negative Class",
-        "Test Fairness",
-        "Log Loss"
+        "Precision",
+        "Equal Negative Predictive Value",
+        "AUC-ROC",
+        "Conditional Use Accuracy Equality",
+        "F1 Score"
       ],
       "n_metrics_total": 27,
       "feature_statistics": {
-        "Predictive Equality": {
-          "cluster_mean": 1.8638,
-          "cluster_std": 0.7774,
-          "other_clusters_mean": -0.1694,
-          "other_clusters_std": 0.8315,
-          "value_category": "high",
-          "distinctiveness_score": 2.4452,
-          "z-score": 1.8638
+        "Treatment Equality": {
+          "cluster_mean": -1.0776,
+          "cluster_std": 0.1017,
+          "other_clusters_mean": 0.2155,
+          "other_clusters_std": 0.9588,
+          "value_category": "low",
+          "distinctiveness_score": 1.3487,
+          "z-score": -1.0776
         },
         "Balance for Positive Class": {
-          "cluster_mean": 1.8827,
-          "cluster_std": 0.6121,
-          "other_clusters_mean": -0.1712,
-          "other_clusters_std": 0.8398,
-          "value_category": "high",
-          "distinctiveness_score": 2.4456,
-          "z-score": 1.8827
+          "cluster_mean": -0.9598,
+          "cluster_std": 0.2254,
+          "other_clusters_mean": 0.192,
+          "other_clusters_std": 0.9842,
+          "value_category": "mid",
+          "distinctiveness_score": 1.1702,
+          "z-score": -0.9598
+        },
+        "Disparate Impact": {
+          "cluster_mean": -1.4583,
+          "cluster_std": 0.1507,
+          "other_clusters_mean": 0.2917,
+          "other_clusters_std": 0.8277,
+          "value_category": "low",
+          "distinctiveness_score": 2.1144,
+          "z-score": -1.4583
         },
         "Recall": {
-          "cluster_mean": -1.0297,
-          "cluster_std": 0.0431,
-          "other_clusters_mean": 0.0936,
-          "other_clusters_std": 0.9928,
-          "value_category": "low",
-          "distinctiveness_score": 1.1315,
-          "z-score": -1.0297
-        },
-        "Equal Opportunity": {
-          "cluster_mean": -1.0746,
-          "cluster_std": 0.0413,
-          "other_clusters_mean": 0.0977,
-          "other_clusters_std": 0.988,
-          "value_category": "low",
-          "distinctiveness_score": 1.1865,
-          "z-score": -1.0746
-        },
-        "AUC-ROC": {
-          "cluster_mean": -1.1703,
-          "cluster_std": 0.0495,
-          "other_clusters_mean": 0.1064,
-          "other_clusters_std": 0.9772,
-          "value_category": "low",
-          "distinctiveness_score": 1.3065,
-          "z-score": -1.1703
-        },
-        "Well Calibration": {
-          "cluster_mean": 1.2944,
-          "cluster_std": 0.0166,
-          "other_clusters_mean": -0.1177,
-          "other_clusters_std": 0.9616,
-          "value_category": "high",
-          "distinctiveness_score": 1.4684,
-          "z-score": 1.2944
+          "cluster_mean": -0.9107,
+          "cluster_std": 0.0453,
+          "other_clusters_mean": 0.1821,
+          "other_clusters_std": 1.0003,
+          "value_category": "mid",
+          "distinctiveness_score": 1.0925,
+          "z-score": -0.9107
         },
         "learning_curve_train_score": {
-          "cluster_mean": -1.1054,
-          "cluster_std": 0.0351,
-          "other_clusters_mean": 0.1005,
-          "other_clusters_std": 0.9847,
+          "cluster_mean": -1.0067,
+          "cluster_std": 0.0278,
+          "other_clusters_mean": 0.2013,
+          "other_clusters_std": 0.9781,
           "value_category": "low",
-          "distinctiveness_score": 1.2246,
-          "z-score": -1.1054
+          "distinctiveness_score": 1.2352,
+          "z-score": -1.0067
         },
-        "Balance for Negative Class": {
-          "cluster_mean": -1.0832,
-          "cluster_std": 0.07,
-          "other_clusters_mean": 0.0985,
-          "other_clusters_std": 0.987,
-          "value_category": "low",
-          "distinctiveness_score": 1.1973,
-          "z-score": -1.0832
+        "Precision": {
+          "cluster_mean": 1.0512,
+          "cluster_std": 0.2521,
+          "other_clusters_mean": -0.2102,
+          "other_clusters_std": 0.9602,
+          "value_category": "high",
+          "distinctiveness_score": 1.3137,
+          "z-score": 1.0512
         },
-        "Test Fairness": {
-          "cluster_mean": -1.2123,
-          "cluster_std": 0.3082,
-          "other_clusters_mean": 0.1102,
-          "other_clusters_std": 0.9677,
-          "value_category": "low",
-          "distinctiveness_score": 1.3666,
-          "z-score": -1.2123
-        },
-        "Log Loss": {
-          "cluster_mean": 0.5806,
-          "cluster_std": 0.0136,
-          "other_clusters_mean": -0.0528,
-          "other_clusters_std": 1.0283,
+        "Equal Negative Predictive Value": {
+          "cluster_mean": -0.6926,
+          "cluster_std": 0.0246,
+          "other_clusters_mean": 0.1385,
+          "other_clusters_std": 1.0415,
           "value_category": "mid",
-          "distinctiveness_score": 0.6159,
-          "z-score": 0.5806
+          "distinctiveness_score": 0.798,
+          "z-score": -0.6926
+        },
+        "AUC-ROC": {
+          "cluster_mean": 0.4819,
+          "cluster_std": 0.0286,
+          "other_clusters_mean": -0.0964,
+          "other_clusters_std": 1.0696,
+          "value_category": "mid",
+          "distinctiveness_score": 0.5407,
+          "z-score": 0.4819
+        },
+        "Conditional Use Accuracy Equality": {
+          "cluster_mean": -0.8139,
+          "cluster_std": 0.1601,
+          "other_clusters_mean": 0.1628,
+          "other_clusters_std": 1.0178,
+          "value_category": "mid",
+          "distinctiveness_score": 0.9597,
+          "z-score": -0.8139
+        },
+        "F1 Score": {
+          "cluster_mean": -0.6421,
+          "cluster_std": 0.0384,
+          "other_clusters_mean": 0.1284,
+          "other_clusters_std": 1.0492,
+          "value_category": "mid",
+          "distinctiveness_score": 0.7344,
+          "z-score": -0.6421
         }
       }
     },
@@ -1792,68 +1384,68 @@
       "model_quality_score": 1.0,
       "quality_interpretation": "Excellent - Cluster is very well distinguished",
       "confusion_matrix": {
-        "true_negatives": 88,
+        "true_negatives": 80,
         "false_positives": 0,
         "false_negatives": 0,
-        "true_positives": 8
+        "true_positives": 16
       }
     },
     "high_shap_features": {
       "features": [
-        "Balance for Positive Class",
-        "Predictive Equality"
+        "Treatment Equality",
+        "Precision",
+        "Balance for Positive Class"
       ],
       "feature_statistics": {
-        "Balance for Positive Class": {
-          "cluster_mean": 1.8827,
-          "cluster_std": 0.6121,
-          "other_clusters_mean": -0.1712,
-          "other_clusters_std": 0.8398,
-          "value_category": "high",
-          "distinctiveness_score": 2.4456,
-          "z-score": 1.8827
+        "Treatment Equality": {
+          "cluster_mean": -1.0776,
+          "cluster_std": 0.1017,
+          "other_clusters_mean": 0.2155,
+          "other_clusters_std": 0.9588,
+          "value_category": "low",
+          "distinctiveness_score": 1.3487,
+          "z-score": -1.0776
         },
-        "Predictive Equality": {
-          "cluster_mean": 1.8638,
-          "cluster_std": 0.7774,
-          "other_clusters_mean": -0.1694,
-          "other_clusters_std": 0.8315,
+        "Precision": {
+          "cluster_mean": 1.0512,
+          "cluster_std": 0.2521,
+          "other_clusters_mean": -0.2102,
+          "other_clusters_std": 0.9602,
           "value_category": "high",
-          "distinctiveness_score": 2.4452,
-          "z-score": 1.8638
+          "distinctiveness_score": 1.3137,
+          "z-score": 1.0512
+        },
+        "Balance for Positive Class": {
+          "cluster_mean": -0.9598,
+          "cluster_std": 0.2254,
+          "other_clusters_mean": 0.192,
+          "other_clusters_std": 0.9842,
+          "value_category": "mid",
+          "distinctiveness_score": 1.1702,
+          "z-score": -0.9598
         }
       }
     },
     "correlation_analysis": {
-      "n_removed_features": 6,
+      "n_removed_features": 7,
       "removed_features": {
-        "Treatment Equality": {
+        "Predictive Equality": {
           "max_relationship": 0.7784,
-          "related_to": "Predictive Equality",
+          "related_to": "Treatment Equality",
           "all_relationships": [
             {
-              "selected_feature": "Predictive Equality",
+              "selected_feature": "Treatment Equality",
               "relationship_measure": 0.7783899771334027
             }
           ]
         },
-        "Conditional Use Accuracy Equality": {
-          "max_relationship": 0.9005,
-          "related_to": "Equal Opportunity",
+        "Conditional Statistical Parity": {
+          "max_relationship": 1.0,
+          "related_to": "Disparate Impact",
           "all_relationships": [
             {
-              "selected_feature": "Equal Opportunity",
-              "relationship_measure": 0.9004949704004698
-            }
-          ]
-        },
-        "Equalized Odds": {
-          "max_relationship": 0.9005,
-          "related_to": "Equal Opportunity",
-          "all_relationships": [
-            {
-              "selected_feature": "Equal Opportunity",
-              "relationship_measure": 0.9004949704004698
+              "selected_feature": "Disparate Impact",
+              "relationship_measure": 1.0
             }
           ]
         },
@@ -1886,360 +1478,53 @@
               "relationship_measure": 0.796334667056496
             }
           ]
-        }
-      }
-    },
-    "trade_off_analysis": {
-      "n_total_tradeoffs": 88,
-      "n_strong_tradeoffs": 1,
-      "strong_threshold": -0.75,
-      "strong_tradeoffs": [
-        {
-          "metric_1": "Balance for Negative Class",
-          "metric_2": "Equal Negative Predictive Value",
-          "relationship_type": "Kendall",
-          "relationship_strength": -0.9719101123595505,
-          "is_tradeoff": 1
-        }
-      ]
-    },
-    "hyperparameter_patterns": {
-      "criterion": {
-        "dominant_value": "entropy",
-        "dominant_percentage": 50.0,
-        "unique_values": 2,
-        "value_distribution": {
-          "entropy": 20,
-          "gini": 20
-        }
-      },
-      "normalization": {
-        "dominant_value": "robust",
-        "dominant_percentage": 20.0,
-        "unique_values": 5,
-        "value_distribution": {
-          "robust": 8,
-          "standard": 8,
-          "maxabs": 8,
-          "minmax": 8,
-          "none": 8
-        }
-      },
-      "splitter": {
-        "dominant_value": "basic",
-        "dominant_percentage": 100.0,
-        "unique_values": 1,
-        "value_distribution": {
-          "basic": 40
-        }
-      }
-    },
-    "decision_tree_rules": [
-      {
-        "rule": "fairness_method = 'relabel_data' and max_depth <= 15.0 and max_depth > 7.5",
-        "f1_score": 1.0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "n_workflows_in_cluster": 40,
-        "combined_score": 1.0
-      },
-      {
-        "rule": "criterion = 'gini' and max_depth <= 15.0 and max_depth > 7.5 and n_estimators <= 150.0",
-        "f1_score": 0.4421052631578948,
-        "precision": 0.5384615384615384,
-        "recall": 0.375,
-        "n_workflows_in_cluster": 15,
-        "combined_score": 0.16578947368421054
-      },
-      {
-        "rule": "max_depth <= 15.0 and max_depth > 7.5 and n_estimators <= 75.0 and normalization IN {'maxabs', 'minmax', 'none'}",
-        "f1_score": 0.4,
-        "precision": 0.6,
-        "recall": 0.3,
-        "n_workflows_in_cluster": 12,
-        "combined_score": 0.12
-      }
-    ]
-  },
-  "6": {
-    "cluster_id": 6,
-    "metadata": {
-      "n_workflows": 20,
-      "percentage_of_total": 4.17,
-      "medoid_workflow_id": "0cafca9cfde542e19c2b8c7ca0ec767f",
-      "medoid_index": 130
-    },
-    "feature_selection": {
-      "n_features_selected": 10,
-      "selected_features": [
-        "system_network_receive_megabytes",
-        "Balance for Negative Class",
-        "Overall Accuracy Equality",
-        "Treatment Equality",
-        "Well Calibration",
-        "Equal Negative Predictive Value",
-        "Conditional Statistical Parity",
-        "Precision",
-        "Matthews Corrcoef",
-        "system_cpu_utilization_percentage"
-      ],
-      "n_metrics_total": 27,
-      "feature_statistics": {
-        "system_network_receive_megabytes": {
-          "cluster_mean": 2.673,
-          "cluster_std": 0.966,
-          "other_clusters_mean": -0.1162,
-          "other_clusters_std": 0.8239,
-          "value_category": "high",
-          "distinctiveness_score": 3.3856,
-          "z-score": 2.673
         },
-        "Balance for Negative Class": {
-          "cluster_mean": -1.2885,
-          "cluster_std": 0.0411,
-          "other_clusters_mean": 0.056,
-          "other_clusters_std": 0.9839,
-          "value_category": "low",
-          "distinctiveness_score": 1.3665,
-          "z-score": -1.2885
-        },
-        "Overall Accuracy Equality": {
-          "cluster_mean": 1.5578,
-          "cluster_std": 0.0385,
-          "other_clusters_mean": -0.0677,
-          "other_clusters_std": 0.9661,
-          "value_category": "high",
-          "distinctiveness_score": 1.6826,
-          "z-score": 1.5578
-        },
-        "Treatment Equality": {
-          "cluster_mean": 2.0443,
-          "cluster_std": 0.1056,
-          "other_clusters_mean": -0.0889,
-          "other_clusters_std": 0.9238,
-          "value_category": "high",
-          "distinctiveness_score": 2.3092,
-          "z-score": 2.0443
-        },
-        "Well Calibration": {
-          "cluster_mean": 1.1285,
-          "cluster_std": 0.0404,
-          "other_clusters_mean": -0.0491,
-          "other_clusters_std": 0.9928,
-          "value_category": "high",
-          "distinctiveness_score": 1.1861,
-          "z-score": 1.1285
-        },
-        "Equal Negative Predictive Value": {
-          "cluster_mean": 1.4739,
-          "cluster_std": 0.0269,
-          "other_clusters_mean": -0.0641,
-          "other_clusters_std": 0.9721,
-          "value_category": "high",
-          "distinctiveness_score": 1.5822,
-          "z-score": 1.4739
-        },
-        "Conditional Statistical Parity": {
-          "cluster_mean": 1.4704,
-          "cluster_std": 0.245,
-          "other_clusters_mean": -0.0639,
-          "other_clusters_std": 0.971,
-          "value_category": "high",
-          "distinctiveness_score": 1.5802,
-          "z-score": 1.4704
-        },
-        "Precision": {
-          "cluster_mean": -1.7547,
-          "cluster_std": 0.4469,
-          "other_clusters_mean": 0.0763,
-          "other_clusters_std": 0.9461,
-          "value_category": "low",
-          "distinctiveness_score": 1.9353,
-          "z-score": -1.7547
-        },
-        "Matthews Corrcoef": {
-          "cluster_mean": -1.4038,
-          "cluster_std": 0.1629,
-          "other_clusters_mean": 0.061,
-          "other_clusters_std": 0.9762,
-          "value_category": "low",
-          "distinctiveness_score": 1.5005,
-          "z-score": -1.4038
-        },
-        "system_cpu_utilization_percentage": {
-          "cluster_mean": -1.0834,
-          "cluster_std": 1.0686,
-          "other_clusters_mean": 0.0471,
-          "other_clusters_std": 0.9698,
-          "value_category": "low",
-          "distinctiveness_score": 1.1656,
-          "z-score": -1.0834
-        }
-      }
-    },
-    "model_evaluation": {
-      "test_auc": 1.0,
-      "balanced_accuracy": 1.0,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "model_quality_score": 1.0,
-      "quality_interpretation": "Excellent - Cluster is very well distinguished",
-      "confusion_matrix": {
-        "true_negatives": 92,
-        "false_positives": 0,
-        "false_negatives": 0,
-        "true_positives": 4
-      }
-    },
-    "high_shap_features": {
-      "features": [
-        "system_network_receive_megabytes",
-        "Treatment Equality",
-        "Overall Accuracy Equality",
-        "Balance for Negative Class",
-        "Equal Negative Predictive Value"
-      ],
-      "feature_statistics": {
-        "system_network_receive_megabytes": {
-          "cluster_mean": 2.673,
-          "cluster_std": 0.966,
-          "other_clusters_mean": -0.1162,
-          "other_clusters_std": 0.8239,
-          "value_category": "high",
-          "distinctiveness_score": 3.3856,
-          "z-score": 2.673
-        },
-        "Treatment Equality": {
-          "cluster_mean": 2.0443,
-          "cluster_std": 0.1056,
-          "other_clusters_mean": -0.0889,
-          "other_clusters_std": 0.9238,
-          "value_category": "high",
-          "distinctiveness_score": 2.3092,
-          "z-score": 2.0443
-        },
-        "Overall Accuracy Equality": {
-          "cluster_mean": 1.5578,
-          "cluster_std": 0.0385,
-          "other_clusters_mean": -0.0677,
-          "other_clusters_std": 0.9661,
-          "value_category": "high",
-          "distinctiveness_score": 1.6826,
-          "z-score": 1.5578
-        },
-        "Balance for Negative Class": {
-          "cluster_mean": -1.2885,
-          "cluster_std": 0.0411,
-          "other_clusters_mean": 0.056,
-          "other_clusters_std": 0.9839,
-          "value_category": "low",
-          "distinctiveness_score": 1.3665,
-          "z-score": -1.2885
-        },
-        "Equal Negative Predictive Value": {
-          "cluster_mean": 1.4739,
-          "cluster_std": 0.0269,
-          "other_clusters_mean": -0.0641,
-          "other_clusters_std": 0.9721,
-          "value_category": "high",
-          "distinctiveness_score": 1.5822,
-          "z-score": 1.4739
-        }
-      }
-    },
-    "correlation_analysis": {
-      "n_removed_features": 7,
-      "removed_features": {
-        "system_network_transmit_megabytes": {
-          "max_relationship": 0.9643,
-          "related_to": "system_network_receive_megabytes",
-          "all_relationships": [
-            {
-              "selected_feature": "system_network_receive_megabytes",
-              "relationship_measure": 0.9643309165492939
-            }
-          ]
-        },
-        "Predictive Equality": {
-          "max_relationship": 0.7784,
-          "related_to": "Treatment Equality",
-          "all_relationships": [
-            {
-              "selected_feature": "Treatment Equality",
-              "relationship_measure": 0.7783899771334027
-            }
-          ]
-        },
-        "Disparate Impact": {
+        "Equalized Odds": {
           "max_relationship": 1.0,
-          "related_to": "Conditional Statistical Parity",
+          "related_to": "Conditional Use Accuracy Equality",
           "all_relationships": [
             {
-              "selected_feature": "Conditional Statistical Parity",
+              "selected_feature": "Conditional Use Accuracy Equality",
               "relationship_measure": 1.0
             }
           ]
         },
-        "Accuracy": {
-          "max_relationship": 0.9483,
-          "related_to": "Matthews Corrcoef",
+        "Equal Opportunity": {
+          "max_relationship": 0.9005,
+          "related_to": "Conditional Use Accuracy Equality",
           "all_relationships": [
             {
-              "selected_feature": "Matthews Corrcoef",
-              "relationship_measure": 0.948277139467917
-            }
-          ]
-        },
-        "Cohen Kappa": {
-          "max_relationship": 0.9189,
-          "related_to": "Matthews Corrcoef",
-          "all_relationships": [
-            {
-              "selected_feature": "Matthews Corrcoef",
-              "relationship_measure": 0.9189335949132058
-            }
-          ]
-        },
-        "F1 Score": {
-          "max_relationship": 0.8308,
-          "related_to": "Matthews Corrcoef",
-          "all_relationships": [
-            {
-              "selected_feature": "Matthews Corrcoef",
-              "relationship_measure": 0.8307905200651615
-            }
-          ]
-        },
-        "AUC-ROC": {
-          "max_relationship": 0.8117,
-          "related_to": "Matthews Corrcoef",
-          "all_relationships": [
-            {
-              "selected_feature": "Matthews Corrcoef",
-              "relationship_measure": 0.8117023605469121
+              "selected_feature": "Conditional Use Accuracy Equality",
+              "relationship_measure": 0.9004949704004698
             }
           ]
         }
       }
     },
     "trade_off_analysis": {
-      "n_total_tradeoffs": 94,
-      "n_strong_tradeoffs": 2,
+      "n_total_tradeoffs": 70,
+      "n_strong_tradeoffs": 3,
       "strong_threshold": -0.75,
       "strong_tradeoffs": [
         {
-          "metric_1": "Matthews Corrcoef",
-          "metric_2": "learning_curve_train_score",
+          "metric_1": "Equal Negative Predictive Value",
+          "metric_2": "Equalized Odds",
           "relationship_type": "Kendall",
-          "relationship_strength": -0.7543799907552087,
+          "relationship_strength": -0.8305084745762711,
           "is_tradeoff": 1
         },
         {
-          "metric_1": "Treatment Equality",
-          "metric_2": "Predictive Equality",
+          "metric_1": "Equal Negative Predictive Value",
+          "metric_2": "Equal Opportunity",
           "relationship_type": "Kendall",
-          "relationship_strength": -0.7717042614792412,
+          "relationship_strength": -0.9479521354771157,
+          "is_tradeoff": 1
+        },
+        {
+          "metric_1": "Equal Negative Predictive Value",
+          "metric_2": "Balance for Negative Class",
+          "relationship_type": "Kendall",
+          "relationship_strength": -0.9999999999999999,
           "is_tradeoff": 1
         }
       ]
@@ -2250,8 +1535,8 @@
         "dominant_percentage": 50.0,
         "unique_values": 2,
         "value_distribution": {
-          "entropy": 10,
-          "gini": 10
+          "entropy": 40,
+          "gini": 40
         }
       },
       "normalization": {
@@ -2259,11 +1544,11 @@
         "dominant_percentage": 20.0,
         "unique_values": 5,
         "value_distribution": {
-          "robust": 4,
-          "standard": 4,
-          "maxabs": 4,
-          "minmax": 4,
-          "none": 4
+          "robust": 16,
+          "standard": 16,
+          "maxabs": 16,
+          "minmax": 16,
+          "none": 16
         }
       },
       "splitter": {
@@ -2271,34 +1556,34 @@
         "dominant_percentage": 100.0,
         "unique_values": 1,
         "value_distribution": {
-          "basic": 20
+          "basic": 80
         }
       }
     },
     "decision_tree_rules": [
       {
-        "rule": "fairness_method = 'relabel_data' and max_depth > 15.0 and n_estimators > 150.0",
+        "rule": "fairness_method IN {'disparate_impact_remover', 'none'} and max_depth <= 7.5",
         "f1_score": 1.0,
         "precision": 1.0,
         "recall": 1.0,
-        "n_workflows_in_cluster": 20,
+        "n_workflows_in_cluster": 80,
         "combined_score": 1.0
       },
       {
-        "rule": "fairness_method = 'relabel_data' and n_estimators > 150.0 and normalization IN {'maxabs', 'minmax', 'none'}",
-        "f1_score": 0.5454545454545454,
-        "precision": 0.5,
-        "recall": 0.6,
-        "n_workflows_in_cluster": 12,
-        "combined_score": 0.3272727272727272
+        "rule": "max_depth <= 7.5 and n_estimators > 35.0 and normalization IN {'none', 'robust', 'standard'}",
+        "f1_score": 0.5373134328358209,
+        "precision": 0.6666666666666666,
+        "recall": 0.45,
+        "n_workflows_in_cluster": 36,
+        "combined_score": 0.2417910447761194
       },
       {
-        "rule": "fairness_method = 'relabel_data' and max_depth <= 25.0 and max_depth > 15.0 and normalization IN {'minmax', 'none', 'robust', 'standard'}",
-        "f1_score": 0.4444444444444445,
-        "precision": 0.5,
+        "rule": "max_depth <= 7.5 and normalization IN {'maxabs', 'minmax', 'none'} and normalization IN {'minmax', 'none', 'robust', 'standard'}",
+        "f1_score": 0.48780487804878053,
+        "precision": 0.625,
         "recall": 0.4,
-        "n_workflows_in_cluster": 8,
-        "combined_score": 0.1777777777777778
+        "n_workflows_in_cluster": 32,
+        "combined_score": 0.19512195121951223
       }
     ]
   }

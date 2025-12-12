@@ -1,0 +1,59 @@
+metric_1,metric_2,relationship_type,relationship_strength,is_tradeoff
+Equal Opportunity,Test Fairness,Kendall,-0.0016943118148277606,0
+Log Loss,Balance for Positive Class,Kendall,-0.009740311078685003,0
+Statistical Parity,Conditional Use Accuracy Equality,Kendall,-0.013071965227050111,0
+Statistical Parity,Equalized Odds,Kendall,-0.013071965227050111,0
+Balance for Negative Class,system_cpu_utilization_percentage,Kendall,-0.01450522779345733,0
+Log Loss,Overall Accuracy Equality,Kendall,-0.017930392699623876,0
+Balance for Negative Class,F1 Score,Kendall,-0.029411921760862752,0
+Balance for Negative Class,Test Fairness,Kendall,-0.053966109221111606,0
+Well Calibration,F1 Score,Kendall,-0.06514796228402489,0
+Statistical Parity,system_cpu_utilization_percentage,Kendall,-0.07276354103905014,0
+Matthews Corrcoef,Balance for Positive Class,Kendall,-0.0816997826690632,0
+Balance for Negative Class,Conditional Statistical Parity,Kendall,-0.08496777397582574,0
+Log Loss,Conditional Use Accuracy Equality,Kendall,-0.08766279970816501,0
+Log Loss,Equalized Odds,Kendall,-0.08766279970816501,0
+Equal Opportunity,Treatment Equality,Kendall,-0.0877447505531234,0
+AUC-ROC,Predictive Equality,Kendall,-0.0881462212091116,0
+Disparate Impact,Equal Negative Predictive Value,Kendall,-0.0947717478961133,0
+Matthews Corrcoef,Test Fairness,Kendall,-0.09680068884738736,0
+Statistical Parity,Accuracy,Kendall,-0.10284169677447054,0
+Matthews Corrcoef,Predictive Equality,Kendall,-0.10546241179988335,0
+learning_curve_train_score,Conditional Statistical Parity,Kendall,-0.11785082304541157,0
+Recall,Overall Accuracy Equality,Kendall,-0.12777086029580395,0
+AUC-ROC,Equalized Odds,Kendall,-0.1298708143824667,0
+AUC-ROC,Conditional Use Accuracy Equality,Kendall,-0.1298708143824667,0
+Well Calibration,system_cpu_utilization_percentage,Kendall,-0.14297562335342773,0
+Statistical Parity,Cohen Kappa,Kendall,-0.15737704918032788,0
+Equal Opportunity,Precision,Kendall,-0.1692922465012456,0
+Log Loss,Precision,Kendall,-0.18567169250947096,0
+Recall,Conditional Statistical Parity,Kendall,-0.18887585492467218,0
+Equal Opportunity,Predictive Equality,Kendall,-0.19188765316261505,0
+Matthews Corrcoef,Treatment Equality,Kendall,-0.19281148709898915,0
+Disparate Impact,Precision,Kendall,-0.19672131147540986,0
+learning_curve_train_score,system_cpu_utilization_percentage,Kendall,-0.1974524796297578,0
+Log Loss,Equal Negative Predictive Value,Kendall,-0.2077933030119467,0
+Equal Opportunity,Balance for Positive Class,Kendall,-0.20923748208821732,0
+Disparate Impact,Accuracy,Kendall,-0.22282367634468617,0
+Statistical Parity,F1 Score,Kendall,-0.23278688524590166,0
+AUC-ROC,Treatment Equality,Kendall,-0.23376746588844008,0
+Matthews Corrcoef,system_cpu_utilization_percentage,Kendall,-0.23446029890360595,0
+Matthews Corrcoef,Conditional Statistical Parity,Kendall,-0.2360655737704918,0
+Disparate Impact,Cohen Kappa,Kendall,-0.24262295081967217,0
+Log Loss,Accuracy,Kendall,-0.25202891999879273,0
+Disparate Impact,F1 Score,Kendall,-0.2655737704918033,0
+Well Calibration,Conditional Use Accuracy Equality,Kendall,-0.2694819398436184,0
+Well Calibration,Equalized Odds,Kendall,-0.2694819398436184,0
+AUC-ROC,system_cpu_utilization_percentage,Kendall,-0.27149303760369986,0
+Balance for Negative Class,Equalized Odds,Kendall,-0.27361563517915316,0
+Balance for Negative Class,Conditional Use Accuracy Equality,Kendall,-0.27361563517915316,0
+Log Loss,F1 Score,Kendall,-0.28665103404970954,0
+Recall,Balance for Positive Class,Kendall,-0.2893620067434045,0
+Log Loss,Cohen Kappa,Kendall,-0.28990843216391077,0
+Equal Opportunity,Equal Negative Predictive Value,Kendall,-0.2936074345431437,0
+Equal Opportunity,Overall Accuracy Equality,Kendall,-0.3134476857431357,0
+Recall,Predictive Equality,Kendall,-0.33394986993109194,0
+Recall,Treatment Equality,Kendall,-0.33817005607361733,0
+learning_curve_train_score,Test Fairness,Kendall,-0.4330128902924165,0
+AUC-ROC,Test Fairness,Kendall,-0.45804003169039176,0
+AUC-ROC,Conditional Statistical Parity,Kendall,-0.45929313410237554,0

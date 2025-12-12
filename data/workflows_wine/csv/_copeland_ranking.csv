@@ -1,0 +1,4 @@
+cluster_id,copeland_score,n_representatives,cluster_size,copeland_rank
+2,2,1,27,1
+1,1,0,162,2
+0,0,1,54,3

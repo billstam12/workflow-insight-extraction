@@ -1,0 +1,17 @@
+iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
+1,Conditional Statistical Parity,0.04998196600412672,Disparate Impact,1.0
+1,Conditional Statistical Parity,0.04998196600412672,Conditional Statistical Parity,0.0
+2,Overall Accuracy Equality,0.060625954238104476,Overall Accuracy Equality,0.0
+3,Precision,0.06455239307385145,Precision,0.0
+4,Balance for Negative Class,0.05955312514877979,Balance for Negative Class,0.0
+5,Treatment Equality,0.0683500788414828,Predictive Equality,0.7783899771334027
+5,Treatment Equality,0.0683500788414828,Treatment Equality,0.0
+6,Accuracy,0.05544861556090712,Matthews Corrcoef,0.948277139467917
+6,Accuracy,0.05544861556090712,Cohen Kappa,0.867423143630844
+6,Accuracy,0.05544861556090712,AUC-ROC,0.8223264927331584
+6,Accuracy,0.05544861556090712,F1 Score,0.7785508616185786
+6,Accuracy,0.05544861556090712,Accuracy,0.0
+7,Equal Negative Predictive Value,0.05657934512626426,Equal Negative Predictive Value,0.0
+8,Balance for Positive Class,0.066286530703677,Balance for Positive Class,0.0
+9,Log Loss,0.08039923953591369,Log Loss,0.0
+10,Well Calibration,0.09595408517748837,Well Calibration,0.0

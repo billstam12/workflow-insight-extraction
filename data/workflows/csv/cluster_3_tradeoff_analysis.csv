@@ -1,0 +1,67 @@
+metric_1,metric_2,relationship_type,relationship_strength,is_tradeoff
+Treatment Equality,Matthews Corrcoef,Kendall,-0.0136986301369863,0
+Log Loss,Predictive Equality,Kendall,-0.028084182124742313,0
+Cohen Kappa,Balance for Positive Class,Kendall,-0.0410958904109589,0
+Equalized Odds,AUC-ROC,Kendall,-0.05460782657914247,0
+Overall Accuracy Equality,Conditional Use Accuracy Equality,Kendall,-0.055173725906824525,0
+Cohen Kappa,Statistical Parity,Kendall,-0.06185603533388805,0
+Accuracy,Statistical Parity,Kendall,-0.06362370636794122,0
+Precision,Statistical Parity,Kendall,-0.08934760659339386,0
+Precision,Recall,Kendall,-0.09546959142271438,0
+Accuracy,Balance for Positive Class,Kendall,-0.09863068845940283,0
+Equalized Odds,F1 Score,Kendall,-0.1095890410958904,0
+Well Calibration,Balance for Positive Class,Kendall,-0.12286760980307054,0
+Log Loss,F1 Score,Kendall,-0.12286760980307054,0
+Equalized Odds,Matthews Corrcoef,Kendall,-0.1643835616438356,0
+Cohen Kappa,Conditional Use Accuracy Equality,Kendall,-0.1643835616438356,0
+Well Calibration,Recall,Kendall,-0.16833224214724116,0
+Accuracy,Conditional Use Accuracy Equality,Kendall,-0.16908118021611915,0
+Treatment Equality,F1 Score,Kendall,-0.1780821917808219,0
+Balance for Negative Class,F1 Score,Kendall,-0.1780821917808219,0
+Precision,Conditional Use Accuracy Equality,Kendall,-0.1917808219178082,0
+Overall Accuracy Equality,system_cpu_utilization_percentage,Kendall,-0.20211302086361083,0
+Overall Accuracy Equality,Test Fairness,Kendall,-0.20619652471058064,0
+Balance for Negative Class,Predictive Equality,Kendall,-0.2254415736214922,0
+Balance for Negative Class,AUC-ROC,Kendall,-0.23208326296135548,0
+Precision,Balance for Positive Class,Kendall,-0.2328767123287671,0
+learning_curve_train_score,system_cpu_utilization_percentage,Kendall,-0.23606684260939015,0
+Overall Accuracy Equality,Equal Opportunity,Kendall,-0.25102669836529556,0
+Cohen Kappa,Test Fairness,Kendall,-0.2593871762509267,0
+Accuracy,Test Fairness,Kendall,-0.266799730185052,0
+Cohen Kappa,Disparate Impact,Kendall,-0.2817886054099345,0
+Cohen Kappa,Conditional Statistical Parity,Kendall,-0.2817886054099345,0
+Precision,Test Fairness,Kendall,-0.28669108954049793,0
+Accuracy,Conditional Statistical Parity,Kendall,-0.28984132900951,0
+Accuracy,Disparate Impact,Kendall,-0.28984132900951,0
+Precision,Disparate Impact,Kendall,-0.3092801766694403,0
+Precision,Conditional Statistical Parity,Kendall,-0.3092801766694403,0
+Overall Accuracy Equality,F1 Score,Kendall,-0.31724892396424104,0
+learning_curve_train_score,AUC-ROC,Kendall,-0.3211151353994379,0
+learning_curve_train_score,Equal Opportunity,Kendall,-0.33508312663335643,0
+Treatment Equality,Balance for Positive Class,Kendall,-0.34246575342465757,0
+Treatment Equality,Equal Negative Predictive Value,Kendall,-0.34246575342465757,0
+Cohen Kappa,Equal Opportunity,Kendall,-0.3490219719227287,0
+Accuracy,Equal Opportunity,Kendall,-0.3589960355154841,0
+Well Calibration,Predictive Equality,Kendall,-0.3650943676216501,0
+Treatment Equality,Recall,Kendall,-0.3745345509660334,0
+Precision,Equal Opportunity,Kendall,-0.37751356146744125,0
+Log Loss,Matthews Corrcoef,Kendall,-0.3959067426987829,0
+learning_curve_train_score,Test Fairness,Kendall,-0.42815351386591727,0
+learning_curve_train_score,Conditional Use Accuracy Equality,Kendall,-0.436330061002107,0
+Equalized Odds,Predictive Equality,Kendall,-0.4367930488916411,0
+Balance for Negative Class,Matthews Corrcoef,Kendall,-0.452054794520548,0
+Log Loss,AUC-ROC,Kendall,-0.4965986394557823,0
+Well Calibration,Equal Negative Predictive Value,Kendall,-0.5051223958570678,0
+learning_curve_train_score,Disparate Impact,Kendall,-0.5388702304143923,0
+learning_curve_train_score,Conditional Statistical Parity,Kendall,-0.5388702304143923,0
+Overall Accuracy Equality,Predictive Equality,Kendall,-0.5391291361472075,0
+Precision,system_cpu_utilization_percentage,Kendall,-0.5887901403293802,0
+Cohen Kappa,system_cpu_utilization_percentage,Kendall,-0.5887901403293802,0
+Accuracy,system_cpu_utilization_percentage,Kendall,-0.6193801042615005,0
+Log Loss,Equal Negative Predictive Value,Kendall,-0.6689458755944953,0
+learning_curve_train_score,Statistical Parity,Kendall,-0.7274748110594297,0
+Equalized Odds,Equal Negative Predictive Value,Kendall,-0.7397260273972602,0
+Treatment Equality,Predictive Equality,Kendall,-0.8454059010805958,1
+Overall Accuracy Equality,Recall,Kendall,-0.8799618718376462,1
+Balance for Negative Class,Equal Negative Predictive Value,Kendall,-0.9452054794520547,1
+Overall Accuracy Equality,Balance for Positive Class,Kendall,-0.9793336348461354,1
