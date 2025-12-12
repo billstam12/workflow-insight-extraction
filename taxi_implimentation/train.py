@@ -28,7 +28,7 @@ data = pd.read_parquet('taxi.parquet')
 data = data.drop(['tpep_pickup_datetime', 'tpep_dropoff_datetime', "store_and_fwd_flag"], axis=1)
 data = data.dropna()
 
-frac = 0.005
+frac = 0.1
 # Downsample to frac% of the cleaned dataset to reduce runtime
 data = data.sample(frac=frac, random_state=42).reset_index(drop=True)
 print(f"Using {frac * 100}% sample: {len(data)} rows")

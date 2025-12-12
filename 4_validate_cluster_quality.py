@@ -174,14 +174,16 @@ def calculate_rule_based_conciseness(rule_str: str) -> float:
     """
     Calculate conciseness based on actual decision rule.
     
-    Conciseness(E_c) = 1 / |{P | P is a predicate in E_c}|
+    Conciseness(E_c) decays gently with predicate count so longer rules are penalized
+    without collapsing to near-zero too quickly.
     
     Counts the actual number of predicates (conditions) in the rule.
     """
     n_predicates = count_predicates_in_rule(rule_str)
     if n_predicates == 0:
         return 0.0
-    return 1.0 / n_predicates
+    decay = 0.25  # smaller decay -> slower drop in conciseness
+    return 1.0 / (1.0 + decay * (n_predicates - 1))
 
 
 def calculate_qse_for_rule(rule_str: str, cluster_id: int, all_data: pd.DataFrame) -> dict:
@@ -465,13 +467,51 @@ def calculate_predictive_quality(clusters_insights: dict) -> pd.DataFrame:
 
 ####################################RULE  QUALITY####################################
 def convert_rule_to_pandas(rule_str):
-    # Replace "IN {...}" with "in [...]"
-    # The regex captures the content inside {} and puts it inside []
-    rule_str = re.sub(r"IN\s*\{([^}]+)\}", r"in [\1]", rule_str)
+    """
+    Convert decision tree rule format to pandas query format.
     
-    # Replace single = with == for equality checks
-    # We look for = that is NOT preceded by <, >, or ! and NOT followed by =
+    Handles:
+    - col = None -> col.isna()
+    - col = 'value' -> col == 'value'
+    - col IN {None, 'val1', 'val2'} -> (col.isna() | col.in(['val1', 'val2']))
+    - col IN {'val1', 'val2'} -> col.in(['val1', 'val2'])
+    - and -> &
+    """
+    import re
+    
+    # First handle "IN {...}" patterns that contain None
+    def replace_in_with_none(match):
+        col = match.group(1)
+        values_str = match.group(2)
+        
+        # Check if None is in the list
+        if 'None' in values_str:
+            # Split values and filter out None, keeping quoted strings
+            values = [v.strip() for v in values_str.split(',')]
+            non_none_values = [v for v in values if v != 'None']
+            
+            if non_none_values:
+                # Has both None and other values
+                values_list = ', '.join(non_none_values)
+                return f"({col}.isna() | {col}.isin([{values_list}]))"
+            else:
+                # Only None
+                return f"{col}.isna()"
+        else:
+            # No None, just normal IN list
+            return f"{col}.isin([{values_str}])"
+    
+    # Replace "col IN {...}" patterns
+    rule_str = re.sub(r'(\w+)\s+IN\s*\{([^}]+)\}', replace_in_with_none, rule_str)
+    
+    # Handle "col = None" -> "col.isna()"
+    rule_str = re.sub(r'(\w+)\s*=\s*None\b', r'\1.isna()', rule_str)
+    
+    # Replace single = with == for equality checks (but not for <=, >=, !=)
     rule_str = re.sub(r"(?<![<>!])=(?!=)", "==", rule_str)
+    
+    # Replace " and " with " & " for pandas query
+    rule_str = re.sub(r'\s+and\s+', ' & ', rule_str)
     
     return rule_str
 

@@ -1115,9 +1115,20 @@ def step_phase1_decision_tree_rules(results, pipeline, **kwargs):
                     valid_categories = [all_classes[i] for i in valid_indices]
                     
                     if len(valid_categories) == 1:
-                        replacement = f"{col} = '{valid_categories[0]}'"
+                        cat_val = valid_categories[0]
+                        if pd.isna(cat_val):
+                            replacement = f"{col} = None"
+                        else:
+                            replacement = f"{col} = '{cat_val}'"
                     else:
-                        categories_str = ', '.join([f"'{c}'" for c in valid_categories])
+                        # Handle NaN values in categories
+                        categories_parts = []
+                        for c in valid_categories:
+                            if pd.isna(c):
+                                categories_parts.append('None')
+                            else:
+                                categories_parts.append(f"'{c}'")
+                        categories_str = ', '.join(categories_parts)
                         replacement = f"{col} IN {{{categories_str}}}"
                     
                     decoded = decoded.replace(original_condition, replacement, 1)
@@ -1505,11 +1516,25 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                 dominant_value = value_counts.index[0]
                 dominant_pct = round((value_counts.iloc[0] / n_cluster) * 100, 2)
                 
+                # Convert dominant_value to string, but handle NaN/None properly
+                if pd.isna(dominant_value):
+                    dominant_value_str = None
+                else:
+                    dominant_value_str = str(dominant_value)
+                
+                # Convert value distribution keys, handling NaN/None
+                value_dist = {}
+                for k, v in value_counts.items():
+                    if pd.isna(k):
+                        value_dist[None] = int(v)
+                    else:
+                        value_dist[str(k)] = int(v)
+                
                 cluster_insights['hyperparameter_patterns'][hyperparam] = {
-                    'dominant_value': str(dominant_value),
+                    'dominant_value': dominant_value_str,
                     'dominant_percentage': float(dominant_pct),
                     'unique_values': int(value_counts.shape[0]),
-                    'value_distribution': {str(k): int(v) for k, v in value_counts.items()}
+                    'value_distribution': value_dist
                 }
         
         # ===== DECISION TREE RULES WITH SCORES =====
