@@ -1168,4 +1168,96 @@ if __name__ == "__main__":
         print("Warning: No rules available. Skipping QSE calculation.")
 
 
+def plot_datasets_scores(ablation="full", results_base_path="./results", output_dir="./paper_results"):
+    """Plot cluster quality metrics across all datasets for a given ablation mode."""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    try:
+        cluster_wine = pd.read_csv(f"{results_base_path}/wine/{ablation}/cluster_quality/overall_cluster_quality_scores.csv")
+        cluster_adult = pd.read_csv(f"{results_base_path}/adult/{ablation}/cluster_quality/overall_cluster_quality_scores.csv")
+        cluster_taxi = pd.read_csv(f"{results_base_path}/taxi/{ablation}/cluster_quality/overall_cluster_quality_scores.csv")
 
+        cluster_wine = cluster_wine.drop(columns=["Calinski_Harabasz_Score"])
+        cluster_adult = cluster_adult.drop(columns=["Calinski_Harabasz_Score"])
+        cluster_taxi = cluster_taxi.drop(columns=["Calinski_Harabasz_Score"])
+
+        metrics = ['Davies Bouldin Index', 'Silhouette Score']
+        wine_scores = [
+            cluster_wine['Davies_Bouldin_Index'].values[0],
+            cluster_wine['Silhouette_Score'].values[0]
+        ]
+        adult_scores = [
+            cluster_adult['Davies_Bouldin_Index'].values[0],
+            cluster_adult['Silhouette_Score'].values[0]
+        ]
+        taxi_scores = [
+            cluster_taxi['Davies_Bouldin_Index'].values[0],
+            cluster_taxi['Silhouette_Score'].values[0]
+        ]
+
+        # Create bar plot with colorblind-friendly blue palette
+        x = np.arange(len(metrics))
+        width = 0.15
+
+        # Colorblind-friendly blue palette (light to dark blue)
+        colors = {
+            'wine': '#9ECAE1',    # Light blue
+            'adult': '#4292C6',   # Medium blue  
+            'taxi': '#08519C'     # Dark blue
+        }
+
+        # Hatching patterns for black & white printing distinction
+        hatches = {
+            'wine': '',       # No hatch (solid)
+            'adult': '//',    # Diagonal lines
+            'taxi': 'xx'      # Cross-hatch
+        }
+
+        fig, ax = plt.subplots()
+        bars1 = ax.bar(x - width, wine_scores, width, label='Wine', 
+                    color=colors['wine'], edgecolor='black', linewidth=1.2,
+                    hatch=hatches['wine'])
+        bars2 = ax.bar(x, adult_scores, width, label='Adult',
+                    color=colors['adult'], edgecolor='black', linewidth=1.2,
+                    hatch=hatches['adult'])
+        bars3 = ax.bar(x + width, taxi_scores, width, label='Taxi',
+                    color=colors['taxi'], edgecolor='black', linewidth=1.2,
+                    hatch=hatches['taxi'])
+
+        ax.set_xlabel('Metric', fontweight='bold')
+        ax.set_ylabel('Score', fontweight='bold')
+        ax.set_xticks(x)
+        ax.set_xticklabels(metrics)
+        ax.set_ylim(0, 1)
+        ax.legend()
+        ax.grid(True, axis='y')
+
+        plt.tight_layout()
+        plt.savefig(f"{output_dir}/cluster_quality_metrics_{ablation}.png")
+        plt.close()
+        
+        print(f"✓ Plotted cluster quality metrics for ablation: {ablation}")
+    except Exception as e:
+        print(f"Warning: Could not plot cluster quality metrics for ablation '{ablation}': {e}")
+
+
+def copy_quality_images(results_base_path="./results", output_dir="./paper_results"):
+    """Copy representative and explanation quality images to paper_results directory."""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    try:
+        # Copy adult/full representative quality
+        img = plt.imread(f"{results_base_path}/adult/full/representative_quality/cv_boxplot.png")
+        plt.imsave(f"{output_dir}/cluster_respresentative_quality_full_adult.png", img)
+        
+        # Copy adult/full explanation quality
+        img = plt.imread(f"{results_base_path}/adult/full/explanation_quality/qse_scores.png")
+        plt.imsave(f"{output_dir}/explanation_quality_qse_adult_full.png", img)
+        
+        # Copy adult/no_iterative_filter representative quality
+        img = plt.imread(f"{results_base_path}/adult/no_iterative_filter/representative_quality/cv_boxplot.png")
+        plt.imsave(f"{output_dir}/cluster_respresentative_quality_no_iterative_filter_adult.png", img)
+        
+        print(f"✓ Copied quality images to {output_dir}")
+    except Exception as e:
+        print(f"Warning: Could not copy quality images: {e}")

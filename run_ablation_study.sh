@@ -68,6 +68,25 @@ done
 
 echo ""
 echo "=========================================="
+echo "Generating Paper Results Plots and Images"
+echo "=========================================="
+echo ""
+
+# Generate plots for all ablation modes
+python -c "
+import importlib.util
+spec = importlib.util.spec_from_file_location('validate_quality', '4_validate_cluster_quality.py')
+validate_quality = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(validate_quality)
+
+modes = ['full', 'no_variance_filter', 'no_dim_reduction', 'no_iterative_filter']
+for mode in modes:
+    validate_quality.plot_datasets_scores(ablation=mode)
+validate_quality.copy_quality_images()
+"
+
+echo ""
+echo "=========================================="
 echo "Ablation Study Complete for All Datasets!"
 echo "=========================================="
 echo ""
@@ -75,4 +94,7 @@ echo "Results are saved in:"
 echo "  - results/wine/{full,no_variance_filter,no_dim_reduction,no_iterative_filter}/"
 echo "  - results/adult/{full,no_variance_filter,no_dim_reduction,no_iterative_filter}/"
 echo "  - results/taxi/{full,no_variance_filter,no_dim_reduction,no_iterative_filter}/"
+echo ""
+echo "Plots are saved in:"
+echo "  - paper_results/cluster_quality_metrics_*.png"
 echo ""
