@@ -19,7 +19,7 @@ FONT_SIZE = {
     'ytick': 26,
     'legend': 24,
     'figure': 12,
-    'figsize': [8, 6]
+    'figsize': [10, 8]
 }
  
 # Set publication-ready plotting style
@@ -144,7 +144,7 @@ def calculate_rule_based_separation_error(rule_str: str, cluster_id: int, all_da
     """
     Calculate separation error based on actual decision rule.
     
-    SeparationErr(E_c) = |{x ∈ X | E_c(x) = True ∧ CL(x) ∈ C\{c}}| / |{x ∈ X | E(x) = true}|
+    SeparationErr(E_c) = |{x ∈ X | E_c(x) = True ∧ CL(x) ∈ C\\{c}}| / |{x ∈ X | E(x) = true}|
     
     This is the ratio of points satisfying the rule that DON'T belong to cluster c.
     Note: This is equivalent to (1 - precision) of the rule.
@@ -282,7 +282,7 @@ def plot_qse_components(qse_df: pd.DataFrame, save_path: str = None):
     """
     Plot QSE components (Coverage, Separation Quality, Conciseness) for each cluster.
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=tuple(FONT_SIZE['figsize']))
     
     clusters = qse_df['cluster_id'].values
     x = np.arange(len(clusters))
@@ -290,11 +290,11 @@ def plot_qse_components(qse_df: pd.DataFrame, save_path: str = None):
     
     # Plot the three components
     bars1 = ax.bar(x - width, qse_df['coverage'], width, 
-                   label='Coverage', color='#3498db', alpha=0.8, edgecolor='black')
+                   label='Coverage', color='#3498db', alpha=0.8, edgecolor='black', linewidth=1.5)
     bars2 = ax.bar(x, qse_df['separation_quality'], width,
-                   label='Separation Quality (1-Error)', color='#2ecc71', alpha=0.8, edgecolor='black')
+                   label='Separation Quality (1-Error)', color='#2ecc71', alpha=0.8, edgecolor='black', linewidth=1.5)
     bars3 = ax.bar(x + width, qse_df['conciseness'], width,
-                   label='Conciseness', color='#e74c3c', alpha=0.8, edgecolor='black')
+                   label='Conciseness', color='#e74c3c', alpha=0.8, edgecolor='black', linewidth=1.5)
     
     # Add value labels
     for bars in [bars1, bars2, bars3]:
@@ -302,14 +302,15 @@ def plot_qse_components(qse_df: pd.DataFrame, save_path: str = None):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
                    f'{height:.2f}',
-                   ha='center', va='bottom', fontsize=9)
+                   ha='center', va='bottom', fontsize=FONT_SIZE['figure'], fontweight='bold')
     
-    ax.set_xlabel('Cluster ID')
-    ax.set_ylabel('Score')
+    ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
+    ax.set_ylabel('Score', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
     ax.set_xticks(x)
-    ax.set_xticklabels(clusters)
-    ax.legend()
-    ax.set_ylim(0, 1.1)
+    ax.set_xticklabels(clusters, fontsize=FONT_SIZE['xtick'])
+    ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
+    ax.legend(fontsize=FONT_SIZE['legend'], frameon=True, edgecolor='black', fancybox=False)
+    ax.set_ylim(0, 1)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
     plt.tight_layout()
@@ -322,30 +323,31 @@ def plot_qse_scores(qse_df: pd.DataFrame, save_path: str = None):
     """
     Plot overall QSE scores for each cluster.
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=tuple(FONT_SIZE['figsize']))
     
     clusters = qse_df['cluster_id'].values
     qse_scores = qse_df['qse'].values
     
-    bars = ax.bar(clusters, qse_scores, color='#9b59b6', alpha=0.8, edgecolor='black')
+    bars = ax.bar(clusters, qse_scores, color='#4292C6', alpha=0.8, edgecolor='black', linewidth=1.5)
     
     # Add value labels
     for bar in bars:
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
                f'{height:.3f}',
-               ha='center', va='bottom', fontsize=10)
+               ha='center', va='bottom', fontsize=FONT_SIZE['figure'], fontweight='bold')
     
     # Add horizontal line for average QSE
     avg_qse = qse_scores.mean()
-    ax.axhline(y=avg_qse, color='red', linestyle='--', linewidth=2, 
+    ax.axhline(y=avg_qse, color='black', linestyle='--', linewidth=2.5, 
                label=f'Average QSE: {avg_qse:.3f}')
     
-    ax.set_xlabel('Cluster ID')
-    ax.set_ylabel('Quality Score for Explanation (QSE)')
+    ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
+    ax.set_ylabel('Quality Score for Explanation', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
     ax.set_xticks(clusters)
-    ax.set_ylim(0, 1.1)
-    ax.legend()
+    ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
+    ax.set_ylim(0, 1)
+    ax.legend(fontsize=FONT_SIZE['legend'], frameon=True, edgecolor='black', fancybox=False)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
     plt.tight_layout()
@@ -458,7 +460,7 @@ def plot_representative_metrics_cv_boxplot(detailed_df: pd.DataFrame, save_path:
     ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
     # ax.set_title('Selected vs Non-Selected CV Distribution by Cluster - Adult Dataset (Real Data)', 
     #              fontsize=14, fontweight='bold')
-    ax.grid(axis='y', alpha=0.3)
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
 
     # Add legend with colorblind-friendly colors
     from matplotlib.patches import Patch
@@ -592,28 +594,41 @@ def plot_silhouette_boxplot(X_scaled, clusters, silhouette_avg, per_cluster_metr
     """
     Generates a box plot of silhouette scores for each cluster.
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=tuple(FONT_SIZE['figsize']))
     
     sample_silhouette_values = silhouette_samples(X_scaled, clusters)
     
     cluster_ids = sorted(per_cluster_metrics_df['cluster_id'].unique())
     data_to_plot = [sample_silhouette_values[clusters == i] for i in cluster_ids]
     
-    bp = ax.boxplot(data_to_plot, patch_artist=True, labels=[str(i) for i in cluster_ids])
+    bp = ax.boxplot(data_to_plot, patch_artist=True, tick_labels=[str(i) for i in cluster_ids], widths=0.5)
     
-    # Customizing colors
+    # Customizing colors and edges
     colors = [plt.cm.nipy_spectral(float(i) / len(cluster_ids)) for i in cluster_ids]
     for patch, color in zip(bp['boxes'], colors):
         patch.set_facecolor(color)
+        patch.set_alpha(0.8)
+        patch.set_edgecolor('black')
+        patch.set_linewidth(1.5)
+    
+    # Style whiskers and other elements
+    for whisker in bp['whiskers']:
+        whisker.set(linewidth=1.2, linestyle='--', alpha=0.7)
+    for cap in bp['caps']:
+        cap.set(linewidth=1.2)
+    for median in bp['medians']:
+        median.set(color='darkred', linewidth=2)
         
-    ax.axhline(y=silhouette_avg, color="red", linestyle="--", label=f'Overall Avg Silhouette: {silhouette_avg:.2f}')
+    ax.axhline(y=silhouette_avg, color="black", linestyle='--', linewidth=2.5, label=f'Overall Avg Silhouette: {silhouette_avg:.2f}')
     
     # ax.set_title('Distribution of Silhouette Scores per Cluster', fontsize=16)
-    ax.set_xlabel('Cluster ID', fontsize=12)
-    ax.set_ylabel('Silhouette Coefficient', fontsize=12)
+    ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
+    ax.set_ylabel('Silhouette Coefficient', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
+    ax.tick_params(axis='x', labelsize=FONT_SIZE['xtick'])
+    ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
     ax.set_ylim([-0.2, 1.0])
-    ax.grid(axis='y', linestyle='--', alpha=0.7)
-    ax.legend()
+    ax.grid(axis='y', linestyle='--', alpha=0.3)
+    ax.legend(fontsize=FONT_SIZE['legend'], frameon=True, edgecolor='black', fancybox=False)
     
     plt.tight_layout()
     
@@ -747,8 +762,19 @@ def rule_quality(sub_frames: dict, clusters_insights: dict):
         if cluster_key not in clusters_insights:
             print(f"Warning: No insights found for Cluster {cluster_id}")
             continue
-            
-        selected_features_raw = clusters_insights[cluster_key]['high_shap_features']['features']
+        
+        # Try to get SHAP features first (if available and populated), otherwise use selected features
+        cluster_data = clusters_insights[cluster_key]
+        high_shap = cluster_data.get('high_shap_features', [])
+        
+        # Handle different structures of high_shap_features
+        if isinstance(high_shap, dict) and 'features' in high_shap:
+            selected_features_raw = high_shap['features']
+        elif isinstance(high_shap, list) and len(high_shap) > 0:
+            selected_features_raw = high_shap
+        else:
+            # Fallback to selected features from feature_selection step
+            selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
         
         # 2. Map feature names to dataframe columns (spaces to underscores)
         selected_features = [f.replace(' ', '_') for f in selected_features_raw]
@@ -879,18 +905,21 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
     # Set x-axis labels at cluster centers
     cluster_positions = [i * cluster_spacing for i in range(n_clusters)]
     ax.set_xticks(cluster_positions)
-    ax.set_xticklabels([f'Cluster {c}' for c in clusters])
+    ax.set_xticklabels([f'{c}' for c in clusters], fontsize=FONT_SIZE['xtick'])
     
     # Create legend for rules
     from matplotlib.patches import Patch
     legend_elements = [Patch(facecolor=rule_colors[i], edgecolor='black', 
-                             label=f'Rule {rule}', alpha=0.7) 
+                             label=f'Rule {rule}', alpha=0.7, linewidth=1.5) 
                       for i, rule in enumerate(rules)]
-    ax.legend(handles=legend_elements, title='Rule Number', loc='best')
+    ax.legend(handles=legend_elements, title='Rule Number', loc='best', 
+              fontsize=FONT_SIZE['legend'], title_fontsize=FONT_SIZE['legend'], 
+              frameon=True, edgecolor='black', fancybox=False)
     
     # Formatting
-    ax.set_xlabel('Cluster', fontsize=12)
-    ax.set_ylabel('Coefficient of Variation (CV)', fontsize=12)
+    ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
+    ax.set_ylabel('Coefficient of Variation (CV)', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
+    ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
     # ax.set_title('Stability of Discriminative Metrics within Rules\n(Box plots showing CV distribution per rule)', fontsize=14)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
@@ -905,7 +934,7 @@ def plot_representative_metrics_cv_comparison(df: pd.DataFrame, save_path: str =
     """
     Create a simple bar plot comparing CV for selected vs non-selected metrics per cluster.
     """
-    fig, ax = plt.subplots(figsize=(14, 6))
+    fig, ax = plt.subplots(figsize=tuple(FONT_SIZE['figsize']))
     
     clusters = df['Cluster'].values
     x = np.arange(len(clusters))
@@ -913,9 +942,9 @@ def plot_representative_metrics_cv_comparison(df: pd.DataFrame, save_path: str =
     
     # Plot bars for selected and non-selected metrics
     bars1 = ax.bar(x - width/2, df['Selected_CV_Mean'], width, 
-                   label='Selected Metrics', color='#2ecc71', alpha=0.8, edgecolor='black')
+                   label='Selected Metrics', color='#2ecc71', alpha=0.8, edgecolor='black', linewidth=1.5)
     bars2 = ax.bar(x + width/2, df['Non_Selected_CV_Mean'], width,
-                   label='Non-Selected Metrics', color='#e74c3c', alpha=0.8, edgecolor='black')
+                   label='Non-Selected Metrics', color='#e74c3c', alpha=0.8, edgecolor='black', linewidth=1.5)
     
     # Add value labels on bars
     for bars in [bars1, bars2]:
@@ -924,15 +953,16 @@ def plot_representative_metrics_cv_comparison(df: pd.DataFrame, save_path: str =
             if not np.isnan(height):
                 ax.text(bar.get_x() + bar.get_width()/2., height,
                        f'{height:.3f}',
-                       ha='center', va='bottom', fontsize=10)
+                       ha='center', va='bottom', fontsize=FONT_SIZE['figure'], fontweight='bold')
     
     # Formatting
-    ax.set_xlabel('Cluster ID')
-    ax.set_ylabel('Mean Coefficient of Variation (CV)')
+    ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
+    ax.set_ylabel('Mean Coefficient of Variation (CV)', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
     # ax.set_title('Stability Comparison: Selected vs Non-Selected Metrics\n(Lower CV = More Stable)')
     ax.set_xticks(x)
-    ax.set_xticklabels(clusters)
-    ax.legend()
+    ax.set_xticklabels(clusters, fontsize=FONT_SIZE['xtick'])
+    ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
+    ax.legend(fontsize=FONT_SIZE['legend'], frameon=True, edgecolor='black', fancybox=False)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
     plt.tight_layout()

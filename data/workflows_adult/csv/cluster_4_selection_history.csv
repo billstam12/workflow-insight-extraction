@@ -1,18 +1,22 @@
 iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
-1,Treatment Equality,0.038499420698198304,Predictive Equality,0.7783899771334027
-1,Treatment Equality,0.038499420698198304,Treatment Equality,0.0
-2,Balance for Positive Class,0.06539193454684103,Balance for Positive Class,0.0
-3,Disparate Impact,0.0353795273932434,Conditional Statistical Parity,1.0
-3,Disparate Impact,0.0353795273932434,Disparate Impact,0.0
-4,Recall,0.0444150290038707,Recall,0.0
-5,learning_curve_train_score,0.04621401766045747,learning_curve_train_score,0.0
-6,Precision,0.04304158231162974,Precision,0.0
-7,Equal Negative Predictive Value,0.03311860453809563,Equal Negative Predictive Value,0.0
-8,AUC-ROC,0.03531008396154516,Accuracy,0.8223264927331584
-8,AUC-ROC,0.03531008396154516,Matthews Corrcoef,0.8117023605469121
-8,AUC-ROC,0.03531008396154516,Cohen Kappa,0.796334667056496
-8,AUC-ROC,0.03531008396154516,AUC-ROC,0.0
-9,Conditional Use Accuracy Equality,0.05477713178405685,Equalized Odds,1.0
-9,Conditional Use Accuracy Equality,0.05477713178405685,Equal Opportunity,0.9004949704004698
-9,Conditional Use Accuracy Equality,0.05477713178405685,Conditional Use Accuracy Equality,0.0
-10,F1 Score,0.06786469612544786,F1 Score,0.0
+1,system_network_receive_megabytes,0.01908870477075681,system_network_transmit_megabytes,0.9764624437521633
+1,system_network_receive_megabytes,0.01908870477075681,system_network_receive_megabytes,0.0
+2,Well Calibration,0.010545218599183772,Well Calibration,0.0
+3,Conditional Use Accuracy Equality,0.011174262555142346,Equalized Odds,1.0
+3,Conditional Use Accuracy Equality,0.011174262555142346,Equal Opportunity,0.93231069693794
+3,Conditional Use Accuracy Equality,0.011174262555142346,Conditional Use Accuracy Equality,0.0
+4,Log Loss,0.011795003808693616,Log Loss,0.0
+5,learning_curve_train_score,0.012765977537714808,learning_curve_test_score,0.8001047442609039
+5,learning_curve_train_score,0.012765977537714808,learning_curve_train_score,0.0
+6,Cohen Kappa,0.011187286143599177,F1 Score,0.9349680170575693
+6,Cohen Kappa,0.011187286143599177,Recall,0.8342789307578871
+6,Cohen Kappa,0.011187286143599177,Matthews Corrcoef,0.791044776119403
+6,Cohen Kappa,0.011187286143599177,Cohen Kappa,0.0
+7,Accuracy,0.014862337910486757,AUC-ROC,0.8192383172511721
+7,Accuracy,0.014862337910486757,Accuracy,0.0
+8,Conditional Statistical Parity,0.015143482795000175,Disparate Impact,1.0
+8,Conditional Statistical Parity,0.015143482795000175,Treatment Equality,0.8299488804641003
+8,Conditional Statistical Parity,0.015143482795000175,Predictive Equality,0.7662547794610262
+8,Conditional Statistical Parity,0.015143482795000175,Conditional Statistical Parity,0.0
+9,Test Fairness,0.016797133485466548,Test Fairness,0.0
+10,Balance for Negative Class,0.018611522452394166,Balance for Negative Class,0.0

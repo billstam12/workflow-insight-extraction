@@ -1,17 +1,22 @@
 iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
-1,system_network_transmit_megabytes,0.0501402620549262,system_network_receive_megabytes,0.9643309165492939
-1,system_network_transmit_megabytes,0.0501402620549262,system_network_transmit_megabytes,0.0
-2,system_cpu_utilization_percentage,0.0419930659483284,system_cpu_utilization_percentage,0.0
-3,Log Loss,0.030404620597950963,Log Loss,0.0
-4,learning_curve_train_score,0.02928725739280645,learning_curve_train_score,0.0
-5,Recall,0.025318716995787856,Recall,0.0
-6,Conditional Use Accuracy Equality,0.021842241737424696,Equalized Odds,1.0
-6,Conditional Use Accuracy Equality,0.021842241737424696,Equal Opportunity,0.9004949704004698
-6,Conditional Use Accuracy Equality,0.021842241737424696,Conditional Use Accuracy Equality,0.0
-7,F1 Score,0.029806084444467133,Cohen Kappa,0.9118569251519558
-7,F1 Score,0.029806084444467133,Matthews Corrcoef,0.8307905200651615
-7,F1 Score,0.029806084444467133,Accuracy,0.7785508616185786
-7,F1 Score,0.029806084444467133,F1 Score,0.0
-8,AUC-ROC,0.03470316748394372,AUC-ROC,0.0
-9,Well Calibration,0.029003973815418773,Well Calibration,0.0
-10,Balance for Negative Class,0.03273648017921379,Balance for Negative Class,0.0
+1,Treatment Equality,0.034586762688614464,Predictive Equality,0.9100885177690456
+1,Treatment Equality,0.034586762688614464,Balance for Positive Class,0.8789521228545619
+1,Treatment Equality,0.034586762688614464,Conditional Statistical Parity,0.8299488804641003
+1,Treatment Equality,0.034586762688614464,Disparate Impact,0.8299488804641003
+1,Treatment Equality,0.034586762688614464,Treatment Equality,0.0
+2,Balance for Negative Class,0.06526798433048447,Balance for Negative Class,0.0
+3,Overall Accuracy Equality,0.07728379593657377,Equal Negative Predictive Value,0.8411421826094154
+3,Overall Accuracy Equality,0.07728379593657377,Overall Accuracy Equality,0.0
+4,Precision,0.11914897500815436,Precision,0.0
+5,Accuracy,0.04874187744102465,AUC-ROC,0.8192383172511721
+5,Accuracy,0.04874187744102465,Matthews Corrcoef,0.7902089926497786
+5,Accuracy,0.04874187744102465,Accuracy,0.0
+6,Log Loss,0.06539414132892654,Log Loss,0.0
+7,Well Calibration,0.08358156785299674,Well Calibration,0.0
+8,Equalized Odds,0.04209599628443601,Conditional Use Accuracy Equality,1.0
+8,Equalized Odds,0.04209599628443601,Equal Opportunity,0.9323106969379401
+8,Equalized Odds,0.04209599628443601,Equalized Odds,0.0
+9,learning_curve_train_score,0.06412153486963633,learning_curve_train_score,0.0
+10,Cohen Kappa,0.08615034970921126,F1 Score,0.9349680170575693
+10,Cohen Kappa,0.08615034970921126,Recall,0.8342789307578871
+10,Cohen Kappa,0.08615034970921126,Cohen Kappa,0.0

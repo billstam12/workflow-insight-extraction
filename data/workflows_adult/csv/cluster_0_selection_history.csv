@@ -1,18 +1,19 @@
 iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
-1,Well Calibration,0.06319409719622943,Well Calibration,0.0
-2,Conditional Use Accuracy Equality,0.06559655135600309,Equalized Odds,1.0
-2,Conditional Use Accuracy Equality,0.06559655135600309,Equal Opportunity,0.9004949704004698
-2,Conditional Use Accuracy Equality,0.06559655135600309,Conditional Use Accuracy Equality,0.0
-3,Matthews Corrcoef,0.08156324566527623,Accuracy,0.948277139467917
-3,Matthews Corrcoef,0.08156324566527623,Cohen Kappa,0.9189335949132058
-3,Matthews Corrcoef,0.08156324566527623,F1 Score,0.8307905200651615
-3,Matthews Corrcoef,0.08156324566527623,AUC-ROC,0.8117023605469121
-3,Matthews Corrcoef,0.08156324566527623,Matthews Corrcoef,0.0
-4,Recall,0.11224144847600631,Recall,0.0
-5,Balance for Negative Class,0.11254964459984541,Balance for Negative Class,0.0
-6,Overall Accuracy Equality,0.13087734489933472,Overall Accuracy Equality,0.0
-7,Log Loss,0.08782355400371236,Log Loss,0.0
-8,Balance for Positive Class,0.08763891604087946,Balance for Positive Class,0.0
-9,Equal Negative Predictive Value,0.11055455032189775,Equal Negative Predictive Value,0.0
-10,Disparate Impact,0.10331601143808548,Conditional Statistical Parity,1.0
-10,Disparate Impact,0.10331601143808548,Disparate Impact,0.0
+1,Well Calibration,0.04916666666666662,Well Calibration,0.0
+2,Recall,0.057685185185185124,F1 Score,0.8999024185415506
+2,Recall,0.057685185185185124,Cohen Kappa,0.8342789307578871
+2,Recall,0.057685185185185124,Recall,0.0
+3,Statistical Parity,0.07540123456790113,Statistical Parity,0.0
+4,AUC-ROC,0.07291077441077452,Accuracy,0.8192383172511721
+4,AUC-ROC,0.07291077441077452,AUC-ROC,0.0
+5,Balance for Negative Class,0.08287037037037025,Balance for Negative Class,0.0
+6,Equal Opportunity,0.0804320987654321,Equalized Odds,0.9323106969379401
+6,Equal Opportunity,0.0804320987654321,Conditional Use Accuracy Equality,0.93231069693794
+6,Equal Opportunity,0.0804320987654321,Equal Opportunity,0.0
+7,Matthews Corrcoef,0.12335615333513553,Matthews Corrcoef,0.0
+8,learning_curve_train_score,0.10519400352733682,learning_curve_train_score,0.0
+9,Log Loss,0.12262896951609993,Log Loss,0.0
+10,Disparate Impact,0.08292378252770004,Conditional Statistical Parity,1.0
+10,Disparate Impact,0.08292378252770004,Treatment Equality,0.8299488804641003
+10,Disparate Impact,0.08292378252770004,Predictive Equality,0.7662547794610262
+10,Disparate Impact,0.08292378252770004,Disparate Impact,0.0
