@@ -1137,7 +1137,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir_representative_quality, exist_ok=True)
     summary_df, detailed_df = representative_metrics_quality_detailed(clustered_data, clusters_insights, metric_cols)
     detailed_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_detailed.csv"), index=False)
-    plot_representative_metrics_cv_boxplot(detailed_df, save_path=os.path.join(result_dir_representative_quality, "cv_boxplot.png"))
+    plot_representative_metrics_cv_boxplot(detailed_df, save_path=os.path.join(result_dir_representative_quality, "cluster_respresentative_quality.png"))
 
     # representative_quality_df = representative_metrics_quality(clustered_data, clusters_insights, metric_cols)
     # representative_quality_df.to_csv(os.path.join(result_dir_representative_quality, "representative_quality_metrics.csv"), index=False)
@@ -1163,7 +1163,7 @@ if __name__ == "__main__":
         
         # Plot QSE for best rules per cluster
         plot_qse_components(qse_best_df, save_path=os.path.join(result_dir_qse, "qse_components.png"))
-        plot_qse_scores(qse_best_df, save_path=os.path.join(result_dir_qse, "qse_scores.png"))
+        plot_qse_scores(qse_best_df, save_path=os.path.join(result_dir_qse, f"explanation_quality_qse.png"))
     else:
         print("Warning: No rules available. Skipping QSE calculation.")
 
@@ -1247,15 +1247,15 @@ def copy_quality_images(results_base_path="./results", output_dir="./paper_resul
     
     try:
         # Copy adult/full representative quality
-        img = plt.imread(f"{results_base_path}/adult/full/representative_quality/cv_boxplot.png")
+        img = plt.imread(f"{results_base_path}/adult/full/representative_quality/cluster_respresentative_quality.png")
         plt.imsave(f"{output_dir}/cluster_respresentative_quality_full_adult.png", img)
         
         # Copy adult/full explanation quality
-        img = plt.imread(f"{results_base_path}/adult/full/explanation_quality/qse_scores.png")
+        img = plt.imread(f"{results_base_path}/adult/full/explanation_quality/explanation_quality_qse.png")
         plt.imsave(f"{output_dir}/explanation_quality_qse_adult_full.png", img)
         
         # Copy adult/no_iterative_filter representative quality
-        img = plt.imread(f"{results_base_path}/adult/no_iterative_filter/representative_quality/cv_boxplot.png")
+        img = plt.imread(f"{results_base_path}/adult/no_iterative_filter/representative_quality/cluster_respresentative_quality.png")
         plt.imsave(f"{output_dir}/cluster_respresentative_quality_no_iterative_filter_adult.png", img)
         
         print(f"✓ Copied quality images to {output_dir}")
