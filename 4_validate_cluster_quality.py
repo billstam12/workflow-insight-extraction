@@ -13,11 +13,11 @@ from sklearn.metrics import silhouette_samples
 
 FONT_SIZE = {
     'title': 22,
-    'xlabel': 26,
-    'ylabel': 26,
-    'xtick': 26,
-    'ytick': 26,
-    'legend': 24,
+    'xlabel': 40,
+    'ylabel': 40,
+    'xtick': 32,
+    'ytick': 32,
+    'legend': 25,
     'figure': 12,
     'figsize': [10, 8]
 }
@@ -343,7 +343,7 @@ def plot_qse_scores(qse_df: pd.DataFrame, save_path: str = None):
                label=f'Average QSE: {avg_qse:.3f}')
     
     ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
-    ax.set_ylabel('Quality Score for Explanation', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
+    ax.set_ylabel('QSE', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
     ax.set_xticks(clusters)
     ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
     ax.set_ylim(0, 1)
@@ -425,7 +425,7 @@ def plot_representative_metrics_cv_boxplot(detailed_df: pd.DataFrame, save_path:
         pos += 1.5
 
     # Create box plot with explicit figure size to match bar chart
-    fig, ax = plt.subplots(figsize=(8, 6.2))
+    fig, ax = plt.subplots(figsize=tuple(FONT_SIZE['figsize']))
 
     bp = ax.boxplot(all_data, 
                     positions=positions,
@@ -456,7 +456,7 @@ def plot_representative_metrics_cv_boxplot(detailed_df: pd.DataFrame, save_path:
     ax.set_xticklabels([f'{c}' for c in clusters], fontsize=FONT_SIZE['xtick'])
 
     ax.set_xlabel('Cluster', fontweight='bold', fontsize=FONT_SIZE['xlabel'])
-    ax.set_ylabel('CV Values', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
+    ax.set_ylabel('CV', fontweight='bold', fontsize=FONT_SIZE['ylabel'])
     ax.tick_params(axis='y', labelsize=FONT_SIZE['ytick'])
     # ax.set_title('Selected vs Non-Selected CV Distribution by Cluster - Adult Dataset (Real Data)', 
     #              fontsize=14, fontweight='bold')
@@ -1181,7 +1181,7 @@ def plot_datasets_scores(ablation="full", results_base_path="./results", output_
         cluster_adult = cluster_adult.drop(columns=["Calinski_Harabasz_Score"])
         cluster_taxi = cluster_taxi.drop(columns=["Calinski_Harabasz_Score"])
 
-        metrics = ['Davies Bouldin Index', 'Silhouette Score']
+        metrics = ['DBI', 'SiS']
         wine_scores = [
             cluster_wine['Davies_Bouldin_Index'].values[0],
             cluster_wine['Silhouette_Score'].values[0]
@@ -1257,6 +1257,18 @@ def copy_quality_images(results_base_path="./results", output_dir="./paper_resul
         # Copy adult/no_iterative_filter representative quality
         img = plt.imread(f"{results_base_path}/adult/no_iterative_filter/representative_quality/cluster_respresentative_quality.png")
         plt.imsave(f"{output_dir}/cluster_respresentative_quality_no_iterative_filter_adult.png", img)
+
+         # Copy taxi/no_variance_filter representative quality
+        img = plt.imread(f"{results_base_path}/taxi/no_variance_filter/representative_quality/cluster_respresentative_quality.png")
+        plt.imsave(f"{output_dir}/cluster_respresentative_quality_no_variance_filter_taxi.png", img)
+        
+          # Copy wine/no_variance_filter representative quality
+        img = plt.imread(f"{results_base_path}/wine/no_variance_filter/representative_quality/cluster_respresentative_quality.png")
+        plt.imsave(f"{output_dir}/cluster_respresentative_quality_no_variance_filter_wine.png", img)
+        
+         # Copy wine/full representative quality
+        img = plt.imread(f"{results_base_path}/wine/full/representative_quality/cluster_respresentative_quality.png")
+        plt.imsave(f"{output_dir}/cluster_respresentative_quality_full_wine.png", img)
         
         print(f"✓ Copied quality images to {output_dir}")
     except Exception as e:
