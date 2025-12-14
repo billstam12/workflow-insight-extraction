@@ -12,20 +12,31 @@ set -e  # Exit on error
 # Activate virtual environment
 source env/bin/activate
 
-# Configuration
-WORKFLOW_FOLDER="./data/workflows_wine"
-DATASET_NAME="wine"
+# Array of datasets
+datasets=(
+    "wine:./data/workflows_wine"
+    "adult:./data/workflows_adult"
+    "taxi:./data/workflows_taxi"
+)
+
+# Array of ablation modes
+modes=("no_variance_filter" "no_dim_reduction" "no_iterative_filter" "full" )
 
 echo "=========================================="
-echo "Starting Ablation Study"
-echo "=========================================="
-echo "Workflow Folder: $WORKFLOW_FOLDER"
-echo "Dataset Name: $DATASET_NAME"
+echo "Starting Ablation Study for All Datasets"
 echo "=========================================="
 echo ""
 
-# Array of ablation modes
-modes=("full" "no_variance_filter" "no_dim_reduction" "no_iterative_filter")
+for dataset_config in "${datasets[@]}"; do
+    # Parse dataset configuration
+    DATASET_NAME="${dataset_config%%:*}"
+    WORKFLOW_FOLDER="${dataset_config##*:}"
+    
+    echo "=========================================="
+    echo "Dataset: $DATASET_NAME"
+    echo "Workflow Folder: $WORKFLOW_FOLDER"
+    echo "=========================================="
+    echo ""
 
 for mode in "${modes[@]}"; do
     echo ""
@@ -50,14 +61,18 @@ for mode in "${modes[@]}"; do
     echo ""
 done
 
+    echo ""
+    echo "✓ Dataset Complete: $DATASET_NAME"
+    echo ""
+done
+
 echo ""
 echo "=========================================="
-echo "Ablation Study Complete!"
+echo "Ablation Study Complete for All Datasets!"
 echo "=========================================="
 echo ""
 echo "Results are saved in:"
-echo "  - results/$DATASET_NAME/full/"
-echo "  - results/$DATASET_NAME/no_variance_filter/"
-echo "  - results/$DATASET_NAME/no_dim_reduction/"
-echo "  - results/$DATASET_NAME/no_iterative_filter/"
+echo "  - results/wine/{full,no_variance_filter,no_dim_reduction,no_iterative_filter}/"
+echo "  - results/adult/{full,no_variance_filter,no_dim_reduction,no_iterative_filter}/"
+echo "  - results/taxi/{full,no_variance_filter,no_dim_reduction,no_iterative_filter}/"
 echo ""
