@@ -1,41 +1,11 @@
 env
 requirements.txt
 __pycache__/
-cluster_0_selection_history.csv
-cluster_0_tradeoff_analysis.csv
-cluster_1_selection_history.csv
-cluster_1_tradeoff_analysis.csv
-cluster_2_selection_history.csv
-cluster_2_tradeoff_analysis.csv
-cluster_3_selection_history.csv
-cluster_3_tradeoff_analysis.csv
-cluster_decision_rules.csv
-clusters_comprehensive_insights.json
-workflows_classification_results.csv
-workflows_cluster_metadata.csv
-workflows_clustered.csv
-workflows_component_correlations.csv
-workflows_medoids.csv
-workflows_processed_data.csv
-
-parallel-viz/__pycache__
-parallel-viz/output_constrained
-parallel-viz/output_constrained_workflows
-readme.md
-
-/data/workflows/**
-
 
 /results/**
 
-train_copy.py
-5_representative_metric_quality.py
-6_discriminative_power_analysis.py
-/data
-
 /ok.ipynb
 
-# /4_validate_cluster_quality_copy.py
 paper_figures
 
 last.py
