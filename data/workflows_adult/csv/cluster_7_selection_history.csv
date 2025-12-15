@@ -1,0 +1,23 @@
+iteration,selected_feature,selected_shap_importance,removed_feature,relationship_measure
+1,system_system_memory_usage_megabytes,0.03414473558667157,system_system_memory_usage_percentage,0.901021673097863
+1,system_system_memory_usage_megabytes,0.03414473558667157,system_system_memory_usage_megabytes,0.0
+2,Precision,0.0291454856199682,Precision,0.0
+3,Log Loss,0.021610071861942064,Log Loss,0.0
+4,Statistical Parity,0.032437549315184194,Statistical Parity,0.0
+5,Conditional Statistical Parity,0.02496718892288175,Disparate Impact,1.0
+5,Conditional Statistical Parity,0.02496718892288175,Treatment Equality,0.8299488804641003
+5,Conditional Statistical Parity,0.02496718892288175,Predictive Equality,0.7662547794610262
+5,Conditional Statistical Parity,0.02496718892288175,Conditional Statistical Parity,0.0
+6,Equal Negative Predictive Value,0.029750233703739987,Overall Accuracy Equality,0.8411421826094154
+6,Equal Negative Predictive Value,0.029750233703739987,Equal Negative Predictive Value,0.0
+7,Accuracy,0.030827143773581627,AUC-ROC,0.8192383172511721
+7,Accuracy,0.030827143773581627,Matthews Corrcoef,0.7902089926497786
+7,Accuracy,0.030827143773581627,Accuracy,0.0
+8,Equalized Odds,0.03041040849268824,Conditional Use Accuracy Equality,1.0
+8,Equalized Odds,0.03041040849268824,Equal Opportunity,0.9323106969379401
+8,Equalized Odds,0.03041040849268824,Equalized Odds,0.0
+9,Recall,0.03614784839833551,F1 Score,0.8999024185415506
+9,Recall,0.03614784839833551,Cohen Kappa,0.8342789307578871
+9,Recall,0.03614784839833551,Recall,0.0
+10,learning_curve_train_score,0.03932748011213664,learning_curve_test_score,0.8001047442609039
+10,learning_curve_train_score,0.03932748011213664,learning_curve_train_score,0.0

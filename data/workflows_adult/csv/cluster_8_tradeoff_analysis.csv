@@ -1,0 +1,72 @@
+metric_1,metric_2,relationship_type,relationship_strength,is_tradeoff
+Equalized Odds,system_network_transmit_megabytes,Kendall,-0.18257418583505539,0
+Equal Negative Predictive Value,system_cpu_utilization_percentage,Kendall,-0.18257418583505539,0
+system_network_receive_megabytes,Conditional Statistical Parity,Kendall,-0.18257418583505539,0
+system_system_memory_usage_megabytes,Overall Accuracy Equality,Kendall,-0.18257418583505539,0
+Test Fairness,system_cpu_utilization_percentage,Kendall,-0.18257418583505539,0
+system_network_receive_megabytes,Conditional Use Accuracy Equality,Kendall,-0.18257418583505539,0
+system_network_receive_megabytes,Disparate Impact,Kendall,-0.18257418583505539,0
+system_network_receive_megabytes,Equal Opportunity,Kendall,-0.18257418583505539,0
+Equalized Odds,Overall Accuracy Equality,Kendall,-0.19999999999999998,0
+Test Fairness,Conditional Use Accuracy Equality,Kendall,-0.19999999999999998,0
+Test Fairness,Disparate Impact,Kendall,-0.19999999999999998,0
+Test Fairness,Equal Opportunity,Kendall,-0.19999999999999998,0
+Test Fairness,Conditional Statistical Parity,Kendall,-0.19999999999999998,0
+Equal Negative Predictive Value,Equal Opportunity,Kendall,-0.19999999999999998,0
+Equal Negative Predictive Value,Disparate Impact,Kendall,-0.19999999999999998,0
+Equal Negative Predictive Value,Conditional Use Accuracy Equality,Kendall,-0.19999999999999998,0
+Equal Negative Predictive Value,Conditional Statistical Parity,Kendall,-0.19999999999999998,0
+Equalized Odds,Log Loss,Kendall,-0.19999999999999998,0
+system_network_receive_megabytes,system_system_memory_usage_percentage,Kendall,-0.2357022603955159,0
+Equal Negative Predictive Value,system_system_memory_usage_percentage,Kendall,-0.25819888974716115,0
+system_system_memory_usage_megabytes,system_network_transmit_megabytes,Kendall,-0.3333333333333334,0
+system_network_receive_megabytes,system_cpu_utilization_percentage,Kendall,-0.3333333333333334,0
+system_system_memory_usage_megabytes,Conditional Use Accuracy Equality,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,F1 Score,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,Equal Opportunity,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,Disparate Impact,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,AUC-ROC,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,Conditional Statistical Parity,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,Cohen Kappa,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,Accuracy,Kendall,-0.5477225575051662,0
+Test Fairness,system_network_transmit_megabytes,Kendall,-0.5477225575051662,0
+Precision,learning_curve_test_score,Kendall,-0.5477225575051662,0
+Precision,learning_curve_train_score,Kendall,-0.5477225575051662,0
+system_system_memory_usage_megabytes,Well Calibration,Kendall,-0.5477225575051662,0
+system_network_receive_megabytes,Log Loss,Kendall,-0.5477225575051662,0
+Statistical Parity,learning_curve_train_score,Kendall,-0.5477225575051662,0
+Statistical Parity,learning_curve_test_score,Kendall,-0.5477225575051662,0
+Statistical Parity,Cohen Kappa,Kendall,-0.6,0
+Matthews Corrcoef,Balance for Negative Class,Kendall,-0.6,0
+Equal Negative Predictive Value,Log Loss,Kendall,-0.6,0
+Recall,Balance for Negative Class,Kendall,-0.6,0
+Statistical Parity,AUC-ROC,Kendall,-0.6,0
+Statistical Parity,Accuracy,Kendall,-0.6,0
+Test Fairness,Overall Accuracy Equality,Kendall,-0.6,0
+Precision,Well Calibration,Kendall,-0.6,0
+Precision,F1 Score,Kendall,-0.6,0
+Statistical Parity,Well Calibration,Kendall,-0.6,0
+Precision,AUC-ROC,Kendall,-0.6,0
+Precision,Accuracy,Kendall,-0.6,0
+Precision,Cohen Kappa,Kendall,-0.6,0
+Statistical Parity,F1 Score,Kendall,-0.6,0
+system_system_memory_usage_megabytes,learning_curve_test_score,Kendall,-0.6666666666666669,0
+system_system_memory_usage_megabytes,learning_curve_train_score,Kendall,-0.6666666666666669,0
+Equalized Odds,system_system_memory_usage_percentage,Kendall,-0.7745966692414834,1
+Matthews Corrcoef,system_system_memory_usage_percentage,Kendall,-0.7745966692414834,1
+Recall,system_system_memory_usage_percentage,Kendall,-0.7745966692414834,1
+system_network_receive_megabytes,Balance for Negative Class,Kendall,-0.9128709291752769,1
+Test Fairness,learning_curve_train_score,Kendall,-0.912870929175277,1
+Test Fairness,learning_curve_test_score,Kendall,-0.912870929175277,1
+Precision,system_network_transmit_megabytes,Kendall,-0.912870929175277,1
+Statistical Parity,system_network_transmit_megabytes,Kendall,-0.912870929175277,1
+Test Fairness,Well Calibration,Kendall,-1.0,1
+Test Fairness,F1 Score,Kendall,-1.0,1
+Test Fairness,Cohen Kappa,Kendall,-1.0,1
+Test Fairness,Accuracy,Kendall,-1.0,1
+Test Fairness,AUC-ROC,Kendall,-1.0,1
+Precision,Overall Accuracy Equality,Kendall,-1.0,1
+Statistical Parity,Overall Accuracy Equality,Kendall,-1.0,1
+Recall,Log Loss,Kendall,-1.0,1
+Equal Negative Predictive Value,Balance for Negative Class,Kendall,-1.0,1
+Matthews Corrcoef,Log Loss,Kendall,-1.0,1

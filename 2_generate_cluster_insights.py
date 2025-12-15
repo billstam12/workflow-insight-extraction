@@ -1497,6 +1497,50 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                     'features': list(shap_feature_stats.keys()),
                     'feature_statistics': shap_feature_stats
                 }
+            else:
+                # Cluster not found in model summary - use zero scores with worst quality level
+                cluster_insights['model_evaluation'] = {
+                    'test_auc': 0.0,
+                    'balanced_accuracy': 0.0,
+                    'precision': 0.0,
+                    'recall': 0.0,
+                    'f1_score': 0.0,
+                    'model_quality_score': 0.0,
+                    'quality_interpretation': "Poor - Cluster model training was skipped or failed",
+                    'confusion_matrix': {
+                        'true_negatives': 0,
+                        'false_positives': 0,
+                        'false_negatives': 0,
+                        'true_positives': 0
+                    }
+                }
+                
+                cluster_insights['high_shap_features'] = {
+                    'features': [],
+                    'feature_statistics': {}
+                }
+        else:
+            # No models summary available - use zero scores with worst quality level
+            cluster_insights['model_evaluation'] = {
+                'test_auc': 0.0,
+                'balanced_accuracy': 0.0,
+                'precision': 0.0,
+                'recall': 0.0,
+                'f1_score': 0.0,
+                'model_quality_score': 0.0,
+                'quality_interpretation': "Poor - Model evaluation data not available",
+                'confusion_matrix': {
+                    'true_negatives': 0,
+                    'false_positives': 0,
+                    'false_negatives': 0,
+                    'true_positives': 0
+                }
+            }
+            
+            cluster_insights['high_shap_features'] = {
+                'features': [],
+                'feature_statistics': {}
+            }
         
         # ===== TRADE-OFF ANALYSIS =====
         # Get trade-off data from trade-off analysis step
