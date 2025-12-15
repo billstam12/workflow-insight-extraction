@@ -1,13 +1,13 @@
 Dataset,Ablation,N_Clusters,SiS_avg,SiS_min,SiS_max,DBI_avg,CV_avg,CV_min,CV_max,F1_avg,QSE_avg
-Adult,Full,4,\textbf{0.9216},\textbf{0.8153},\textbf{0.9656},\textbf{0.1395},0.2299,0.0032,2.9104,\textbf{1.0000},\textbf{0.9265}
-Adult,No Dim Reduction,2,0.0106,-0.7027,0.3027,0.9382,0.4908,0.0554,\textbf{1.2548},N/A,0.8867
-Adult,No Iterative Filter,4,0.9216,0.8153,0.9656,0.1395,0.2299,0.0032,2.9104,1.0000,0.9265
-Adult,No Variance Filter,9,0.6356,0.0000,0.8039,0.4704,\textbf{0.2039},\textbf{0.0000},2.9104,N/A,0.6990
-Taxi,Full,4,\textbf{0.8044},\textbf{0.5723},\textbf{0.9742},\textbf{0.2305},0.2513,0.0001,\textbf{1.6686},0.9722,\textbf{0.8613}
-Taxi,No Dim Reduction,4,0.3974,-0.2092,0.8618,1.0542,0.2581,0.0012,1.6686,\textbf{0.9963},0.8465
-Taxi,No Iterative Filter,4,0.8044,0.5723,0.9742,0.2305,0.2513,0.0001,1.6686,0.9722,0.8613
-Taxi,No Variance Filter,17,0.6436,-0.2423,0.9645,0.3998,\textbf{0.2244},\textbf{0.0000},17.3973,N/A,0.7679
-Wine,Full,3,0.9078,0.7700,\textbf{0.9487},\textbf{0.1319},0.2713,0.0026,1.5832,\textbf{1.0000},\textbf{0.9512}
-Wine,No Dim Reduction,2,0.0298,-0.2279,0.2256,8.0719,0.6154,0.0745,\textbf{1.5005},0.5178,0.6407
-Wine,No Iterative Filter,3,0.9078,0.7700,0.9487,0.1319,0.2713,0.0026,1.5832,1.0000,0.9512
-Wine,No Variance Filter,3,\textbf{0.9128},\textbf{0.7971},0.9478,0.1405,\textbf{0.0919},\textbf{0.0000},1.5832,1.0000,0.9512
+Adult,Full,4,\textbf{0.9216},\textbf{0.8153},\textbf{0.9656},\textbf{0.1395},\textbf{0.1412},\textbf{0.0423},\textbf{0.2043},\textbf{1.0000},\textbf{0.9265}
+Adult,No Dim Reduction,2,0.0106,-0.7027,0.3027,0.9382,N/A,N/A,N/A,N/A,0.8867
+Adult,No Iterative Filter,4,0.9216,0.8153,0.9656,0.1395,0.9936,0.1211,3.1375,1.0000,0.9265
+Adult,No Variance Filter,9,0.6356,0.0000,0.8039,0.4704,0.3832,0.0429,1.5787,N/A,0.6990
+Taxi,Full,4,\textbf{0.8044},\textbf{0.5723},\textbf{0.9742},\textbf{0.2305},1.0013,0.0113,2.2014,0.9722,\textbf{0.8613}
+Taxi,No Dim Reduction,4,0.3974,-0.2092,0.8618,1.0542,\textbf{0.4013},0.0113,\textbf{0.7913},\textbf{0.9963},0.8465
+Taxi,No Iterative Filter,4,0.8044,0.5723,0.9742,0.2305,1.2882,0.1876,2.2074,0.9722,0.8613
+Taxi,No Variance Filter,17,0.6436,-0.2423,0.9645,0.3998,0.9500,\textbf{0.0001},2.3599,N/A,0.7679
+Wine,Full,3,0.9078,0.7700,\textbf{0.9487},\textbf{0.1319},1.4293,0.9431,\textbf{1.9155},\textbf{1.0000},\textbf{0.9512}
+Wine,No Dim Reduction,2,0.0298,-0.2279,0.2256,8.0719,N/A,N/A,N/A,0.5178,0.6407
+Wine,No Iterative Filter,3,0.9078,0.7700,0.9487,0.1319,3.3654,2.9944,3.7364,1.0000,0.9512
+Wine,No Variance Filter,3,\textbf{0.9128},\textbf{0.7971},0.9478,0.1405,\textbf{1.0968},\textbf{0.2721},1.9215,1.0000,0.9512

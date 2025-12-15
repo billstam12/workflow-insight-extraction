@@ -1,15 +1,8 @@
-env
-requirements.txt
 __pycache__/
+requirements.txt
 
 /results/**
 
-/ok.ipynb
-
 paper_figures
 
-last.py
-
-
 paper_results
-paper_results.py
