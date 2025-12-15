@@ -366,13 +366,7 @@ def main():
     data_folder = sys.argv[1]
     ablation_mode = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith('--') else 'full'
     export_csv = '--no-csv' not in sys.argv
-    
-    # Print ablation mode
-    if ablation_mode == 'no_iterative_filter':
-        print("\n" + "="*80)
-        print("ABLATION MODE: No Iterative Feature Selection")
-        print("Using all metrics without SHAP-based iterative filtering")
-        print("="*80 + "\n")
+        
     csv_dir = os.path.join(data_folder, 'csv')
     if export_csv:
         os.makedirs(csv_dir, exist_ok=True)
@@ -432,11 +426,15 @@ def main():
     n_clusters = df_clustered['cluster'].max() + 1
 
     # Build the pipeline
+    if ablation_mode == 'no_iterative_filter':
+        print("\n" + "="*80)
+        print("ABLATION MODE: No Iterative Feature Selection")
+        print("Using all metrics without SHAP-based iterative filtering")
+        print("="*80 + "\n")    
+    
     pipeline = build_default_insights_pipeline()
-    
-    # Print current pipeline configuration
     pipeline.list_steps()
-    
+        
     # Configure pipeline parameters
     pipeline_params = {
         'df_clustered': df_clustered,
@@ -588,8 +586,48 @@ def step_phase1_feature_selection(results, pipeline, **kwargs):
         # Feature selection (Steps 1-3 from paper) - Skip if ablation mode is no_iterative_filter
         if ablation_mode == 'no_iterative_filter':
             print(f"\n  ⚠ ABLATION: Skipping iterative feature selection")
-            print(f"  Using all {len(metric_cols)} metrics without filtering")
-            selected_features = metric_cols
+            print(f"  Selecting top {n_iterations if n_iterations else 'all'} features by SHAP importance (no correlation removal)")
+            
+            # Train RF on all features to get SHAP importance
+            n_iter = n_iterations if n_iterations else len(metric_cols)
+            print(f"  Training RF on all {len(metric_cols)} features...")
+            rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+            rf.fit(X_train, y_train)
+            
+            # Get SHAP values
+            try:
+                explainer = shap.TreeExplainer(rf)
+                shap_values = explainer.shap_values(X_train)
+            except Exception as e:
+                print(f"  Warning: SHAP failed, using tree importance fallback: {e}")
+                shap_importance = rf.feature_importances_
+                importance_with_idx = [(i, shap_importance[i], metric_cols[i]) 
+                                       for i in range(len(metric_cols))]
+            else:
+                # Handle SHAP output format
+                if isinstance(shap_values, list):
+                    shap_vals = shap_values[1]
+                else:
+                    shap_vals = shap_values
+                
+                if len(shap_vals.shape) == 3:
+                    shap_importance = np.abs(shap_vals).mean(axis=(0, 2))
+                else:
+                    shap_importance = np.abs(shap_vals).mean(axis=0)
+                
+                importance_with_idx = [(i, shap_importance[i], metric_cols[i]) 
+                                       for i in range(len(metric_cols))]
+            
+            # Sort by importance, descending
+            importance_with_idx.sort(key=lambda x: x[1], reverse=True)
+            
+            # Select top n_iterations features
+            selected_features = [feat for idx, shap_val, feat in importance_with_idx[:n_iter]]
+            
+            print(f"\n  Top {len(selected_features)} features by SHAP importance:")
+            for idx, (i, shap_val, feat) in enumerate(importance_with_idx[:n_iter], 1):
+                print(f"    {idx}. {feat} (SHAP: {shap_val:.6f})")
+            
             selection_history = []
             removed_features_analysis = {}
         else:
@@ -1416,14 +1454,18 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                 # ===== DISTINCT FEATURES SECTION (High/Low only) =====
                 # Filter feature_stats to keep only high and low features
                 distinct_features = {
-                    feat: stats for feat, stats in feature_stats.items() 
+                    feat: stats for feat, stats in feature_stats.items()
                     if stats.get('value_category') in ['high', 'low']
                 }
-                
+
                 if distinct_features:
+                    # Align structure with high_shap_features: expose both the list of
+                    # feature names and their statistics so downstream consumers can
+                    # treat them uniformly.
                     cluster_insights['distinct_features'] = {
                         'n_distinct_features': len(distinct_features),
-                        'features': distinct_features
+                        'features': list(distinct_features.keys()),
+                        'feature_statistics': distinct_features
                     }
         
         # ===== CORRELATION ANALYSIS FOR REMOVED FEATURES =====
@@ -1682,7 +1724,6 @@ def build_default_insights_pipeline():
     pipeline.add_step('step_phase1_comprehensive_cluster_insights', step_phase1_comprehensive_cluster_insights, enabled=True)
     
     return pipeline
-
 
 if __name__ == "__main__":
     main()

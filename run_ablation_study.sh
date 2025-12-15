@@ -9,8 +9,6 @@
 
 set -e  # Exit on error
 
-# Activate virtual environment
-source env/bin/activate
 
 # Array of datasets
 datasets=(
@@ -58,6 +56,13 @@ for mode in "${modes[@]}"; do
     
     echo ""
     echo "✓ Completed: $mode"
+    
+    echo ""
+    echo "Cleaning generated files from data folder..."
+    cd "$WORKFLOW_FOLDER" && find . -type f ! -name 'workflows.csv' ! -name 'metric_names.txt' ! -name 'parameter_names.txt' -delete
+    rm -rf csv
+    cd - > /dev/null
+    echo "✓ Data folder cleaned"
     echo ""
 done
 

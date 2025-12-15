@@ -175,20 +175,27 @@ def calculate_rule_based_separation_error(rule_str: str, cluster_id: int, all_da
         return 1.0
 
 
-def calculate_rule_based_conciseness(rule_str: str) -> float:
+def calculate_rule_based_conciseness(rule_str: str, total_parameters: int | None = None) -> float:
     """
     Calculate conciseness based on actual decision rule.
-    
-    Conciseness(E_c) decays gently with predicate count so longer rules are penalized
-    without collapsing to near-zero too quickly.
-    
-    Counts the actual number of predicates (conditions) in the rule.
+
+    Conciseness(E_c) decays gently with predicate count and also factors in
+    the proportion of the total available parameters that the rule touches.
     """
     n_predicates = count_predicates_in_rule(rule_str)
     if n_predicates == 0:
         return 0.0
+
+    # Base penalty for predicate count
     decay = 0.25  # smaller decay -> slower drop in conciseness
-    return 1.0 / (1.0 + decay * (n_predicates - 1))
+    base_conciseness = 1.0 / (1.0 + decay * (n_predicates - 1))
+
+    if not total_parameters or total_parameters <= 0:
+        return base_conciseness
+
+    # Additional penalty for using many parameters relative to what is available
+    parameter_ratio = min(1.0, n_predicates / total_parameters)
+    return base_conciseness * (1 - 0.5 * parameter_ratio)
 
 
 def calculate_qse_for_rule(rule_str: str, cluster_id: int, all_data: pd.DataFrame) -> dict:
@@ -213,7 +220,8 @@ def calculate_qse_for_rule(rule_str: str, cluster_id: int, all_data: pd.DataFram
     # Calculate the three quality measures based on the actual rule
     coverage = calculate_rule_based_coverage(rule_str, cluster_id, all_data)
     separation_err = calculate_rule_based_separation_error(rule_str, cluster_id, all_data)
-    conciseness = calculate_rule_based_conciseness(rule_str)
+    total_parameters = len([c for c in all_data.columns if c != 'cluster'])
+    conciseness = calculate_rule_based_conciseness(rule_str, total_parameters)
     
     # Calculate QSE as the average of the three normalized measures
     # Note: Separation error is inverted (1 - err) to align with "higher is better"
@@ -435,13 +443,10 @@ def plot_representative_metrics_cv_boxplot(detailed_df: pd.DataFrame, save_path:
 
     # Colorblind-friendly colors: blue for good (representative), orange for bad (other)
     # These colors are distinguishable for all types of colorblindness and in grayscale
-    if ablation=="no_iterative_filter":
-        color_bad = '#DE8F05'       # Vermillion - other metrics (bad)
-        color_good = '#DE8F05'      # Green - representative metrics (good)
-    else:
-        color_good = '#0173B2' 
-            # Blue - representative metrics (good)
-        color_bad = '#DE8F05'       # Orange - other metrics (bad)
+    color_good = '#0173B2' 
+    
+    # Blue - representative metrics (good)
+    color_bad = '#DE8F05'       # Orange - other metrics (bad)
 
     colors = [color_good, color_bad] * len(clusters)
     for patch, color in zip(bp['boxes'], colors):
@@ -463,12 +468,7 @@ def plot_representative_metrics_cv_boxplot(detailed_df: pd.DataFrame, save_path:
     ax.grid(axis='y', linestyle='--', alpha=0.3)
 
     # Add legend with colorblind-friendly colors
-    from matplotlib.patches import Patch
-    if ablation=="no_iterative_filter":
-        legend_elements = [Patch(facecolor=color_good, edgecolor='black', linewidth=1.2, label='All Metrics'),
-                    ]
-    else:
-        legend_elements = [Patch(facecolor=color_good, edgecolor='black', linewidth=1.2, label='Representative Metrics'),
+    legend_elements = [Patch(facecolor=color_good, edgecolor='black', linewidth=1.2, label='Representative Metrics'),
                     Patch(facecolor=color_bad, edgecolor='black', linewidth=1.2, label='Other Metrics')]
     ax.legend(handles=legend_elements, fontsize=FONT_SIZE['legend'], frameon=True, edgecolor='black', fancybox=False)
 
@@ -493,7 +493,8 @@ def representative_metrics_quality_detailed(clustered_data: pd.DataFrame, cluste
         
         # Get selected features for this cluster
         cluster_data = cluster_info
-        distinct_features = cluster_data.get('distinct_features', {}).get('features', [])
+        distinct_features = cluster_data.get('distinct_features', {})
+        cluster_size = (clustered_data['cluster'] == cluster_id).sum()
         
         # Handle different structures of distinct_features
         if isinstance(distinct_features, dict) and 'features' in distinct_features:
@@ -501,9 +502,9 @@ def representative_metrics_quality_detailed(clustered_data: pd.DataFrame, cluste
         elif isinstance(distinct_features, list) and len(distinct_features) > 0:
             selected_features_raw = distinct_features
         else:
-            # Fallback to selected features from feature_selection step
-            selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
-        
+            # No distinct features available
+            selected_features_raw = []
+
         selected_features = selected_features_raw
         # Filter to only include metrics that exist in our metric_cols
         selected_metrics = [f for f in selected_features if f in metric_cols]
@@ -516,7 +517,7 @@ def representative_metrics_quality_detailed(clustered_data: pd.DataFrame, cluste
         if len(cluster_data) < 2:
             continue
         
-        # Calculate CV for selected metrics
+        # Calculate CV for selected metrics (may be empty)
         selected_cvs = []
         for metric in selected_metrics:
             if metric in cluster_data.columns:
@@ -556,15 +557,15 @@ def representative_metrics_quality_detailed(clustered_data: pd.DataFrame, cluste
         summary_results.append({
             'Cluster': cluster_id,
             'N_Workflows': len(cluster_data),
-            'N_Selected_Metrics': len(selected_metrics),
+            'N_Selected_Metrics': len(selected_metrics) if selected_metrics else 0,
             'N_Non_Selected_Metrics': len(non_selected_metrics),
-            'Selected_CV_Mean': np.mean(selected_cvs) if selected_cvs else np.nan,
-            'Selected_CV_Median': np.median(selected_cvs) if selected_cvs else np.nan,
-            'Selected_CV_Std': np.std(selected_cvs) if selected_cvs else np.nan,
+            'Selected_CV_Mean': np.mean(selected_cvs) if selected_cvs else "N/A",
+            'Selected_CV_Median': np.median(selected_cvs) if selected_cvs else "N/A",
+            'Selected_CV_Std': np.std(selected_cvs) if selected_cvs else "N/A",
             'Non_Selected_CV_Mean': np.mean(non_selected_cvs) if non_selected_cvs else np.nan,
             'Non_Selected_CV_Median': np.median(non_selected_cvs) if non_selected_cvs else np.nan,
             'Non_Selected_CV_Std': np.std(non_selected_cvs) if non_selected_cvs else np.nan,
-            'CV_Difference': (np.mean(non_selected_cvs) - np.mean(selected_cvs)) if (selected_cvs and non_selected_cvs) else np.nan
+            'CV_Difference': (np.mean(non_selected_cvs) - np.mean(selected_cvs)) if (selected_cvs and non_selected_cvs) else "N/A"
         })
     
     summary_df = pd.DataFrame(summary_results)
@@ -775,7 +776,7 @@ def rule_quality(sub_frames: dict, clusters_insights: dict):
         
         # Try to get SHAP features first (if available and populated), otherwise use selected features
         cluster_data = clusters_insights[cluster_key]
-        distinct_features = cluster_data.get('distinct_features', {}).get('features', [])
+        distinct_features = cluster_data.get('distinct_features', {})
         
         # Handle different structures of distinct_features
         if isinstance(distinct_features, dict) and 'features' in distinct_features:
@@ -783,8 +784,19 @@ def rule_quality(sub_frames: dict, clusters_insights: dict):
         elif isinstance(distinct_features, list) and len(distinct_features) > 0:
             selected_features_raw = distinct_features
         else:
-            # Fallback to selected features from feature_selection step
-            selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
+            # No distinct features available
+            selected_features_raw = []
+
+        if not selected_features_raw:
+            cv_results.append({
+                'Cluster': cluster_id,
+                'Rule': rule_num,
+                'Num_Features': 0,
+                'Median_CV': "N/A",
+                'CV_10th_Percentile': "N/A",
+                'CV_90th_Percentile': "N/A"
+            })
+            continue
         
         # 2. Map feature names to dataframe columns (spaces to underscores)
         selected_features = [f.replace(' ', '_') for f in selected_features_raw]
@@ -882,6 +894,9 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
             
             if not match.empty:
                 row = match.iloc[0]
+                # Skip if CV values are N/A (no distinct features)
+                if row['Median_CV'] == "N/A":
+                    continue
                 # Create distribution from percentiles
                 cv_values = [row['CV_10th_Percentile'], row['Median_CV'], row['CV_90th_Percentile']]
                 data_to_plot.append(cv_values)
@@ -893,6 +908,16 @@ def plot_rule_quality_box_plot(cv_summary_df: pd.DataFrame, save_path: str = Non
             else:
                 # No data for this combination - skip
                 pass
+    
+    # Check if we have any valid data to plot
+    if not data_to_plot:
+        print(f"Warning: No valid rule quality data to plot (all clusters have N/A CV values)")
+        return
+    
+    # Verify lengths match
+    if len(data_to_plot) != len(box_positions) or len(data_to_plot) != len(colors_list):
+        print(f"Error: Length mismatch - data: {len(data_to_plot)}, positions: {len(box_positions)}, colors: {len(colors_list)}")
+        return
     
     # Create boxplot with custom positions
     bp = ax.boxplot(data_to_plot, positions=box_positions, widths=box_width * 0.8, 
@@ -1000,7 +1025,8 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
         
         # Get selected features for this cluster
         cluster_data = cluster_info
-        distinct_features = cluster_data.get('distinct_features', {}).get('features', [])
+        distinct_features = cluster_data.get('distinct_features', {})
+        cluster_size = (clustered_data['cluster'] == cluster_id).sum()
         
         # Handle different structures of distinct_features
         if isinstance(distinct_features, dict) and 'features' in distinct_features:
@@ -1008,9 +1034,9 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
         elif isinstance(distinct_features, list) and len(distinct_features) > 0:
             selected_features_raw = distinct_features
         else:
-            # Fallback to selected features from feature_selection step
-            selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
-        
+            # No distinct features available
+            selected_features_raw = []
+
         # Don't normalize - the column names in the dataframe have spaces, matching the JSON
         selected_features = selected_features_raw
         
@@ -1052,15 +1078,15 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
         results.append({
             'Cluster': cluster_id,
             'N_Workflows': len(cluster_data),
-            'N_Selected_Metrics': len(selected_metrics),  # Use actual selected metrics count
-            'N_Non_Selected_Metrics': len(non_selected_metrics),  # Use actual non-selected metrics count
-            'Selected_CV_Mean': np.mean(selected_cvs) if selected_cvs else np.nan,
-            'Selected_CV_Median': np.median(selected_cvs) if selected_cvs else np.nan,
-            'Selected_CV_Std': np.std(selected_cvs) if selected_cvs else np.nan,
+            'N_Selected_Metrics': len(selected_metrics) if selected_metrics else 0,  # Show zero when none selected
+            'N_Non_Selected_Metrics': len(non_selected_metrics),
+            'Selected_CV_Mean': np.mean(selected_cvs) if selected_cvs else "N/A",
+            'Selected_CV_Median': np.median(selected_cvs) if selected_cvs else "N/A",
+            'Selected_CV_Std': np.std(selected_cvs) if selected_cvs else "N/A",
             'Non_Selected_CV_Mean': np.mean(non_selected_cvs) if non_selected_cvs else np.nan,
             'Non_Selected_CV_Median': np.median(non_selected_cvs) if non_selected_cvs else np.nan,
             'Non_Selected_CV_Std': np.std(non_selected_cvs) if non_selected_cvs else np.nan,
-            'CV_Difference': (np.mean(non_selected_cvs) - np.mean(selected_cvs)) if (selected_cvs and non_selected_cvs) else np.nan
+            'CV_Difference': (np.mean(non_selected_cvs) - np.mean(selected_cvs)) if (selected_cvs and non_selected_cvs) else "N/A"
         })
     
     df = pd.DataFrame(results)

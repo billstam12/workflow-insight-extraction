@@ -1,5 +1,0 @@
-cluster_id,efficiency_status,n_representatives,n_tradeoff_pairs,cluster_size
-1,Efficient,2,0,18
-2,Efficient,1,0,36
-3,Efficient,2,1,18
-0,"Dominated by [1, 2, 3]",1,0,36

@@ -1,6 +1,0 @@
-criterion
-fairness method
-max depth
-n estimators
-normalization
-random state
