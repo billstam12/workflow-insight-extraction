@@ -492,9 +492,19 @@ def representative_metrics_quality_detailed(clustered_data: pd.DataFrame, cluste
         cluster_id = int(cluster_id_str)
         
         # Get selected features for this cluster
-        selected_features_raw = cluster_info['feature_selection']['selected_features']
-        selected_features = selected_features_raw
+        cluster_data = cluster_info
+        distinct_features = cluster_data.get('distinct_features', {}).get('features', [])
         
+        # Handle different structures of distinct_features
+        if isinstance(distinct_features, dict) and 'features' in distinct_features:
+            selected_features_raw = distinct_features['features']
+        elif isinstance(distinct_features, list) and len(distinct_features) > 0:
+            selected_features_raw = distinct_features
+        else:
+            # Fallback to selected features from feature_selection step
+            selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
+        
+        selected_features = selected_features_raw
         # Filter to only include metrics that exist in our metric_cols
         selected_metrics = [f for f in selected_features if f in metric_cols]
         non_selected_metrics = [f for f in metric_cols if f not in selected_metrics]
@@ -765,13 +775,13 @@ def rule_quality(sub_frames: dict, clusters_insights: dict):
         
         # Try to get SHAP features first (if available and populated), otherwise use selected features
         cluster_data = clusters_insights[cluster_key]
-        high_shap = cluster_data.get('high_shap_features', [])
+        distinct_features = cluster_data.get('distinct_features', {}).get('features', [])
         
-        # Handle different structures of high_shap_features
-        if isinstance(high_shap, dict) and 'features' in high_shap:
-            selected_features_raw = high_shap['features']
-        elif isinstance(high_shap, list) and len(high_shap) > 0:
-            selected_features_raw = high_shap
+        # Handle different structures of distinct_features
+        if isinstance(distinct_features, dict) and 'features' in distinct_features:
+            selected_features_raw = distinct_features['features']
+        elif isinstance(distinct_features, list) and len(distinct_features) > 0:
+            selected_features_raw = distinct_features
         else:
             # Fallback to selected features from feature_selection step
             selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
@@ -975,7 +985,7 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
     Compare CV distribution for selected (discriminative) vs non-selected metrics.
     
     For each cluster:
-    - Selected metrics = those in high_shap_features.features
+    - Selected metrics = those in distinct_features.features
     - Non-selected metrics = all other metrics
     
     We expect selected metrics to have lower CV (more stable within cluster).
@@ -989,7 +999,17 @@ def representative_metrics_quality(clustered_data: pd.DataFrame, clusters_insigh
         cluster_id = int(cluster_id_str)
         
         # Get selected features for this cluster
-        selected_features_raw = cluster_info['high_shap_features']["features"]
+        cluster_data = cluster_info
+        distinct_features = cluster_data.get('distinct_features', {}).get('features', [])
+        
+        # Handle different structures of distinct_features
+        if isinstance(distinct_features, dict) and 'features' in distinct_features:
+            selected_features_raw = distinct_features['features']
+        elif isinstance(distinct_features, list) and len(distinct_features) > 0:
+            selected_features_raw = distinct_features
+        else:
+            # Fallback to selected features from feature_selection step
+            selected_features_raw = cluster_data.get('feature_selection', {}).get('selected_features', [])
         
         # Don't normalize - the column names in the dataframe have spaces, matching the JSON
         selected_features = selected_features_raw

@@ -1389,16 +1389,17 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                         
                         # Classify cluster's mean value
                         z_score = (cluster_mean - global_mean) / (global_std + 1e-6)
+                        # Calculate how distinctive this feature is for the cluster
+                        distinctiveness = (cluster_mean - other_mean) / (other_std + 1e-6)
+                        use = z_score
                         threshold = 1.0
-                        if z_score > threshold:
+                        if use > threshold:
                             value_category = "high"  # > threshold std above global
-                        elif z_score < -threshold:
+                        elif use < -threshold:
                             value_category = "low"   # < threshold std below global
                         else:
                             value_category = "mid"
                         
-                        # Calculate how distinctive this feature is for the cluster
-                        distinctiveness = abs(cluster_mean - other_mean) / (other_std + 1e-6)
                         
                         feature_stats[feat] = {
                             'cluster_mean': round(cluster_mean, 4),
@@ -1411,6 +1412,19 @@ def step_phase1_comprehensive_cluster_insights(results, pipeline, **kwargs):
                         }
                 
                 cluster_insights['feature_selection']['feature_statistics'] = feature_stats
+                
+                # ===== DISTINCT FEATURES SECTION (High/Low only) =====
+                # Filter feature_stats to keep only high and low features
+                distinct_features = {
+                    feat: stats for feat, stats in feature_stats.items() 
+                    if stats.get('value_category') in ['high', 'low']
+                }
+                
+                if distinct_features:
+                    cluster_insights['distinct_features'] = {
+                        'n_distinct_features': len(distinct_features),
+                        'features': distinct_features
+                    }
         
         # ===== CORRELATION ANALYSIS FOR REMOVED FEATURES =====
         # Get removed features analysis from feature selection step

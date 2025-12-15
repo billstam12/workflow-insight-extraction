@@ -26,7 +26,7 @@
           "other_clusters_mean": 0.301,
           "other_clusters_std": 0.9341,
           "value_category": "low",
-          "distinctiveness_score": 1.45,
+          "distinctiveness_score": -1.45,
           "z-score": -1.0535
         },
         "test_False_Negatives": {
@@ -62,7 +62,7 @@
           "other_clusters_mean": 0.3702,
           "other_clusters_std": 0.8177,
           "value_category": "low",
-          "distinctiveness_score": 2.0373,
+          "distinctiveness_score": -2.0373,
           "z-score": -1.2957
         },
         "test_Well_Calibration": {
@@ -111,7 +111,7 @@
           "other_clusters_mean": 0.301,
           "other_clusters_std": 0.9341,
           "value_category": "low",
-          "distinctiveness_score": 1.45,
+          "distinctiveness_score": -1.45,
           "z-score": -1.0535
         }
       }
@@ -247,7 +247,66 @@
         "n_workflows_in_cluster": 12,
         "combined_score": 0.08080808080808079
       }
-    ]
+    ],
+    "distinct_features": {
+      "n_distinct_features": 6,
+      "features": {
+        "test_Equalized_Odds": {
+          "cluster_mean": -1.0535,
+          "cluster_std": 0.1385,
+          "other_clusters_mean": 0.301,
+          "other_clusters_std": 0.9341,
+          "value_category": "low",
+          "distinctiveness_score": -1.45,
+          "z-score": -1.0535
+        },
+        "test_False_Negatives": {
+          "cluster_mean": 1.8492,
+          "cluster_std": 0.3001,
+          "other_clusters_mean": -0.5284,
+          "other_clusters_std": 0.0616,
+          "value_category": "high",
+          "distinctiveness_score": 38.6113,
+          "z-score": 1.8492
+        },
+        "test_Log_Loss": {
+          "cluster_mean": 1.5223,
+          "cluster_std": 0.0346,
+          "other_clusters_mean": -0.4349,
+          "other_clusters_std": 0.6589,
+          "value_category": "high",
+          "distinctiveness_score": 2.9706,
+          "z-score": 1.5223
+        },
+        "test_Conditional_Statistical_Parity": {
+          "cluster_mean": 1.845,
+          "cluster_std": 0.2994,
+          "other_clusters_mean": -0.5271,
+          "other_clusters_std": 0.0984,
+          "value_category": "high",
+          "distinctiveness_score": 24.1156,
+          "z-score": 1.845
+        },
+        "test_Test_Fairness": {
+          "cluster_mean": -1.2957,
+          "cluster_std": 0.031,
+          "other_clusters_mean": 0.3702,
+          "other_clusters_std": 0.8177,
+          "value_category": "low",
+          "distinctiveness_score": -2.0373,
+          "z-score": -1.2957
+        },
+        "test_Well_Calibration": {
+          "cluster_mean": 1.5163,
+          "cluster_std": 0.0745,
+          "other_clusters_mean": -0.4332,
+          "other_clusters_std": 0.6629,
+          "value_category": "high",
+          "distinctiveness_score": 2.9408,
+          "z-score": 1.5163
+        }
+      }
+    }
   },
   "1": {
     "cluster_id": 1,
@@ -275,7 +334,7 @@
           "cluster_std": 0.041,
           "other_clusters_mean": -1.4073,
           "other_clusters_std": 0.1606,
-          "value_category": "mid",
+          "value_category": "high",
           "distinctiveness_score": 13.1409,
           "z-score": 0.7037
         },
@@ -284,8 +343,8 @@
           "cluster_std": 0.3962,
           "other_clusters_mean": 1.3166,
           "other_clusters_std": 0.2931,
-          "value_category": "mid",
-          "distinctiveness_score": 6.7376,
+          "value_category": "low",
+          "distinctiveness_score": -6.7376,
           "z-score": -0.6583
         },
         "test_Conditional_Statistical_Parity": {
@@ -293,8 +352,8 @@
           "cluster_std": 0.0712,
           "other_clusters_mean": 1.1112,
           "other_clusters_std": 1.0667,
-          "value_category": "mid",
-          "distinctiveness_score": 1.5625,
+          "value_category": "low",
+          "distinctiveness_score": -1.5625,
           "z-score": -0.5556
         },
         "test_Well_Calibration": {
@@ -302,8 +361,8 @@
           "cluster_std": 0.0432,
           "other_clusters_mean": 1.4065,
           "other_clusters_std": 0.1701,
-          "value_category": "mid",
-          "distinctiveness_score": 12.4,
+          "value_category": "low",
+          "distinctiveness_score": -12.4,
           "z-score": -0.7032
         },
         "test_Equal_Opportunity": {
@@ -312,7 +371,7 @@
           "other_clusters_mean": 0.1455,
           "other_clusters_std": 1.7066,
           "value_category": "mid",
-          "distinctiveness_score": 0.1279,
+          "distinctiveness_score": -0.1279,
           "z-score": -0.0727
         },
         "test_False_Negatives": {
@@ -320,8 +379,8 @@
           "cluster_std": 0.0605,
           "other_clusters_mean": 1.0481,
           "other_clusters_std": 1.1597,
-          "value_category": "mid",
-          "distinctiveness_score": 1.3556,
+          "value_category": "low",
+          "distinctiveness_score": -1.3556,
           "z-score": -0.524
         },
         "test_Treatment_Equality": {
@@ -329,8 +388,8 @@
           "cluster_std": 0.5622,
           "other_clusters_mean": 1.0936,
           "other_clusters_std": 0.7576,
-          "value_category": "mid",
-          "distinctiveness_score": 2.1652,
+          "value_category": "low",
+          "distinctiveness_score": -2.1652,
           "z-score": -0.5468
         }
       }
@@ -360,7 +419,7 @@
           "cluster_std": 0.041,
           "other_clusters_mean": -1.4073,
           "other_clusters_std": 0.1606,
-          "value_category": "mid",
+          "value_category": "high",
           "distinctiveness_score": 13.1409,
           "z-score": 0.7037
         }
@@ -520,7 +579,66 @@
         "n_workflows_in_cluster": 24,
         "combined_score": 0.037624926513815396
       }
-    ]
+    ],
+    "distinct_features": {
+      "n_distinct_features": 6,
+      "features": {
+        "test_Test_Fairness": {
+          "cluster_mean": 0.7037,
+          "cluster_std": 0.041,
+          "other_clusters_mean": -1.4073,
+          "other_clusters_std": 0.1606,
+          "value_category": "high",
+          "distinctiveness_score": 13.1409,
+          "z-score": 0.7037
+        },
+        "test_Log_Loss": {
+          "cluster_mean": -0.6583,
+          "cluster_std": 0.3962,
+          "other_clusters_mean": 1.3166,
+          "other_clusters_std": 0.2931,
+          "value_category": "low",
+          "distinctiveness_score": -6.7376,
+          "z-score": -0.6583
+        },
+        "test_Conditional_Statistical_Parity": {
+          "cluster_mean": -0.5556,
+          "cluster_std": 0.0712,
+          "other_clusters_mean": 1.1112,
+          "other_clusters_std": 1.0667,
+          "value_category": "low",
+          "distinctiveness_score": -1.5625,
+          "z-score": -0.5556
+        },
+        "test_Well_Calibration": {
+          "cluster_mean": -0.7032,
+          "cluster_std": 0.0432,
+          "other_clusters_mean": 1.4065,
+          "other_clusters_std": 0.1701,
+          "value_category": "low",
+          "distinctiveness_score": -12.4,
+          "z-score": -0.7032
+        },
+        "test_False_Negatives": {
+          "cluster_mean": -0.524,
+          "cluster_std": 0.0605,
+          "other_clusters_mean": 1.0481,
+          "other_clusters_std": 1.1597,
+          "value_category": "low",
+          "distinctiveness_score": -1.3556,
+          "z-score": -0.524
+        },
+        "test_Treatment_Equality": {
+          "cluster_mean": -0.5468,
+          "cluster_std": 0.5622,
+          "other_clusters_mean": 1.0936,
+          "other_clusters_std": 0.7576,
+          "value_category": "low",
+          "distinctiveness_score": -2.1652,
+          "z-score": -0.5468
+        }
+      }
+    }
   },
   "2": {
     "cluster_id": 2,
@@ -558,7 +676,7 @@
           "other_clusters_mean": 0.3198,
           "other_clusters_std": 0.4303,
           "value_category": "low",
-          "distinctiveness_score": 6.6886,
+          "distinctiveness_score": -6.6886,
           "z-score": -2.5581
         },
         "test_False_Positives": {
@@ -585,7 +703,7 @@
           "other_clusters_mean": 0.2038,
           "other_clusters_std": 0.8666,
           "value_category": "low",
-          "distinctiveness_score": 2.1165,
+          "distinctiveness_score": -2.1165,
           "z-score": -1.6305
         },
         "test_Log_Loss": {
@@ -593,7 +711,7 @@
           "cluster_std": 0.0395,
           "other_clusters_mean": -0.1132,
           "other_clusters_std": 1.0048,
-          "value_category": "mid",
+          "value_category": "high",
           "distinctiveness_score": 1.0136,
           "z-score": 0.9053
         },
@@ -603,7 +721,7 @@
           "other_clusters_mean": 0.1998,
           "other_clusters_std": 0.858,
           "value_category": "low",
-          "distinctiveness_score": 2.0956,
+          "distinctiveness_score": -2.0956,
           "z-score": -1.5982
         }
       }
@@ -779,6 +897,74 @@
         "n_workflows_in_cluster": 8,
         "combined_score": 0.12812812812812813
       }
-    ]
+    ],
+    "distinct_features": {
+      "n_distinct_features": 7,
+      "features": {
+        "test_Equalized_Odds": {
+          "cluster_mean": 2.5434,
+          "cluster_std": 0.2733,
+          "other_clusters_mean": -0.3179,
+          "other_clusters_std": 0.4539,
+          "value_category": "high",
+          "distinctiveness_score": 6.3043,
+          "z-score": 2.5434
+        },
+        "overfitting_Accuracy_diff": {
+          "cluster_mean": -2.5581,
+          "cluster_std": 0.396,
+          "other_clusters_mean": 0.3198,
+          "other_clusters_std": 0.4303,
+          "value_category": "low",
+          "distinctiveness_score": -6.6886,
+          "z-score": -2.5581
+        },
+        "test_False_Positives": {
+          "cluster_mean": 2.7508,
+          "cluster_std": 0.3524,
+          "other_clusters_mean": -0.3439,
+          "other_clusters_std": 0.213,
+          "value_category": "high",
+          "distinctiveness_score": 14.5282,
+          "z-score": 2.7508
+        },
+        "test_Treatment_Equality": {
+          "cluster_mean": 2.0494,
+          "cluster_std": 0.2123,
+          "other_clusters_mean": -0.2562,
+          "other_clusters_std": 0.7272,
+          "value_category": "high",
+          "distinctiveness_score": 3.1706,
+          "z-score": 2.0494
+        },
+        "test_Test_Fairness": {
+          "cluster_mean": -1.6305,
+          "cluster_std": 0.0283,
+          "other_clusters_mean": 0.2038,
+          "other_clusters_std": 0.8666,
+          "value_category": "low",
+          "distinctiveness_score": -2.1165,
+          "z-score": -1.6305
+        },
+        "test_Log_Loss": {
+          "cluster_mean": 0.9053,
+          "cluster_std": 0.0395,
+          "other_clusters_mean": -0.1132,
+          "other_clusters_std": 1.0048,
+          "value_category": "high",
+          "distinctiveness_score": 1.0136,
+          "z-score": 0.9053
+        },
+        "overfitting_AUC_diff": {
+          "cluster_mean": -1.5982,
+          "cluster_std": 0.4871,
+          "other_clusters_mean": 0.1998,
+          "other_clusters_std": 0.858,
+          "value_category": "low",
+          "distinctiveness_score": -2.0956,
+          "z-score": -1.5982
+        }
+      }
+    }
   }
 }
