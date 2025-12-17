@@ -781,16 +781,12 @@ def step_phase1_tradeoff_analysis(results, pipeline, **kwargs):
         var_types = detect_variable_types(X_cluster_df)
         correlation_results = []
         
-        # Separate selected and non-selected features
-        non_selected_features = [f for f in metric_cols if f not in selected_features]
+        print(f"Representative metrics (selected features): {len(selected_features)}")
+        print(f"Analyzing pairs: between representative metrics only")
         
-        print(f"Selected features: {len(selected_features)}")
-        print(f"Non-selected features: {len(non_selected_features)}")
-        print(f"Analyzing pairs: selected vs non-selected (excluding non-selected vs non-selected)")
-        
-        # Analyze pairs: selected vs non-selected
-        for feat1 in selected_features:
-            for feat2 in non_selected_features:
+        # Analyze pairs: between selected features only (representative metrics)
+        for i, feat1 in enumerate(selected_features):
+            for feat2 in selected_features[i+1:]:  # Only analyze unique pairs
                 try:
                     measure, measure_type = compute_relationship_measure(
                         X_cluster_df, feat1, feat2, var_types
