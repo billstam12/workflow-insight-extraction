@@ -6,15 +6,7 @@
 
 You have two options for installing dependencies:
 
-#### Option A: Using Conda (Recommended)
-If you prefer conda and want the exact environment configuration:
-
-```bash
-conda env create -f environment.yml
-conda activate xxp
-```
-
-#### Option B: Using pip (Standalone - No Conda)
+#### Option A: Using pip (Recommended)
 For a simpler setup with pip and no conda dependency:
 
 ```bash
@@ -29,6 +21,14 @@ pip install -r requirements.txt
 ```
 
 **Note:** Python 3.12+ is required. The packages do not support Python 3.14.
+
+#### Option B: Using Conda 
+If you prefer conda and want the exact environment configuration:
+
+```bash
+conda env create -f environment.yml
+conda activate xxp
+```
 
 ### 2. Run the Ablation Study
 
@@ -95,15 +95,15 @@ paper_results/
 
 ## Conda vs Pip
 
-**Use Conda (environment.yml) if:**
-- You want the exact same environment as the original
-- You need binary package optimization
-- You're working on macOS with Apple Silicon
-
 **Use Pip (requirements.txt) if:**
 - You prefer simplicity
 - You already have Python set up
 - You're working in a CI/CD pipeline
+
+**Use Conda (environment.yml) if:**
+- You want the exact same environment as the original
+- You need binary package optimization
+- You're working on macOS with Apple Silicon
 
 ## Troubleshooting
 
