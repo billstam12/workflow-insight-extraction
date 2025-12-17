@@ -46,8 +46,8 @@ for mode in "${modes[@]}"; do
     echo "=========================================="
     echo ""
     
-    # Record start time
-    START_TIME=$(date +%s)
+    # Record start time with nanosecond precision
+    START_TIME=$(date +%s%N)
     
     echo "Step 1: Clustering workflows..."
     python 1_cluster_workflows.py "$WORKFLOW_FOLDER" "$mode"
@@ -60,9 +60,9 @@ for mode in "${modes[@]}"; do
     echo "Step 3: Validating cluster quality..."
     python 4_validate_cluster_quality.py "$WORKFLOW_FOLDER" "$DATASET_NAME" "$mode"
     
-    # Record end time and calculate elapsed time
-    END_TIME=$(date +%s)
-    ELAPSED_TIME=$((END_TIME - START_TIME))
+    # Record end time and calculate elapsed time with 2 decimal precision
+    END_TIME=$(date +%s%N)
+    ELAPSED_TIME=$(echo "scale=2; ($END_TIME - $START_TIME) / 1000000000" | bc)
     
     # Append to timing CSV
     echo "$DATASET_NAME,$mode,$ELAPSED_TIME" >> "$TIMING_CSV"
