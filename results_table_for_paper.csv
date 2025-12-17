@@ -1,13 +1,13 @@
-Dataset,Ablation,N_Clusters,SiS_avg,SiS_min,SiS_max,DBI_avg,CV_avg,CV_min,CV_max,F1_avg,QSE_avg
-Adult,Full,4,\textbf{0.9216},\textbf{0.8153},\textbf{0.9656},\textbf{0.1395},\textbf{0.1412},\textbf{0.0423},\textbf{0.2043},\textbf{1.0000},\textbf{0.9265}
-Adult,No Dim Reduction,2,0.0106,-0.7027,0.3027,0.9382,N/A,N/A,N/A,N/A,0.8867
-Adult,No Iterative Filter,4,0.9216,0.8153,0.9656,0.1395,0.9936,0.1211,3.1375,1.0000,0.9265
-Adult,No Variance Filter,9,0.6356,0.0000,0.8039,0.4704,0.3832,0.0429,1.5787,N/A,0.6990
-Taxi,Full,4,\textbf{0.8044},\textbf{0.5723},\textbf{0.9742},\textbf{0.2305},1.0013,0.0113,2.2014,0.9722,\textbf{0.8613}
-Taxi,No Dim Reduction,4,0.3974,-0.2092,0.8618,1.0542,\textbf{0.4013},0.0113,\textbf{0.7913},\textbf{0.9963},0.8465
-Taxi,No Iterative Filter,4,0.8044,0.5723,0.9742,0.2305,1.2882,0.1876,2.2074,0.9722,0.8613
-Taxi,No Variance Filter,17,0.6436,-0.2423,0.9645,0.3998,0.9500,\textbf{0.0001},2.3599,N/A,0.7679
-Wine,Full,3,0.9078,0.7700,\textbf{0.9487},\textbf{0.1319},1.4293,0.9431,\textbf{1.9155},\textbf{1.0000},\textbf{0.9512}
-Wine,No Dim Reduction,2,0.0298,-0.2279,0.2256,8.0719,N/A,N/A,N/A,0.5178,0.6407
-Wine,No Iterative Filter,3,0.9078,0.7700,0.9487,0.1319,3.3654,2.9944,3.7364,1.0000,0.9512
-Wine,No Variance Filter,3,\textbf{0.9128},\textbf{0.7971},0.9478,0.1405,\textbf{1.0968},\textbf{0.2721},1.9215,1.0000,0.9512
+Pipeline,Ablation,N_Clusters,Metrics_avg,SiS_avg,SiS_min,SiS_max,DBI_avg,Ratio_avg,Ratio_min,Ratio_max,F1_avg,QSE_avg
+\blue{Inc},\blue{FULL},\blue{4},\blue{5},\blue{\textbf{0.9216}},\blue{\textbf{0.8153}},\blue{\textbf{0.9656}},\blue{\textbf{0.1395}},\blue{\textbf{0.0271}},\blue{\textbf{0.0273}},\blue{\textbf{0.0153}},\blue{\textbf{0}},\blue{\textbf{0.9265}}
+Inc,NDR,2,N/A,0.0106,-0.7027,0.3027,0.9382,N/A,N/A,N/A,0,0.8867
+Inc,NIS,4,9,0.9216,0.8153,0.9656,0.1395,0.2283,0.0899,0.3055,0,0.9265
+Inc,NVF,9,5,0.6356,0.0000,0.8039,0.4704,0.0652,0.0304,0.1089,0,0.6990
+\blue{Taxi},\blue{FULL},\blue{4},\blue{3},\blue{\textbf{0.8044}},\blue{\textbf{0.5723}},\blue{\textbf{0.9742}},\blue{\textbf{0.2305}},\blue{0.2655},\blue{0.0099},\blue{0.2975},\blue{\textbf{0}},\blue{\textbf{0.8613}}
+Taxi,NDR,4,2,0.3974,-0.2092,0.8618,1.0542,\textbf{0.0903},0.0084,\textbf{0.1069},0,0.8465
+Taxi,NIS,4,9,0.8044,0.5723,0.9742,0.2305,0.3622,0.1652,0.3284,0,0.8613
+Taxi,NVF,17,3,0.6436,-0.2423,0.9645,0.3998,0.1521,\textbf{0.0000},0.1252,0,0.7679
+\blue{Wine},\blue{FULL},\blue{3},\blue{6},\blue{0.9078},\blue{0.7700},\blue{\textbf{0.9487}},\blue{\textbf{0.1319}},\blue{0.4587},\blue{0.3577},\blue{0.5293},\blue{\textbf{0}},\blue{\textbf{0.9512}}
+Wine,NDR,2,N/A,0.0298,-0.2279,0.2256,8.0719,N/A,N/A,N/A,0,0.6472
+Wine,NIS,3,10,0.9078,0.7700,0.9487,0.1319,1.8436,2.3536,1.4172,0,0.9512
+Wine,NVF,3,9,\textbf{0.9128},\textbf{0.7971},0.9478,0.1405,\textbf{0.3222},\textbf{0.1013},\textbf{0.4392},0,0.9512

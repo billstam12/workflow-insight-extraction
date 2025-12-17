@@ -14,18 +14,21 @@ conda env create -f environment.yml
 conda activate xxp
 ```
 
-#### Option B: Using pip
-For a simpler setup with pip:
+#### Option B: Using pip (Standalone - No Conda)
+For a simpler setup with pip and no conda dependency:
 
 ```bash
-# Create a virtual environment
-python -m venv env
+# Create a virtual environment (requires Python 3.12)
+python3.12 -m venv env
 source env/bin/activate  # On macOS/Linux
 # or: env\Scripts\activate  # On Windows
 
 # Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+**Note:** Python 3.12+ is required. The packages do not support Python 3.14.
 
 ### 2. Run the Ablation Study
 

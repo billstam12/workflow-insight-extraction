@@ -1,8 +1,6 @@
 __pycache__/
-requirements.txt
-
 /results/**
-
 paper_figures
-
 paper_results
+env
+venv

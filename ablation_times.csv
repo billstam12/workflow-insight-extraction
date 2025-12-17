@@ -1,0 +1,13 @@
+Pipeline,Ablation,Time(sec)
+wine,no_variance_filter,13
+wine,no_dim_reduction,10
+wine,no_iterative_filter,8
+wine,full,8
+adult,no_variance_filter,15
+adult,no_dim_reduction,6
+adult,no_iterative_filter,7
+adult,full,10
+taxi,no_variance_filter,31
+taxi,no_dim_reduction,11
+taxi,no_iterative_filter,7
+taxi,full,10
